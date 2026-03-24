@@ -2,3 +2,8 @@ build/
 install/
 .cache/
 CMakeUserPresets.json
+
+# Executables
+*.exe
+*.out
+LoomicServer
