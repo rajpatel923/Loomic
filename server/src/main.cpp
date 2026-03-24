@@ -2,6 +2,6 @@
 
 int main()
 {
-    std::cout << "LoomicServer starting...\n";
+    std::cout << "Loomic Server starting...\n";
     return 0;
 }
