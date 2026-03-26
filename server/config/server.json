@@ -1,0 +1,16 @@
+{
+  "bind_address": "0.0.0.0",
+  "port": 7777,
+  "http_health_port": 8080,
+  "thread_count": 0,
+  "tls_cert_path": "",
+  "tls_key_path": "",
+  "scylla_hosts": "127.0.0.1",
+  "pg_conn_string": "host=127.0.0.1 dbname=loomic user=loomic",
+  "redis_host": "127.0.0.1",
+  "redis_port": 6379,
+  "jwt_secret": "change-me-in-production",
+  "log_level": "info",
+  "log_file": "logs/server.log",
+  "metrics_port": 9090
+}

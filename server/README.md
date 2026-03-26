@@ -10,55 +10,27 @@ Backend server for Loomic.
 | Ninja | any | [ninja-build.org](https://ninja-build.org/) — `brew install ninja` / `winget install Ninja-build.Ninja` |
 | C++ compiler | C++20 support | Clang/GCC on macOS · MSVC or Clang on Windows |
 
----
 
-## Build & Run
+To build and verify the milestone:
 
-### 1. Configure
+cd /Users/rajpatel/Documents/GitHub/Loomic/server
 
-```bash
-cmake --preset debug       # development (tests enabled)
-cmake --preset release     # optimised build
-```
+# 1. Install dependencies
+conan install . --output-folder=build/debug  --build=missing -s build_type=Debug
 
-### 2. Build
+conan install . --output-folder=build/release --build=missing -s build_type=Release
 
-```bash
+# 2. Configure
+cmake --preset debug
+
+# 3. Build
 cmake --build --preset debug
-cmake --build --preset release
-```
 
-### 3. Run
+# 4. Run
+./build/debug/bin/LoomicServer --config config/server.json
 
-**macOS / Linux**
-```bash
-./build/debug/bin/LoomicServer
-```
+# 5. Health check (second terminal)
+curl http://localhost:8080/health   # → {"status":"ok"}
 
-**Windows**
-```powershell
-.\build\debug\bin\LoomicServer.exe
-```
-
----
-
-## Running Tests
-
-Tests are enabled automatically in the `debug` preset.
-
-```bash
+# 6. Tests
 ctest --preset debug
-```
-
----
-
-## Project Structure
-
-```
-server/
-├── CMakeLists.txt          # build definition
-├── CMakePresets.json       # shared presets (debug / release)
-├── src/                    # source files
-├── include/LoomicServer/   # public headers
-└── tests/                  # test suite
-```

@@ -17,21 +17,62 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-# ── Executable ────────────────────────────────────────────────────────────────
+# ── Conan-generated packages ──────────────────────────────────────────────────
+find_package(asio           REQUIRED)
+find_package(Boost          REQUIRED COMPONENTS system)
+find_package(protobuf       REQUIRED)
+find_package(spdlog         REQUIRED)
+find_package(GTest          REQUIRED)
+find_package(absl           REQUIRED)
+find_package(nlohmann_json  REQUIRED)
+find_package(OpenSSL        REQUIRED)
+find_package(hiredis        REQUIRED)
+find_package(jwt-cpp        REQUIRED)
+find_package(prometheus-cpp REQUIRED)
+
+# ── LoomicServer_lib (static) ─────────────────────────────────────────────────
+add_library(LoomicServer_lib STATIC
+    src/util/Config.cpp
+    src/util/Logger.cpp
+    src/core/Server.cpp
+    src/http/HealthHandler.cpp
+)
+
+target_include_directories(LoomicServer_lib
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_compile_options(LoomicServer_lib PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX>
+    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -O2>
+)
+
+target_link_libraries(LoomicServer_lib
+    PUBLIC
+        Boost::headers
+        Boost::system
+        spdlog::spdlog
+        nlohmann_json::nlohmann_json
+        OpenSSL::SSL
+        OpenSSL::Crypto
+        absl::flat_hash_map
+        absl::strings
+)
+
+# ── LoomicServer (executable) ─────────────────────────────────────────────────
 add_executable(LoomicServer
     src/main.cpp
 )
 
-target_include_directories(LoomicServer
+target_link_libraries(LoomicServer
     PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        LoomicServer_lib
 )
 
-# ── Compiler warnings (cross-platform) ───────────────────────────────────────
-target_compile_options(LoomicServer PRIVATE
-    $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX>
-    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Werror>
-)
+# ── Protobuf code-gen stub (Phase 2) ──────────────────────────────────────────
+# find_package(protobuf REQUIRED) is already called above.
+# Proto file generation will be wired here in Phase 2.
 
 # ── Tests ─────────────────────────────────────────────────────────────────────
 option(BUILD_TESTS "Build test suite" OFF)
