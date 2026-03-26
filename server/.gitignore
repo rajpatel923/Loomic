@@ -6,4 +6,18 @@ CMakeUserPresets.json
 # Executables
 *.exe
 *.out
-LoomicServer
+/LoomicServer
+
+# IDE
+.idea/
+.vscode/
+
+# Docs
+CLION_SETUP.md
+
+# Logs
+logs/
+
+# Protobuf generated
+*.pb.h
+*.pb.cc
