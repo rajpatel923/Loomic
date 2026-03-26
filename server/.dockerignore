@@ -1,0 +1,7 @@
+build/
+install/
+.cache/
+logs/*.log
+.idea/
+*.md
+CMakeUserPresets.json

@@ -1,0 +1,14 @@
+services:
+  server:
+    build: .
+    ports:
+      - "7777:7777"
+      - "8080:8080"
+      - "9090:9090"
+    volumes:
+      - ./config:/app/config   # mount local config so it's easy to edit
+      - ./logs:/app/logs        # persist logs on host
+    environment:
+      - LOOMIC_JWT_SECRET=change-me-in-production
+      # Override others as needed
+    restart: unless-stopped
