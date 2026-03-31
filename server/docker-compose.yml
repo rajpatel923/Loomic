@@ -1,4 +1,21 @@
 services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: loomic
+      POSTGRES_USER: loomic
+      POSTGRES_PASSWORD: loomic_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U loomic"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   server:
     build: .
     ports:
@@ -8,7 +25,14 @@ services:
     volumes:
       - ./config:/app/config   # mount local config so it's easy to edit
       - ./logs:/app/logs        # persist logs on host
+      - ./certs:/app/certs      # dev TLS certificates
     environment:
       - LOOMIC_JWT_SECRET=change-me-in-production
       # Override others as needed
+    depends_on:
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
+
+volumes:
+  postgres_data:

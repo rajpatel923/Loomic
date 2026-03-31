@@ -1,9 +1,18 @@
 #include "LoomicServer/core/Server.hpp"
 #include "LoomicServer/util/Config.hpp"
 #include "LoomicServer/util/Logger.hpp"
+#include "LoomicServer/auth/SnowflakeGen.hpp"
+#include "LoomicServer/auth/JwtService.hpp"
+#include "LoomicServer/auth/PasswordService.hpp"
+#include "LoomicServer/db/PgPool.hpp"
+#include "LoomicServer/http/AuthHandler.hpp"
+
+#include <openssl/ssl.h>
+
 #include <thread>
 
 namespace net = boost::asio;
+namespace ssl = boost::asio::ssl;
 
 namespace Loomic {
 
@@ -11,10 +20,44 @@ Server::Server(const Config& cfg)
     : thread_count_(cfg.thread_count == 0
                         ? std::max(1u, std::thread::hardware_concurrency())
                         : cfg.thread_count)
+    , ssl_ctx_(ssl::context::tls_server)
+    , thread_pool_(thread_count_)
     , io_ctxs_(thread_count_)
     , signals_(io_ctxs_[0], SIGINT, SIGTERM)
-    , health_(io_ctxs_[0], cfg.http_health_port)
+    , pg_(std::make_shared<PgPool>(cfg.pg_conn_string, thread_count_, thread_pool_))
+    , snowflake_(std::make_shared<SnowflakeGen>())
+    , jwt_(std::make_shared<JwtService>(cfg.jwt_secret))
+    , pwd_(std::make_shared<PasswordService>(thread_pool_))
+    , http_(io_ctxs_[0], cfg.http_health_port)
+    , tcp_(io_ctxs_[0], ssl_ctx_, cfg.port)
 {
+    setup_tls(cfg);
+    register_routes();
+}
+
+void Server::setup_tls(const Config& cfg)
+{
+    ssl_ctx_.set_options(ssl::context::default_workarounds
+        | ssl::context::no_sslv2
+        | ssl::context::no_sslv3
+        | ssl::context::no_tlsv1
+        | ssl::context::no_tlsv1_1);
+    SSL_CTX_set_min_proto_version(ssl_ctx_.native_handle(), TLS1_2_VERSION);
+
+    if (!cfg.tls_cert_path.empty()) {
+        ssl_ctx_.use_certificate_chain_file(cfg.tls_cert_path);
+        ssl_ctx_.use_private_key_file(cfg.tls_key_path, ssl::context::pem);
+    }
+}
+
+void Server::register_routes()
+{
+    http_.add_route(http::verb::get, "/health",
+        [](Request /*req*/) -> net::awaitable<Response> {
+            co_return make_json(http::status::ok, R"({"status":"ok"})");
+        });
+
+    register_auth_routes(http_, pg_, snowflake_, jwt_, pwd_);
 }
 
 void Server::run()
@@ -22,10 +65,9 @@ void Server::run()
     LOG_INFO("Loomic Server starting");
     LOG_INFO("Thread pool: {} threads", thread_count_);
 
-    // Start health check listener (logs its own port)
-    health_.start();
+    http_.start();
+    tcp_.start();
 
-    // Register signal handler
     signals_.async_wait([this](const boost::system::error_code& ec, int /*signo*/) {
         if (!ec) {
             LOG_INFO("Shutdown signal received, stopping...");
@@ -41,10 +83,9 @@ void Server::run()
         });
     }
 
-    // Main thread drives io_ctxs_[0] (signals + health handler)
+    // Main thread drives io_ctxs_[0] (signals + HTTP + TCP)
     io_ctxs_[0].run();
 
-    // Join all worker threads
     for (auto& t : threads_) {
         if (t.joinable()) t.join();
     }

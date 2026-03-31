@@ -7,6 +7,7 @@ CMakeUserPresets.json
 *.exe
 *.out
 /LoomicServer
+.env
 
 # IDE
 .idea/
@@ -21,3 +22,7 @@ logs/
 # Protobuf generated
 *.pb.h
 *.pb.cc
+
+# TLS dev certificates (private key is sensitive)
+certs/server.key
+certs/server.crt

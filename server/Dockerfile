@@ -5,11 +5,13 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         cmake \
+        make \
         ninja-build \
         gcc \
         g++ \
         python3-pip \
         libssl-dev \
+        libpq-dev \
         git \
         pkg-config \
     && rm -rf /var/lib/apt/lists/*

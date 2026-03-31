@@ -19,6 +19,8 @@ class LoomicServerConan(ConanFile):
         self.requires("hiredis/1.2.0")
         self.requires("jwt-cpp/0.7.0")
         self.requires("prometheus-cpp/1.2.4")
+        self.requires("libpqxx/7.9.2")
+        self.requires("libxcrypt/4.4.36")
 
     def generate(self):
         tc = CMakeToolchain(self)

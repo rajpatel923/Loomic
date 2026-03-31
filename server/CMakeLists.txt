@@ -29,13 +29,22 @@ find_package(OpenSSL        REQUIRED)
 find_package(hiredis        REQUIRED)
 find_package(jwt-cpp        REQUIRED)
 find_package(prometheus-cpp REQUIRED)
+find_package(libpqxx        REQUIRED)
+find_package(libxcrypt         REQUIRED)
 
 # ── LoomicServer_lib (static) ─────────────────────────────────────────────────
 add_library(LoomicServer_lib STATIC
     src/util/Config.cpp
     src/util/Logger.cpp
     src/core/Server.cpp
-    src/http/HealthHandler.cpp
+    src/http/HttpServer.cpp
+    src/http/AuthHandler.cpp
+    src/tcp/TcpServer.cpp
+    src/db/PgPool.cpp
+    src/middleware/RateLimiter.cpp
+    src/auth/SnowflakeGen.cpp
+    src/auth/JwtService.cpp
+    src/auth/PasswordService.cpp
 )
 
 target_include_directories(LoomicServer_lib
@@ -58,6 +67,9 @@ target_link_libraries(LoomicServer_lib
         OpenSSL::Crypto
         absl::flat_hash_map
         absl::strings
+        libpqxx::pqxx
+        jwt-cpp::jwt-cpp
+        libxcrypt::libxcrypt
 )
 
 # ── LoomicServer (executable) ─────────────────────────────────────────────────
