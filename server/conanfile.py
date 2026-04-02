@@ -22,6 +22,11 @@ class LoomicServerConan(ConanFile):
         self.requires("libpqxx/7.9.2")
         self.requires("libxcrypt/4.4.36")
 
+    def configure(self):
+        # Ensure the postgresql Conan package (libpq) is built with SSL support.
+        # Without this, libpq is compiled without OpenSSL and sslmode=require fails.
+        self.options["postgresql/*"].with_openssl = True
+
     def generate(self):
         tc = CMakeToolchain(self)
         tc.generate()

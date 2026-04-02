@@ -11,7 +11,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         g++ \
         python3-pip \
         libssl-dev \
-        libpq-dev \
         git \
         pkg-config \
     && rm -rf /var/lib/apt/lists/*
@@ -21,15 +20,19 @@ RUN pip3 install --break-system-packages "conan==2.*"
 
 WORKDIR /app
 
-# Copy source
-COPY . .
+# Copy only dependency manifest first — Docker caches this layer until conanfile.py changes
+COPY conanfile.py .
 
-# Detect Conan profile and install dependencies
+# Detect Conan profile and install dependencies (cached unless conanfile.py changes)
 RUN conan profile detect --force
 RUN conan install . \
         --output-folder=build/release \
         --build=missing \
-        -s build_type=Release
+        -s build_type=Release \
+        -o "postgresql/*:with_openssl=True"
+
+# Copy the rest of the source (changes here won't re-trigger the Conan layer above)
+COPY . .
 
 # Configure and build
 RUN cmake --preset release
