@@ -39,6 +39,12 @@ struct Config {
 
     /// Overlay LOOMIC_* environment variables on top of an existing config.
     static void from_env(Config& cfg);
+
+    /// Parse a .env file and export each KEY=VALUE as a process environment
+    /// variable. Variables already set in the environment are NOT overwritten,
+    /// so real shell / Docker env vars always take precedence.
+    /// Silently does nothing if the file does not exist.
+    static void load_dotenv(const std::filesystem::path& path = ".env");
 };
 
 } // namespace Loomic

@@ -26,9 +26,8 @@ services:
       - ./config:/app/config   # mount local config so it's easy to edit
       - ./logs:/app/logs        # persist logs on host
       - ./certs:/app/certs      # dev TLS certificates
-    environment:
-      - LOOMIC_JWT_SECRET=change-me-in-production
-      # Override others as needed
+    env_file:
+      - .env                   # all secrets come from .env
     depends_on:
       postgres:
         condition: service_healthy

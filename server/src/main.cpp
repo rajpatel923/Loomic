@@ -18,6 +18,7 @@ int main(int argc, char* argv[])
     }
 
     try {
+        Loomic::Config::load_dotenv();   // load .env → setenv before anything reads env
         auto cfg = Loomic::Config::from_file(config_path);
         Loomic::Config::from_env(cfg);
 

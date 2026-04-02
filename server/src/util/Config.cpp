@@ -3,6 +3,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <cstdlib>
+#include <string>
 
 #include <nlohmann/json.hpp>
 
@@ -75,6 +76,51 @@ void Config::from_env(Config& cfg)
     if (auto v = get("LOOMIC_REDIS_PORT");       !v.empty()) cfg.redis_port       = static_cast<uint16_t>(std::stoi(v));
     if (auto v = get("LOOMIC_METRICS_PORT");     !v.empty()) cfg.metrics_port     = static_cast<uint16_t>(std::stoi(v));
     if (auto v = get("LOOMIC_SCYLLA_HOSTS");     !v.empty()) cfg.scylla_hosts     = v;
+}
+
+void Config::load_dotenv(const std::filesystem::path& path)
+{
+    std::ifstream ifs(path);
+    if (!ifs.is_open()) return;   // file is optional
+
+    std::string line;
+    while (std::getline(ifs, line)) {
+        // Strip trailing \r (Windows line endings)
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+
+        // Skip blank lines and comments
+        if (line.empty() || line.front() == '#') continue;
+
+        auto eq = line.find('=');
+        if (eq == std::string::npos) continue;
+
+        std::string key   = line.substr(0, eq);
+        std::string value = line.substr(eq + 1);
+
+        // Strip inline comments from value (everything after unquoted ' #')
+        // Trim surrounding whitespace from key
+        auto ltrim = [](std::string& s) {
+            s.erase(0, s.find_first_not_of(" \t"));
+        };
+        auto rtrim = [](std::string& s) {
+            auto pos = s.find_last_not_of(" \t");
+            if (pos != std::string::npos) s.erase(pos + 1);
+        };
+        ltrim(key); rtrim(key);
+        ltrim(value); rtrim(value);
+
+        // Strip optional surrounding quotes from value (" or ')
+        if (value.size() >= 2 &&
+            ((value.front() == '"'  && value.back() == '"') ||
+             (value.front() == '\'' && value.back() == '\''))) {
+            value = value.substr(1, value.size() - 2);
+        }
+
+        if (key.empty()) continue;
+
+        // setenv with overwrite=0: real environment variables take precedence
+        ::setenv(key.c_str(), value.c_str(), /*overwrite=*/0);
+    }
 }
 
 } // namespace Loomic
