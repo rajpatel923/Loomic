@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(tree -L 3 -I 'build' /Users/rajpatel/Documents/GitHub/Loomic/server 2>/dev/null || find /Users/rajpatel/Documents/GitHub/Loomic/server -not -path '*/build/*' -not -path '*/.idea/*' -type f | sort)",
-      "Bash(git ls-files include/ && git check-ignore -v include/LoomicServer)"
+      "Bash(git ls-files include/ && git check-ignore -v include/LoomicServer)",
+      "Bash(find ~/.conan2 -path \"*/jwt-cpp*\" -name \"*.h\" 2>/dev/null | grep traits | head -20)"
     ]
   }
 }
