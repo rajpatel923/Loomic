@@ -1,0 +1,98 @@
+[2026-04-03 05:52:02.805][1][info] Loomic Server starting
+[2026-04-03 05:52:02.805][1][info] Thread pool: 32 threads
+[2026-04-03 05:52:02.805][1][info] Health endpoint: http://0.0.0.0:8080/health
+[2026-04-03 05:54:49.137][1][info] Shutdown signal received, stopping...
+[2026-04-03 05:54:49.137][1][info] Server stopped
+[2026-04-03 05:54:49.780][1][info] Loomic Server starting
+[2026-04-03 05:54:49.780][1][info] Thread pool: 32 threads
+[2026-04-03 05:54:49.780][1][info] Health endpoint: http://0.0.0.0:8080/health
+[2026-04-03 05:55:17.753][1][info] Shutdown signal received, stopping...
+[2026-04-03 05:55:17.753][1][info] Server stopped
+[2026-04-03 06:46:53.227][1][info] PgPool: 32 connections established
+[2026-04-03 06:47:09.248][1][info] PgPool: 32 connections established
+[2026-04-03 06:47:22.349][1][info] PgPool: 32 connections established
+[2026-04-03 06:47:34.749][1][info] PgPool: 32 connections established
+[2026-04-03 06:47:49.159][1][info] PgPool: 32 connections established
+[2026-04-03 06:48:01.235][1][info] PgPool: 32 connections established
+[2026-04-03 06:48:16.085][1][info] PgPool: 32 connections established
+[2026-04-03 06:48:27.441][1][info] PgPool: 32 connections established
+[2026-04-03 06:48:38.518][1][info] PgPool: 32 connections established
+[2026-04-03 06:48:53.413][1][info] PgPool: 32 connections established
+[2026-04-03 06:49:25.364][1][info] PgPool: 32 connections established
+[2026-04-03 06:49:36.178][1][info] PgPool: 32 connections established
+[2026-04-03 06:49:47.105][1][info] PgPool: 32 connections established
+[2026-04-03 06:50:01.518][1][info] PgPool: 32 connections established
+[2026-04-03 06:50:12.741][1][info] PgPool: 32 connections established
+[2026-04-03 06:50:29.655][1][info] PgPool: 32 connections established
+[2026-04-03 06:50:42.036][1][info] PgPool: 32 connections established
+[2026-04-03 06:50:58.182][1][info] PgPool: 32 connections established
+[2026-04-03 06:51:09.214][1][info] PgPool: 32 connections established
+[2026-04-03 06:51:20.994][1][info] PgPool: 32 connections established
+[2026-04-03 06:51:35.926][1][info] PgPool: 32 connections established
+[2026-04-03 06:51:48.436][1][info] PgPool: 32 connections established
+[2026-04-03 06:51:59.440][1][info] PgPool: 32 connections established
+[2026-04-03 06:52:13.395][1][info] PgPool: 32 connections established
+[2026-04-03 06:52:24.050][1][info] PgPool: 32 connections established
+[2026-04-03 06:52:38.673][1][info] PgPool: 32 connections established
+[2026-04-03 06:52:50.548][1][info] PgPool: 32 connections established
+[2026-04-03 06:53:01.337][1][info] PgPool: 32 connections established
+[2026-04-03 06:53:15.714][1][info] PgPool: 32 connections established
+[2026-04-03 06:53:27.523][1][info] PgPool: 32 connections established
+[2026-04-03 06:53:42.349][1][info] PgPool: 32 connections established
+[2026-04-03 06:53:54.624][1][info] PgPool: 32 connections established
+[2026-04-03 06:54:06.297][1][info] PgPool: 32 connections established
+[2026-04-03 06:54:20.786][1][info] PgPool: 32 connections established
+[2026-04-03 06:54:32.033][1][info] PgPool: 32 connections established
+[2026-04-03 06:54:43.226][1][info] PgPool: 32 connections established
+[2026-04-03 06:54:57.267][1][info] PgPool: 32 connections established
+[2026-04-03 06:55:08.241][1][info] PgPool: 32 connections established
+[2026-04-03 06:55:22.122][1][info] PgPool: 32 connections established
+[2026-04-03 06:55:34.561][1][info] PgPool: 32 connections established
+[2026-04-03 06:55:45.415][1][info] PgPool: 32 connections established
+[2026-04-03 06:55:59.820][1][info] PgPool: 32 connections established
+[2026-04-03 06:56:11.159][1][info] PgPool: 32 connections established
+[2026-04-03 06:56:21.964][1][info] PgPool: 32 connections established
+[2026-04-03 06:56:36.179][1][info] PgPool: 32 connections established
+[2026-04-03 06:56:47.232][1][info] PgPool: 32 connections established
+[2026-04-03 06:57:02.742][1][info] PgPool: 32 connections established
+[2026-04-03 06:57:14.598][1][info] PgPool: 32 connections established
+[2026-04-03 06:57:25.719][1][info] PgPool: 32 connections established
+[2026-04-03 06:57:39.701][1][info] PgPool: 32 connections established
+[2026-04-03 06:57:50.458][1][info] PgPool: 32 connections established
+[2026-04-03 06:58:01.157][1][info] PgPool: 32 connections established
+[2026-04-03 06:58:16.539][1][info] PgPool: 32 connections established
+[2026-04-03 06:58:27.215][1][info] PgPool: 32 connections established
+[2026-04-03 06:58:41.265][1][info] PgPool: 32 connections established
+[2026-04-03 06:58:52.278][1][info] PgPool: 32 connections established
+[2026-04-03 06:59:28.714][1][info] PgPool: 32 connections established
+[2026-04-03 06:59:40.175][1][info] PgPool: 32 connections established
+[2026-04-03 06:59:54.224][1][info] PgPool: 32 connections established
+[2026-04-03 07:00:05.532][1][info] PgPool: 32 connections established
+[2026-04-03 07:00:20.009][1][info] PgPool: 32 connections established
+[2026-04-03 07:00:30.762][1][info] PgPool: 32 connections established
+[2026-04-03 07:00:41.932][1][info] PgPool: 32 connections established
+[2026-04-03 07:00:56.220][1][info] PgPool: 32 connections established
+[2026-04-03 07:01:07.291][1][info] PgPool: 32 connections established
+[2026-04-03 07:01:20.166][1][info] PgPool: 32 connections established
+[2026-04-03 07:01:35.191][1][info] PgPool: 32 connections established
+[2026-04-03 07:01:46.579][1][info] PgPool: 32 connections established
+[2026-04-03 07:02:03.365][1][info] PgPool: 32 connections established
+[2026-04-03 07:02:18.046][1][info] PgPool: 32 connections established
+[2026-04-03 07:02:32.889][1][info] PgPool: 32 connections established
+[2026-04-03 07:02:44.361][1][info] PgPool: 32 connections established
+[2026-04-03 07:02:56.647][1][info] PgPool: 32 connections established
+[2026-04-03 07:03:10.780][1][info] PgPool: 32 connections established
+[2026-04-03 07:03:21.750][1][info] PgPool: 32 connections established
+[2026-04-03 07:03:33.835][1][info] PgPool: 32 connections established
+[2026-04-03 07:03:47.851][1][info] PgPool: 32 connections established
+[2026-04-03 07:03:59.209][1][info] PgPool: 32 connections established
+[2026-04-03 07:04:14.318][1][info] PgPool: 32 connections established
+[2026-04-03 07:04:26.136][1][info] PgPool: 32 connections established
+[2026-04-03 07:04:37.081][1][info] PgPool: 32 connections established
+[2026-04-03 07:04:53.615][1][info] PgPool: 32 connections established
+[2026-04-03 07:04:53.618][1][info] Loomic Server starting
+[2026-04-03 07:04:53.618][1][info] Thread pool: 32 threads
+[2026-04-03 07:04:53.618][1][info] HTTP server: http://0.0.0.0:8080
+[2026-04-03 07:04:53.627][1][info] TLS TCP server: port 7777
+[2026-04-03 07:12:18.644][1][info] Shutdown signal received, stopping...
+[2026-04-03 07:12:18.645][1][info] Server stopped
