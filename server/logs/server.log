@@ -96,3 +96,10 @@
 [2026-04-03 07:04:53.627][1][info] TLS TCP server: port 7777
 [2026-04-03 07:12:18.644][1][info] Shutdown signal received, stopping...
 [2026-04-03 07:12:18.645][1][info] Server stopped
+[2026-04-03 12:20:10.922][32750133][info] PgPool: 14 connections established
+[2026-04-03 12:20:10.927][32750133][info] Loomic Server starting
+[2026-04-03 12:20:10.927][32750133][info] Thread pool: 14 threads
+[2026-04-03 12:20:10.927][32750133][info] HTTP server: http://0.0.0.0:8080
+[2026-04-03 12:20:10.927][32750133][info] TLS TCP server: port 7777
+[2026-04-03 12:29:22.512][32750133][info] Shutdown signal received, stopping...
+[2026-04-03 12:29:22.512][32750133][info] Server stopped

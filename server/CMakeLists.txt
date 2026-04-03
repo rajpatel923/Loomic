@@ -17,10 +17,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-# ── Conan-generated packages ──────────────────────────────────────────────────
-find_package(asio           REQUIRED)
+# ── vcpkg packages ────────────────────────────────────────────────────────────
 find_package(Boost          REQUIRED COMPONENTS system)
-find_package(protobuf       REQUIRED)
+find_package(protobuf       QUIET)  # Phase 2 — not linked yet
 find_package(spdlog         REQUIRED)
 find_package(GTest          REQUIRED)
 find_package(absl           REQUIRED)
@@ -30,7 +29,25 @@ find_package(hiredis        REQUIRED)
 find_package(jwt-cpp        REQUIRED)
 find_package(prometheus-cpp REQUIRED)
 find_package(libpqxx        REQUIRED)
-find_package(libxcrypt         REQUIRED)
+
+# ── libxcrypt (crypt_r / crypt_gensalt_rn) ────────────────────────────────────
+# macOS: keg-only via Homebrew; Linux: system package (libxcrypt-dev / glibc)
+if(APPLE)
+    execute_process(
+        COMMAND brew --prefix libxcrypt
+        OUTPUT_VARIABLE _BREW_XCRYPT OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET
+    )
+    find_path(CRYPT_INCLUDE_DIR crypt.h HINTS "${_BREW_XCRYPT}/include" REQUIRED)
+    find_library(CRYPT_LIBRARY NAMES crypt HINTS "${_BREW_XCRYPT}/lib" REQUIRED)
+else()
+    find_path(CRYPT_INCLUDE_DIR crypt.h REQUIRED)
+    find_library(CRYPT_LIBRARY NAMES crypt REQUIRED)
+endif()
+add_library(crypt::crypt IMPORTED UNKNOWN)
+set_target_properties(crypt::crypt PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${CRYPT_INCLUDE_DIR}"
+    IMPORTED_LOCATION             "${CRYPT_LIBRARY}"
+)
 
 # ── LoomicServer_lib (static) ─────────────────────────────────────────────────
 add_library(LoomicServer_lib STATIC
@@ -69,7 +86,7 @@ target_link_libraries(LoomicServer_lib
         absl::strings
         libpqxx::pqxx
         jwt-cpp::jwt-cpp
-        libxcrypt::libxcrypt
+        crypt::crypt
 )
 
 # ── LoomicServer (executable) ─────────────────────────────────────────────────

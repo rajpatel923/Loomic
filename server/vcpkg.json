@@ -1,0 +1,18 @@
+{
+  "name": "loomic-server",
+  "version": "0.1.0",
+  "dependencies": [
+    "boost-asio",
+    "boost-beast",
+    "boost-system",
+    "spdlog",
+    "gtest",
+    "abseil",
+    "nlohmann-json",
+    "openssl",
+    "hiredis",
+    "jwt-cpp",
+    "prometheus-cpp",
+    "libpqxx"
+  ]
+}

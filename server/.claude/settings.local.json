@@ -3,7 +3,17 @@
     "allow": [
       "Bash(tree -L 3 -I 'build' /Users/rajpatel/Documents/GitHub/Loomic/server 2>/dev/null || find /Users/rajpatel/Documents/GitHub/Loomic/server -not -path '*/build/*' -not -path '*/.idea/*' -type f | sort)",
       "Bash(git ls-files include/ && git check-ignore -v include/LoomicServer)",
-      "Bash(find ~/.conan2 -path \"*/jwt-cpp*\" -name \"*.h\" 2>/dev/null | grep traits | head -20)"
+      "Bash(find ~/.conan2 -path \"*/jwt-cpp*\" -name \"*.h\" 2>/dev/null | grep traits | head -20)",
+      "Bash(conan profile show 2>&1 | head -40)",
+      "Bash(git submodule add https://github.com/microsoft/vcpkg vcpkg 2>&1)",
+      "Bash(./vcpkg/bootstrap-vcpkg.sh -disableMetrics 2>&1 | tail -5)",
+      "Bash(cd /Users/rajpatel/Documents/GitHub/Loomic/server && cmake --preset debug 2>&1)",
+      "Bash(cmake --build --preset debug 2>&1)",
+      "Bash(rm -rf /Users/rajpatel/Documents/GitHub/Loomic/server/build/debug && cmake --preset debug 2>&1 | tail -20)",
+      "Bash(brew info libxcrypt 2>&1 | head -5)",
+      "Bash(brew install libxcrypt 2>&1 | tail -5)",
+      "Bash(cd /Users/rajpatel/Documents/GitHub/Loomic/server/build/debug && ctest --output-on-failure 2>&1)",
+      "Bash(which ninja cmake vcpkg 2>/dev/null; cmake --version 2>/dev/null | head -1; ninja --version 2>/dev/null)"
     ]
   }
 }

@@ -4,12 +4,10 @@ cert:
 	bash certs/gen_cert.sh
 
 build-debug:
-	conan install . --output-folder=build/debug --build=missing -s build_type=Debug
 	cmake --preset debug
 	cmake --build --preset debug
 
 build-release:
-	conan install . --output-folder=build/release --build=missing -s build_type=Release
 	cmake --preset release
 	cmake --build --preset release
 

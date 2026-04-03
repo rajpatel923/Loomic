@@ -5,3 +5,9 @@ logs/*.log
 .idea/
 *.md
 CMakeUserPresets.json
+
+# vcpkg artifacts
+vcpkg_installed/
+vcpkg/buildtrees/
+vcpkg/packages/
+vcpkg/downloads/

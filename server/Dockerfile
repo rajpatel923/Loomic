@@ -5,37 +5,31 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         cmake \
-        make \
         ninja-build \
         gcc \
         g++ \
-        python3-pip \
-        libssl-dev \
         git \
+        curl \
+        zip \
+        unzip \
+        tar \
         pkg-config \
+        libxcrypt-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Conan 2
-RUN pip3 install --break-system-packages "conan==2.*"
+# Bootstrap vcpkg (submodule is COPY'd with source)
+COPY vcpkg/ vcpkg/
+RUN ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
 
 WORKDIR /app
 
-# Copy only dependency manifest first so Docker can cache dependency resolution.
-COPY conanfile.py .
+# Copy dependency manifest first — unchanged vcpkg.json skips re-install
+COPY vcpkg.json CMakeLists.txt CMakePresets.json ./
+COPY src/ src/
+COPY include/ include/
+COPY tests/ tests/
 
-# Detect Conan profile and install dependencies.
-RUN conan profile detect --force
-RUN conan install . \
-        --output-folder=build/release \
-        --build=missing \
-        --build=libpq/* \
-        -s build_type=Release \
-        -o "libpq/*:with_openssl=True"
-
-# Copy the rest of the source (changes here won't re-trigger the Conan layer above)
-COPY . .
-
-# Configure and build
+# cmake configure triggers vcpkg install automatically
 RUN cmake --preset release
 RUN cmake --build --preset release
 
@@ -49,7 +43,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /root/.conan2/ /root/.conan2/
 COPY --from=builder /app/build/release/bin/LoomicServer /usr/local/bin/LoomicServer
 COPY --from=builder /app/config/ /app/config/
 

@@ -3,6 +3,12 @@ install/
 .cache/
 CMakeUserPresets.json
 
+# vcpkg artifacts
+vcpkg_installed/
+vcpkg/buildtrees/
+vcpkg/packages/
+vcpkg/downloads/
+
 # Executables
 *.exe
 *.out
@@ -11,7 +17,6 @@ CMakeUserPresets.json
 
 # IDE
 .idea/
-.vscode/
 
 # Docs
 CLION_SETUP.md
