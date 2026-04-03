@@ -7,20 +7,20 @@ Backend server for Loomic.
 | Tool | Version | Notes |
 |------|---------|-------|
 | CMake | ≥ 3.25 | [cmake.org](https://cmake.org/download/) |
-| Ninja | any | [ninja-build.org](https://ninja-build.org/) — `brew install ninja` / `winget install Ninja-build.Ninja` |
+| Ninja | any | `brew install ninja` / `winget install Ninja-build.Ninja` |
 | C++ compiler | C++20 support | Clang/GCC on macOS · MSVC or Clang on Windows |
+| Git | any | Required to bootstrap vcpkg |
 
+vcpkg is included as a submodule and manages all C++ dependencies automatically — no separate install step needed.
 
-To build and verify the milestone:
+## Build
 
-cd /Users/rajpatel/Documents/GitHub/Loomic/server
+```sh
+# 1. Bootstrap vcpkg (first time only)
+./vcpkg/bootstrap-vcpkg.sh        # macOS/Linux
+# .\vcpkg\bootstrap-vcpkg.bat     # Windows
 
-# 1. Install dependencies
-conan install . --output-folder=build/debug  --build=missing -s build_type=Debug
-
-conan install . --output-folder=build/release --build=missing -s build_type=Release
-
-# 2. Configure
+# 2. Configure (vcpkg installs dependencies automatically via CMakePresets.json)
 cmake --preset debug
 
 # 3. Build
@@ -34,3 +34,26 @@ curl http://localhost:8080/health   # → {"status":"ok"}
 
 # 6. Tests
 ctest --preset debug
+```
+
+### Release build
+
+```sh
+cmake --preset release
+cmake --build --preset release
+```
+
+## Dependencies
+
+Managed via [vcpkg](https://vcpkg.io) (`vcpkg.json`):
+
+- boost-asio, boost-beast, boost-system
+- spdlog
+- nlohmann-json
+- openssl
+- hiredis
+- jwt-cpp
+- prometheus-cpp
+- libpqxx
+- abseil
+- gtest
