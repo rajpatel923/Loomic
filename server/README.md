@@ -36,6 +36,26 @@ curl http://localhost:8080/health   # → {"status":"ok"}
 ctest --preset debug
 ```
 
+### Development shortcut (Windows / PowerShell)
+
+If you just want to start the backend for local development:
+
+```powershell
+.\dev.cmd
+.\dev.ps1
+```
+
+The script bootstraps `vcpkg` if needed, configures the `debug` preset, builds it,
+and runs the server with `config/server.json`.
+
+Useful flags:
+
+```powershell
+.\dev.ps1 -SkipBuild
+.\dev.ps1 -Preset release
+.\dev.ps1 -BootstrapVcpkg
+```
+
 ### Release build
 
 ```sh
