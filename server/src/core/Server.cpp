@@ -6,7 +6,6 @@
 #include "LoomicServer/auth/PasswordService.hpp"
 #include "LoomicServer/db/PgPool.hpp"
 #include "LoomicServer/http/AuthHandler.hpp"
-
 #include <openssl/ssl.h>
 
 #include <thread>
