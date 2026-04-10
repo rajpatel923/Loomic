@@ -13,7 +13,8 @@
       "Bash(brew info libxcrypt 2>&1 | head -5)",
       "Bash(brew install libxcrypt 2>&1 | tail -5)",
       "Bash(cd /Users/rajpatel/Documents/GitHub/Loomic/server/build/debug && ctest --output-on-failure 2>&1)",
-      "Bash(which ninja cmake vcpkg 2>/dev/null; cmake --version 2>/dev/null | head -1; ninja --version 2>/dev/null)"
+      "Bash(which ninja cmake vcpkg 2>/dev/null; cmake --version 2>/dev/null | head -1; ninja --version 2>/dev/null)",
+      "Bash(docker compose:*)"
     ]
   }
 }
