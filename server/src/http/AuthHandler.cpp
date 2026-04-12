@@ -12,7 +12,6 @@
 #include <nlohmann/json.hpp>
 #include <openssl/rand.h>
 #include <pqxx/pqxx>
-
 #include <chrono>
 #include <cstdio>
 #include <optional>

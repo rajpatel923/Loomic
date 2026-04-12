@@ -1,6 +1,6 @@
 services:
   server:
-    image: ${GAR_IMAGE:-us-central1-docker.pkg.dev/PROJECT_ID/loomic-server/loomic-server:latest}
+    image: ${GAR_IMAGE}
     ports:
       - "7777:7777"
       - "8080:8080"
