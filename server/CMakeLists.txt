@@ -11,6 +11,7 @@ project(
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # ── Output directories ────────────────────────────────────────────────────────
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -56,6 +57,14 @@ target_compile_options(LoomicServer_lib PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX>
     $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -O2>
 )
+
+# Workaround: clang-cl rejects [[gnu::noinline]] / [[gnu::cold]] placed after
+# __declspec(dllimport) (the PQXX_LIBEXPORT expansion).  Pre-defining
+# PQXX_LIBEXPORT as empty bypasses the guard in pqxx/internal/header-pre.hxx
+# so the GNU attributes land in front of the return type — a valid C++ position.
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND WIN32)
+    target_compile_definitions(LoomicServer_lib PRIVATE PQXX_LIBEXPORT=)
+endif()
 
 target_link_libraries(LoomicServer_lib
     PUBLIC

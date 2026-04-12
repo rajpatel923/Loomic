@@ -103,3 +103,5 @@
 [2026-04-03 12:20:10.927][32750133][info] TLS TCP server: port 7777
 [2026-04-03 12:29:22.512][32750133][info] Shutdown signal received, stopping...
 [2026-04-03 12:29:22.512][32750133][info] Server stopped
+[2026-04-12 13:25:07.902][56164][info] PgPool: 32 connections established
+[2026-04-12 13:25:37.366][64964][info] PgPool: 32 connections established

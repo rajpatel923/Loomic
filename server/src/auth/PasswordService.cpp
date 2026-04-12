@@ -1,3 +1,5 @@
+#include <coroutine>
+
 #include "LoomicServer/auth/PasswordService.hpp"
 
 #include <openssl/crypto.h>
@@ -7,6 +9,7 @@
 #include <sstream>
 #include <stdexcept>
 
+#include <boost/asio/awaitable.hpp>
 #include <boost/asio/post.hpp>
 #include <boost/asio/use_awaitable.hpp>
 

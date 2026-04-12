@@ -119,7 +119,12 @@ void Config::load_dotenv(const std::filesystem::path& path)
         if (key.empty()) continue;
 
         // setenv with overwrite=0: real environment variables take precedence
+#ifdef _WIN32
+        if (!std::getenv(key.c_str()))
+            _putenv_s(key.c_str(), value.c_str());
+#else
         ::setenv(key.c_str(), value.c_str(), /*overwrite=*/0);
+#endif
     }
 }
 
