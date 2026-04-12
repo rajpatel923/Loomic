@@ -1,0 +1,290 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Loomic API",
+    "description": "Loomic backend REST API. All authenticated endpoints require a Bearer JWT obtained from `POST /auth/login`.",
+    "version": "0.1.0",
+    "contact": {
+      "name": "Loomic"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Local development"
+    }
+  ],
+  "tags": [
+    {
+      "name": "System",
+      "description": "Infrastructure and liveness endpoints"
+    },
+    {
+      "name": "Auth",
+      "description": "User registration, login, and token management"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "HS256 JWT access token (24-hour lifetime). Obtain from `POST /auth/login` and pass as `Authorization: Bearer <token>`."
+      }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "missing required fields"
+          }
+        }
+      },
+      "HealthResponse": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["ok"],
+            "example": "ok"
+          }
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "required": ["username", "email", "password"],
+        "properties": {
+          "username": {
+            "type": "string",
+            "minLength": 1,
+            "example": "alice"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "alice@example.com"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "minLength": 8,
+            "description": "Minimum 8 characters. Stored as PBKDF2-SHA256 (100k iterations).",
+            "example": "supersecret123"
+          }
+        }
+      },
+      "RegisterResponse": {
+        "type": "object",
+        "required": ["id", "username"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Snowflake ID serialised as a decimal string.",
+            "example": "7816523049238528"
+          },
+          "username": {
+            "type": "string",
+            "example": "alice"
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["username", "password"],
+        "properties": {
+          "username": {
+            "type": "string",
+            "example": "alice"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "example": "supersecret123"
+          }
+        }
+      },
+      "RefreshRequest": {
+        "type": "object",
+        "required": ["refresh_token"],
+        "properties": {
+          "refresh_token": {
+            "type": "string",
+            "description": "Opaque 64-character hex token issued by `/auth/login` or a previous `/auth/refresh`.",
+            "example": "a3f1b2c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2"
+          }
+        }
+      },
+      "TokenResponse": {
+        "type": "object",
+        "required": ["access_token", "refresh_token", "token_type"],
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "description": "Short-lived HS256 JWT (24-hour lifetime).",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ODE2NTIzMDQ5MjM4NTI4IiwiaXNzIjoibG9vbWljIiwiaWF0IjoxNzA0MDY3MjAwLCJleHAiOjE3MDQxNTM2MDB9.SIGNATURE"
+          },
+          "refresh_token": {
+            "type": "string",
+            "description": "Opaque 64-character hex token (30-day lifetime). Rotated on every use.",
+            "example": "a3f1b2c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2"
+          },
+          "token_type": {
+            "type": "string",
+            "enum": ["Bearer"],
+            "example": "Bearer"
+          }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Bad Request — malformed JSON or missing/invalid fields.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "example": { "error": "missing required fields" }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Unauthorized — invalid credentials or expired/unknown token.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "example": { "error": "invalid credentials" }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "Conflict — username or email already registered.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "example": { "error": "username or email already exists" }
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "Internal Server Error — database or unexpected failure.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "example": { "error": "internal server error" }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["System"],
+        "operationId": "getHealth",
+        "summary": "Health check",
+        "description": "Returns `200 OK` with `{\"status\":\"ok\"}` when the server is alive. Safe to poll from load balancers.",
+        "responses": {
+          "200": {
+            "description": "Server is healthy.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HealthResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "tags": ["Auth"],
+        "operationId": "registerUser",
+        "summary": "Register a new user",
+        "description": "Creates a new user account. The password is hashed with PBKDF2-SHA256 (100 000 iterations, 128-bit salt). The returned `id` is a Snowflake ID serialised as a decimal string.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RegisterRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RegisterResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "operationId": "loginUser",
+        "summary": "Authenticate and obtain tokens",
+        "description": "Validates credentials and returns a short-lived JWT access token and a 30-day opaque refresh token. Store the refresh token securely — it grants the ability to mint new access tokens.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication successful.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TokenResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": ["Auth"],
+        "operationId": "refreshTokens",
+        "summary": "Rotate tokens using a refresh token",
+        "description": "Exchanges a valid refresh token for a new access token and a new refresh token (token rotation). The old refresh token is invalidated immediately — use the new one for subsequent refreshes.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RefreshRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token rotation successful.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TokenResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    }
+  }
+}

@@ -17,7 +17,8 @@
       "Bash(tree -L 3 -I '.git|.clang-format|.vscode' /Users/rajpatel/Documents/GitHub/Loomic/server 2>/dev/null || find /Users/rajpatel/Documents/GitHub/Loomic/server -not -path '*/\\\\.*' -type f | head -50)",
       "Bash(wc -l /Users/rajpatel/Documents/GitHub/Loomic/server/src/**/*.cpp /Users/rajpatel/Documents/GitHub/Loomic/server/include/LoomicServer/**/*.h 2>/dev/null | tail -1)",
       "Bash(find /Users/rajpatel/Documents/GitHub/Loomic/server/src -name \"*.cpp\" -exec wc -l {} + 2>/dev/null | tail -1)",
-      "Bash(find /Users/rajpatel/Documents/GitHub/Loomic/server/include -name \"*.h\" -exec wc -l {} + 2>/dev/null | tail -1)"
+      "Bash(find /Users/rajpatel/Documents/GitHub/Loomic/server/include -name \"*.h\" -exec wc -l {} + 2>/dev/null | tail -1)",
+      "Bash(ls -la /c/Users/rajap/Documents/Github/Loomic/server/.env*)"
     ]
   }
 }

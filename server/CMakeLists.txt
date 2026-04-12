@@ -30,24 +30,6 @@ find_package(jwt-cpp        REQUIRED)
 find_package(prometheus-cpp REQUIRED)
 find_package(libpqxx        REQUIRED)
 
-# ── libxcrypt (crypt_r / crypt_gensalt_rn) ────────────────────────────────────
-# macOS: keg-only via Homebrew; Linux: system package (libxcrypt-dev / glibc)
-if(APPLE)
-    execute_process(
-        COMMAND brew --prefix libxcrypt
-        OUTPUT_VARIABLE _BREW_XCRYPT OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET
-    )
-    find_path(CRYPT_INCLUDE_DIR crypt.h HINTS "${_BREW_XCRYPT}/include" REQUIRED)
-    find_library(CRYPT_LIBRARY NAMES crypt HINTS "${_BREW_XCRYPT}/lib" REQUIRED)
-else()
-    find_path(CRYPT_INCLUDE_DIR crypt.h REQUIRED)
-    find_library(CRYPT_LIBRARY NAMES crypt REQUIRED)
-endif()
-add_library(crypt::crypt IMPORTED UNKNOWN)
-set_target_properties(crypt::crypt PROPERTIES
-    INTERFACE_INCLUDE_DIRECTORIES "${CRYPT_INCLUDE_DIR}"
-    IMPORTED_LOCATION             "${CRYPT_LIBRARY}"
-)
 
 # ── LoomicServer_lib (static) ─────────────────────────────────────────────────
 add_library(LoomicServer_lib STATIC
@@ -56,6 +38,7 @@ add_library(LoomicServer_lib STATIC
     src/core/Server.cpp
     src/http/HttpServer.cpp
     src/http/AuthHandler.cpp
+    src/http/DocsHandler.cpp
     src/tcp/TcpServer.cpp
     src/db/PgPool.cpp
     src/middleware/RateLimiter.cpp
@@ -86,7 +69,6 @@ target_link_libraries(LoomicServer_lib
         absl::strings
         libpqxx::pqxx
         jwt-cpp::jwt-cpp
-        crypt::crypt
 )
 
 # ── LoomicServer (executable) ─────────────────────────────────────────────────

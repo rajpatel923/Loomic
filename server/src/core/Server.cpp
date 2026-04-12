@@ -6,8 +6,11 @@
 #include "LoomicServer/auth/PasswordService.hpp"
 #include "LoomicServer/db/PgPool.hpp"
 #include "LoomicServer/http/AuthHandler.hpp"
+#include "LoomicServer/http/DocsHandler.hpp"
 #include <openssl/ssl.h>
 
+#include <fstream>
+#include <sstream>
 #include <thread>
 
 namespace net = boost::asio;
@@ -57,6 +60,23 @@ void Server::register_routes()
         });
 
     register_auth_routes(http_, pg_, snowflake_, jwt_, pwd_);
+
+    // ── Docs ──────────────────────────────────────────────────────────────
+    // Read the OpenAPI spec from disk once at startup and cache it in memory.
+    std::string spec_json;
+    {
+        std::ifstream ifs("api/openapi.json");
+        if (!ifs.is_open()) {
+            LOG_WARN("api/openapi.json not found — /docs will serve a stub spec");
+            spec_json = R"({"openapi":"3.0.3","info":{"title":"Loomic API","version":"0.1.0"},"paths":{}})";
+        } else {
+            std::ostringstream ss;
+            ss << ifs.rdbuf();
+            spec_json = ss.str();
+            LOG_INFO("OpenAPI spec loaded ({} bytes)", spec_json.size());
+        }
+    }
+    register_docs_routes(http_, std::move(spec_json));
 }
 
 void Server::run()

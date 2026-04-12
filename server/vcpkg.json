@@ -9,6 +9,7 @@
     "gtest",
     "abseil",
     "nlohmann-json",
+    "protobuf",
     "openssl",
     "hiredis",
     "jwt-cpp",
