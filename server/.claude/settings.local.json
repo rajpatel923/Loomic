@@ -13,7 +13,11 @@
       "Bash(brew info libxcrypt 2>&1 | head -5)",
       "Bash(brew install libxcrypt 2>&1 | tail -5)",
       "Bash(cd /Users/rajpatel/Documents/GitHub/Loomic/server/build/debug && ctest --output-on-failure 2>&1)",
-      "Bash(which ninja cmake vcpkg 2>/dev/null; cmake --version 2>/dev/null | head -1; ninja --version 2>/dev/null)"
+      "Bash(which ninja cmake vcpkg 2>/dev/null; cmake --version 2>/dev/null | head -1; ninja --version 2>/dev/null)",
+      "Bash(tree -L 3 -I '.git|.clang-format|.vscode' /Users/rajpatel/Documents/GitHub/Loomic/server 2>/dev/null || find /Users/rajpatel/Documents/GitHub/Loomic/server -not -path '*/\\\\.*' -type f | head -50)",
+      "Bash(wc -l /Users/rajpatel/Documents/GitHub/Loomic/server/src/**/*.cpp /Users/rajpatel/Documents/GitHub/Loomic/server/include/LoomicServer/**/*.h 2>/dev/null | tail -1)",
+      "Bash(find /Users/rajpatel/Documents/GitHub/Loomic/server/src -name \"*.cpp\" -exec wc -l {} + 2>/dev/null | tail -1)",
+      "Bash(find /Users/rajpatel/Documents/GitHub/Loomic/server/include -name \"*.h\" -exec wc -l {} + 2>/dev/null | tail -1)"
     ]
   }
 }
