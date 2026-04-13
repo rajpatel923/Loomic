@@ -4,6 +4,7 @@ FROM ubuntu:24.04 AS builder
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
+        cmake \
         ninja-build \
         make \
         gcc \
@@ -23,9 +24,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         autoconf \
         automake \
         libtool \
-    && rm -rf /var/lib/apt/lists/* \
-    && curl -fsSL https://github.com/Kitware/CMake/releases/download/v4.2.3/cmake-4.2.3-linux-x86_64.tar.gz \
-       | tar -xz -C /usr/local --strip-components=1
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 

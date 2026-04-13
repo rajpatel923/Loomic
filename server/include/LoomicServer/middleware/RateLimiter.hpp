@@ -3,8 +3,7 @@
 #include <chrono>
 #include <mutex>
 #include <string>
-
-#include <absl/container/flat_hash_map.h>
+#include <unordered_map>
 
 namespace Loomic {
 
@@ -26,7 +25,7 @@ private:
 
     double max_tokens_;
     double refill_rate_;
-    absl::flat_hash_map<std::string, Bucket> buckets_;
+    std::unordered_map<std::string, Bucket> buckets_;
     std::mutex mutex_;
 };
 

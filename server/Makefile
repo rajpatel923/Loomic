@@ -12,7 +12,7 @@ build-release:
 	cmake --build --preset release
 
 test: build-debug
-	cd build/debug && ctest --output-on-failure
+	ctest --preset debug
 
 clean:
 	rm -rf build/

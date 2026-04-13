@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
-cmake_policy(SET CMP0167 NEW)
+#cmake_policy(SET CMP0167 NEW)
 
 project(
     LoomicServer
@@ -21,10 +21,8 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 # ── vcpkg packages ────────────────────────────────────────────────────────────
 find_package(Boost          REQUIRED COMPONENTS system)
-find_package(protobuf       QUIET)  # Phase 2 — not linked yet
 find_package(spdlog         REQUIRED)
 find_package(GTest          REQUIRED)
-find_package(absl           REQUIRED)
 find_package(nlohmann_json  REQUIRED)
 find_package(OpenSSL        REQUIRED)
 find_package(hiredis        REQUIRED)
@@ -75,8 +73,6 @@ target_link_libraries(LoomicServer_lib
         nlohmann_json::nlohmann_json
         OpenSSL::SSL
         OpenSSL::Crypto
-        absl::flat_hash_map
-        absl::strings
         libpqxx::pqxx
         jwt-cpp::jwt-cpp
 )
@@ -84,6 +80,7 @@ target_link_libraries(LoomicServer_lib
 # ── LoomicServer (executable) ─────────────────────────────────────────────────
 add_executable(LoomicServer
     src/main.cpp
+        src/http/HealthHandler.cpp
 )
 
 target_link_libraries(LoomicServer
@@ -91,9 +88,9 @@ target_link_libraries(LoomicServer
         LoomicServer_lib
 )
 
-# ── Protobuf code-gen stub (Phase 2) ──────────────────────────────────────────
-# find_package(protobuf REQUIRED) is already called above.
-# Proto file generation will be wired here in Phase 2.
+# ── Proto integration ─────────────────────────────────────────────────────────
+# TODO: wire protobuf code generation here when proto sources become part of
+# the build.
 
 # ── Tests ─────────────────────────────────────────────────────────────────────
 option(BUILD_TESTS "Build test suite" OFF)
