@@ -89,7 +89,8 @@ void register_auth_routes(HttpServer& server,
                         return ntxn.exec_params(
                             "SELECT id FROM users WHERE username=$1 OR email=$2",
                             un, em);
-                    });
+                    },
+                    PgPool::RetryClass::ReadOnly);
                 if (!r.empty()) {
                     co_return make_error(http::status::conflict,
                         "username or email already taken");
@@ -112,7 +113,8 @@ void register_auth_routes(HttpServer& server,
                             uid, un, em, h);
                         txn.commit();
                         return r;
-                    });
+                    },
+                    PgPool::RetryClass::NonRetryableWrite);
             } catch (const std::exception& e) {
                 LOG_ERROR("register insert: {}", e.what());
                 co_return make_error(http::status::internal_server_error, "database error");
@@ -148,7 +150,8 @@ void register_auth_routes(HttpServer& server,
                         pqxx::nontransaction ntxn(conn);
                         return ntxn.exec_params(
                             "SELECT id, password_hash FROM users WHERE username=$1", un);
-                    });
+                    },
+                    PgPool::RetryClass::ReadOnly);
             } catch (const std::exception& e) {
                 LOG_ERROR("login query: {}", e.what());
                 co_return make_error(http::status::internal_server_error, "database error");
@@ -179,7 +182,8 @@ void register_auth_routes(HttpServer& server,
                             rt, uid);
                         txn.commit();
                         return r;
-                    });
+                    },
+                    PgPool::RetryClass::NonRetryableWrite);
             } catch (const std::exception& e) {
                 LOG_ERROR("login insert refresh token: {}", e.what());
                 co_return make_error(http::status::internal_server_error, "database error");
@@ -216,7 +220,8 @@ void register_auth_routes(HttpServer& server,
                         return ntxn.exec_params(
                             "SELECT user_id FROM refresh_tokens "
                             "WHERE token=$1 AND expires_at > NOW()", ot);
-                    });
+                    },
+                    PgPool::RetryClass::ReadOnly);
             } catch (const std::exception& e) {
                 LOG_ERROR("refresh token query: {}", e.what());
                 co_return make_error(http::status::internal_server_error, "database error");
@@ -241,7 +246,8 @@ void register_auth_routes(HttpServer& server,
                             nr, uid);
                         txn.commit();
                         return r;
-                    });
+                    },
+                    PgPool::RetryClass::NonRetryableWrite);
             } catch (const std::exception& e) {
                 LOG_ERROR("refresh token rotation: {}", e.what());
                 co_return make_error(http::status::internal_server_error, "database error");

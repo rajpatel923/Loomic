@@ -147,6 +147,13 @@ Set `LOOMIC_PG_CONN_STRING` in `.env`, for example:
 LOOMIC_PG_CONN_STRING=host=127.0.0.1 port=5432 dbname=loomic user=loomic password=secret sslmode=disable
 ```
 
+For Neon production usage, prefer the pooled endpoint (`-pooler`) and include
+libpq keepalive settings so stale sockets are detected and replaced promptly:
+
+```dotenv
+LOOMIC_PG_CONN_STRING=host=<project>-pooler.<region>.aws.neon.tech port=5432 dbname=<dbname> user=<user> password=<password> sslmode=require connect_timeout=5 keepalives=1 keepalives_idle=30 keepalives_interval=10 keepalives_count=3
+```
+
 ### 6. Apply migrations
 
 Linux / macOS:

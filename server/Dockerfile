@@ -53,6 +53,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/build/release/bin/LoomicServer /usr/local/bin/LoomicServer
+COPY api/ /app/api/
 COPY config/ /app/config/
 
 RUN mkdir -p /app/logs
