@@ -9,7 +9,6 @@ on:
 
 env:
   IMAGE: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GAR_REPO }}/loomic-server
-
 jobs:
   build-and-push:
     name: Build & Push Docker Image
