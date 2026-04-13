@@ -66,7 +66,7 @@ jobs:
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
-            cd /opt/loomic-server
+            cd /home/g12g23raj_nes/Loomic/server
 
             # Authenticate Docker on VM (if not already persistent)
             gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev --quiet
