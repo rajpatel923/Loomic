@@ -72,10 +72,11 @@ jobs:
             gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev --quiet
 
             # Pull latest image
-            docker pull ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GAR_REPO }}/loomic-server:latest
+            export GAR_IMAGE=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GAR_REPO }}/loomic-server:latest
+            docker pull $GAR_IMAGE
 
             # Restart with new image, force recreate to replace running container
-            docker compose up -d --pull always --force-recreate
+            docker compose -f docker-compose.prod.yml up -d --force-recreate
 
             # Clean up old images
             docker image prune -f
