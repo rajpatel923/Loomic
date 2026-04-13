@@ -14,13 +14,11 @@ jobs:
   build-and-push:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
-    outputs:
-      image_tag: ${{ steps.meta.outputs.tags }}
 
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive  # needed for vcpkg
+          submodules: recursive
 
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
@@ -61,21 +59,37 @@ jobs:
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
+        env:
+          ENV_FILE: ${{ secrets.ENV_FILE }}
+          TLS_CERT: ${{ secrets.TLS_CERT }}
+          TLS_KEY: ${{ secrets.TLS_KEY }}
+          GAR_IMAGE: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GAR_REPO }}/loomic-server:latest
         with:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
+          envs: ENV_FILE,TLS_CERT,TLS_KEY,GAR_IMAGE
           script: |
             cd /home/g12g23raj_nes/Loomic/server
 
-            # Authenticate Docker on VM (if not already persistent)
+            # Write .env file from secret
+            echo "$ENV_FILE" > .env
+            chmod 600 .env
+
+            # Write TLS certificates from secrets
+            mkdir -p certs
+            echo "$TLS_CERT" | base64 -d > certs/server.crt
+            echo "$TLS_KEY" | base64 -d > certs/server.key
+            chmod 600 certs/server.key
+
+            # Authenticate Docker on VM
             gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev --quiet
 
             # Pull latest image
-            docker pull ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GAR_REPO }}/loomic-server:latest
+            docker pull $GAR_IMAGE
 
-            # Restart with new image
-            docker compose up -d --pull always
+            # Restart with new image, force recreate to replace running container
+            docker compose -f docker-compose.prod.yml up -d --force-recreate
 
             # Clean up old images
             docker image prune -f

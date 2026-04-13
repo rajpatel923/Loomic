@@ -1,6 +1,6 @@
 services:
   server:
-    image: ${GAR_IMAGE}
+    build: .
     ports:
       - "7777:7777"
       - "8080:8080"
