@@ -8,7 +8,7 @@ import {
 } from "@/lib/loomic";
 
 export async function POST(request: NextRequest) {
-  const upstreamUrl = `${getApiBaseUrl()}/auth/login`;
+  const upstreamUrl = `${getApiBaseUrl()}/auth/register`;
 
   try {
     const payload = await request.text();
@@ -23,14 +23,14 @@ export async function POST(request: NextRequest) {
     });
 
     return buildProxyResponse(response, {
-      route: "/api/auth/login",
+      route: "/api/auth/register",
       upstreamUrl,
     });
   } catch (error) {
-    logProxyNetworkError("/api/auth/login", upstreamUrl, error);
+    logProxyNetworkError("/api/auth/register", upstreamUrl, error);
 
     return buildNetworkErrorResponse(
-      "Unable to reach the Loomic sign-in service.",
+      "Unable to reach the Loomic registration service.",
     );
   }
 }

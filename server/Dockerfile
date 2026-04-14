@@ -6,6 +6,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
         cmake \
         ninja-build \
+        make \
         gcc \
         g++ \
         git \
@@ -14,14 +15,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         unzip \
         tar \
         pkg-config \
-        libxcrypt-dev \
+        ca-certificates \
+        linux-libc-dev \
+        bison \
+        flex \
+        perl \
+        python3 \
+        autoconf \
+        automake \
+        libtool \
+        libcrypt-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Bootstrap vcpkg (submodule is COPY'd with source)
-COPY vcpkg/ vcpkg/
-RUN ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
-
 WORKDIR /app
+
+# Clone and bootstrap vcpkg into the source dir so the preset toolchain path resolves.
+RUN git clone https://github.com/microsoft/vcpkg.git vcpkg \
+    && ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
 
 # Copy dependency manifest first — unchanged vcpkg.json skips re-install
 COPY vcpkg.json CMakeLists.txt CMakePresets.json ./
@@ -44,7 +54,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/build/release/bin/LoomicServer /usr/local/bin/LoomicServer
-COPY --from=builder /app/config/ /app/config/
+COPY config/ /app/config/
 
 RUN mkdir -p /app/logs
 

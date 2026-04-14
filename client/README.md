@@ -16,6 +16,24 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Backend Configuration
+
+The client does not need the backend running locally if you point the local
+Next.js server at a remote Loomic backend.
+
+1. Create `client/.env.local`.
+2. Set `LOOMIC_API_BASE_URL` to the backend you want to use.
+
+Example:
+
+```bash
+LOOMIC_API_BASE_URL=http://35.232.85.186:8080
+```
+
+Then restart `npm run dev`. The Next.js route handlers under
+`src/app/api/auth/*` will proxy requests to that backend even during local
+development.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

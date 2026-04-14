@@ -8,8 +8,13 @@ type LoginResponse = {
   token_type: string;
 };
 
-type LoginError = {
+type AuthError = {
   error?: string;
+};
+
+type RegisterResponse = {
+  id: string;
+  username: string;
 };
 
 type StoredSession = LoginResponse & {
@@ -45,66 +50,110 @@ function readStoredSession() {
 
 export default function LoginExperience() {
   const [view, setView] = useState<AuthView>("login");
+  const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [session, setSession] = useState<StoredSession | null>(null);
 
   useEffect(() => {
     setSession(readStoredSession());
   }, []);
 
+  function switchToLogin() {
+    setView("login");
+    setError(null);
+    setNotice(null);
+  }
+
+  function switchToCreateAccount() {
+    setView("create-account");
+    setError(null);
+    setNotice(null);
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (view !== "login") {
-      return;
-    }
-
     setPending(true);
     setError(null);
+    setNotice(null);
 
     try {
-      const response = await fetch("/api/auth/login", {
+      if (view === "login") {
+        const response = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username,
+            password,
+          }),
+        });
+
+        const payload = (await response.json()) as LoginResponse | AuthError;
+
+        if (!response.ok) {
+          setError((payload as AuthError).error ?? "Unable to sign in.");
+          return;
+        }
+
+        const nextSession: StoredSession = {
+          ...(payload as LoginResponse),
+          username,
+          persisted: rememberMe,
+        };
+
+        const serialized = JSON.stringify(nextSession);
+
+        if (rememberMe) {
+          window.localStorage.setItem(SESSION_STORAGE_KEY, serialized);
+          window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
+        } else {
+          window.sessionStorage.setItem(SESSION_STORAGE_KEY, serialized);
+          window.localStorage.removeItem(SESSION_STORAGE_KEY);
+        }
+
+        setSession(nextSession);
+        setPassword("");
+        return;
+      }
+
+      const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           username,
+          email,
           password,
         }),
       });
 
-      const payload = (await response.json()) as LoginResponse | LoginError;
+      const payload = (await response.json()) as RegisterResponse | AuthError;
 
       if (!response.ok) {
-        setError((payload as LoginError).error ?? "Unable to sign in.");
+        setError((payload as AuthError).error ?? "Unable to create account.");
         return;
       }
 
-      const nextSession: StoredSession = {
-        ...(payload as LoginResponse),
-        username,
-        persisted: rememberMe,
-      };
-
-      const serialized = JSON.stringify(nextSession);
-
-      if (rememberMe) {
-        window.localStorage.setItem(SESSION_STORAGE_KEY, serialized);
-        window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
-      } else {
-        window.sessionStorage.setItem(SESSION_STORAGE_KEY, serialized);
-        window.localStorage.removeItem(SESSION_STORAGE_KEY);
-      }
-
-      setSession(nextSession);
+      setView("login");
+      setEmail("");
       setPassword("");
+      setNotice(
+        `Account created for ${(payload as RegisterResponse).username}. Sign in to continue.`,
+      );
     } catch {
-      setError("The sign-in service is unavailable right now.");
+      setError(
+        view === "login"
+          ? "The sign-in service is unavailable right now."
+          : "The registration service is unavailable right now.",
+      );
     } finally {
       setPending(false);
     }
@@ -116,35 +165,30 @@ export default function LoginExperience() {
     setSession(null);
     setPassword("");
     setError(null);
+    setNotice(null);
   }
 
   return (
     <section className="surface-panel mx-auto w-full max-w-md rounded-[1.5rem] p-6 sm:p-7">
-      <div className="grid grid-cols-2 rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] p-1">
+      <div className="relative z-10 grid grid-cols-2 rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] p-1">
         <button
-          className={`rounded-full px-4 py-3 text-sm ${
+          className={`relative z-10 rounded-full px-4 py-3 text-sm touch-manipulation ${
             view === "login"
               ? "bg-[rgba(241,205,146,0.14)] text-[var(--foreground)]"
               : "text-[var(--muted)]"
           }`}
-          onClick={() => {
-            setView("login");
-            setError(null);
-          }}
+          onClick={switchToLogin}
           type="button"
         >
           Login
         </button>
         <button
-          className={`rounded-full px-4 py-3 text-sm ${
+          className={`relative z-10 rounded-full px-4 py-3 text-sm touch-manipulation ${
             view === "create-account"
               ? "bg-[rgba(241,205,146,0.14)] text-[var(--foreground)]"
               : "text-[var(--muted)]"
           }`}
-          onClick={() => {
-            setView("create-account");
-            setError(null);
-          }}
+          onClick={switchToCreateAccount}
           type="button"
         >
           Create Account
@@ -190,6 +234,11 @@ export default function LoginExperience() {
             />
             Remember me
           </label>
+          {notice ? (
+            <div className="rounded-[1rem] border border-[rgba(158,214,167,0.28)] bg-[rgba(158,214,167,0.08)] px-4 py-3 text-sm text-[var(--foreground)]">
+              {notice}
+            </div>
+          ) : null}
           {error ? (
             <div className="rounded-[1rem] border border-[rgba(245,143,124,0.28)] bg-[rgba(245,143,124,0.08)] px-4 py-3 text-sm text-[var(--foreground)]">
               {error}
@@ -202,11 +251,64 @@ export default function LoginExperience() {
           >
             {pending ? "Signing In..." : "Sign In"}
           </button>
+          <button
+            className="w-full text-sm text-[var(--muted)] underline decoration-[rgba(241,205,146,0.35)] underline-offset-4 hover:text-[var(--foreground)]"
+            onClick={switchToCreateAccount}
+            type="button"
+          >
+            Need an account? Create one here.
+          </button>
         </form>
       ) : (
-        <div className="mt-6 rounded-[1rem] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-4 py-5 text-sm text-[var(--muted)]">
-          Create account is not implemented yet.
-        </div>
+        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+          <input
+            autoComplete="username"
+            className="w-full rounded-[1rem] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-[var(--foreground)]"
+            onChange={(event) => setUsername(event.target.value)}
+            placeholder="Username"
+            value={username}
+          />
+          <input
+            autoComplete="email"
+            className="w-full rounded-[1rem] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-[var(--foreground)]"
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="Email"
+            type="email"
+            value={email}
+          />
+          <input
+            autoComplete="new-password"
+            className="w-full rounded-[1rem] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-[var(--foreground)]"
+            onChange={(event) => setPassword(event.target.value)}
+            placeholder="Password"
+            type="password"
+            value={password}
+          />
+          {error ? (
+            <div className="rounded-[1rem] border border-[rgba(245,143,124,0.28)] bg-[rgba(245,143,124,0.08)] px-4 py-3 text-sm text-[var(--foreground)]">
+              {error}
+            </div>
+          ) : null}
+          <button
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-[rgba(241,205,146,0.14)] px-5 text-sm text-[var(--foreground)] hover:bg-[rgba(241,205,146,0.22)] disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={
+              pending ||
+              username.trim().length === 0 ||
+              email.trim().length === 0 ||
+              password.length < 8
+            }
+            type="submit"
+          >
+            {pending ? "Creating Account..." : "Create Account"}
+          </button>
+          <button
+            className="w-full text-sm text-[var(--muted)] underline decoration-[rgba(241,205,146,0.35)] underline-offset-4 hover:text-[var(--foreground)]"
+            onClick={switchToLogin}
+            type="button"
+          >
+            Already have an account? Back to login.
+          </button>
+        </form>
       )}
     </section>
   );
