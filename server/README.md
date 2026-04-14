@@ -240,6 +240,83 @@ docker compose up --build
 
 The compose setup uses `.env`, mounts `config/`, `logs/`, and `certs/`, and exposes the server ports.
 
+## Deployment (GCP)
+
+Pushes to `main` that touch `server/` automatically build a Docker image and deploy it to the GCP VM via GitHub Actions. The following one-time setup is required before the pipeline works.
+
+### One-time setup
+
+#### 1. Store secrets in GCP Secret Manager
+
+Run these from the `server/` directory with `gcloud` pointed at your project:
+
+```bash
+gcloud secrets create loomic-env-file \
+  --data-file=.env --replication-policy=automatic
+
+gcloud secrets create loomic-tls-cert \
+  --data-file=certs/server.crt --replication-policy=automatic
+
+gcloud secrets create loomic-tls-key \
+  --data-file=certs/server.key --replication-policy=automatic
+```
+
+To update a secret later (e.g. cert renewal):
+
+```bash
+gcloud secrets versions add loomic-tls-cert --data-file=certs/server.crt
+gcloud secrets versions add loomic-tls-key  --data-file=certs/server.key
+gcloud secrets versions add loomic-env-file --data-file=.env
+```
+
+#### 2. Grant the VM service account access
+
+```bash
+PROJECT_NUMBER=$(gcloud projects describe YOUR_PROJECT_ID --format="value(projectNumber)")
+CE_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+
+for secret in loomic-env-file loomic-tls-cert loomic-tls-key; do
+  gcloud secrets add-iam-policy-binding $secret \
+    --member="serviceAccount:${CE_SA}" \
+    --role="roles/secretmanager.secretAccessor"
+done
+```
+
+#### 3. Verify the VM has the `cloud-platform` OAuth scope
+
+The VM must have the `cloud-platform` scope to call Secret Manager. Check via:
+
+```bash
+gcloud compute instances describe YOUR_VM_NAME \
+  --format="value(serviceAccounts[].scopes[])"
+```
+
+If `https://www.googleapis.com/auth/cloud-platform` is not listed, stop the VM, edit its access scopes to **Allow full access to all Cloud APIs**, then restart it.
+
+#### 4. Ensure the deploy directory exists on the VM
+
+SSH into the VM and create the working directory if it does not exist:
+
+```bash
+mkdir -p /home/g12g23raj_nes/Loomic/server
+```
+
+### GitHub Secrets required
+
+Add these under **Settings → Secrets and variables → Actions** in the repository:
+
+| Secret | Description |
+|--------|-------------|
+| `GCP_PROJECT_ID` | GCP project ID (e.g. `my-project-123`) |
+| `GCP_REGION` | Artifact Registry region (e.g. `us-central1`) |
+| `GAR_REPO` | Artifact Registry repository name |
+| `GCP_SA_KEY` | JSON key for the GitHub Actions service account (used to push Docker images) |
+| `VM_HOST` | Public IP or hostname of the GCP VM |
+| `VM_USER` | SSH username on the VM |
+| `VM_SSH_KEY` | Private SSH key for the VM user |
+
+> `ENV_FILE`, `TLS_CERT`, and `TLS_KEY` are **no longer needed** as GitHub Secrets — the VM fetches them directly from GCP Secret Manager at deploy time.
+
 ## Environment Variables
 
 Copy `.env.example` to `.env` and set the following:

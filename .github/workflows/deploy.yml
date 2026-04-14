@@ -59,33 +59,32 @@ jobs:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
         env:
-          ENV_FILE: ${{ secrets.ENV_FILE }}
-          TLS_CERT: ${{ secrets.TLS_CERT }}
-          TLS_KEY: ${{ secrets.TLS_KEY }}
           GAR_IMAGE: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GAR_REPO }}/loomic-server:latest
+          GCP_REGION: ${{ secrets.GCP_REGION }}
         with:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
-          envs: ENV_FILE,TLS_CERT,TLS_KEY,GAR_IMAGE
+          envs: GAR_IMAGE,GCP_REGION
           script: |
+            set -e
             cd /home/g12g23raj_nes/Loomic/server
 
-            # Write .env file from secret
-            echo "$ENV_FILE" > .env
+            # Fetch .env from GCP Secret Manager (VM service account has access)
+            gcloud secrets versions access latest --secret="loomic-env-file" > .env
             chmod 600 .env
 
-            # Write TLS certificates from secrets
+            # Fetch TLS certificates from GCP Secret Manager
             mkdir -p certs
-            echo "$TLS_CERT" | base64 -d > certs/server.crt
-            echo "$TLS_KEY" | base64 -d > certs/server.key
+            gcloud secrets versions access latest --secret="loomic-tls-cert" > certs/server.crt
+            gcloud secrets versions access latest --secret="loomic-tls-key"  > certs/server.key
             chmod 600 certs/server.key
 
             # Authenticate Docker on VM
-            gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev --quiet
+            gcloud auth configure-docker "${GCP_REGION}-docker.pkg.dev" --quiet
 
             # Pull latest image
-            docker pull $GAR_IMAGE
+            docker pull "$GAR_IMAGE"
 
             # Restart with new image, force recreate to replace running container
             docker compose -f docker-compose.prod.yml up -d --force-recreate
