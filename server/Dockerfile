@@ -24,12 +24,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         autoconf \
         automake \
         libtool \
-        libcrypt-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Clone and bootstrap vcpkg into the source dir so the preset toolchain path resolves.
+# Clone and bootstrap vcpkg into the source dir so CMakePresets.json toolchain path resolves
 RUN git clone https://github.com/microsoft/vcpkg.git vcpkg \
     && ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
 
@@ -54,6 +53,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/build/release/bin/LoomicServer /usr/local/bin/LoomicServer
+COPY api/ /app/api/
 COPY config/ /app/config/
 
 RUN mkdir -p /app/logs

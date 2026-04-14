@@ -63,7 +63,7 @@ net::awaitable<void> HealthHandler::handle_connection(net::ip::tcp::socket socke
         if (req.method() == http::verb::get && req.target() == "/health") {
             res.result(http::status::ok);
             res.set(http::field::content_type, "application/json");
-            res.body() = R"({"status":"ok"})";
+            res.body() = R"({"status":"ok", "health": "running"})";
         } else {
             res.result(http::status::not_found);
             res.set(http::field::content_type, "application/json");

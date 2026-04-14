@@ -103,3 +103,23 @@
 [2026-04-03 12:20:10.927][32750133][info] TLS TCP server: port 7777
 [2026-04-03 12:29:22.512][32750133][info] Shutdown signal received, stopping...
 [2026-04-03 12:29:22.512][32750133][info] Server stopped
+[2026-04-12 13:25:07.902][56164][info] PgPool: 32 connections established
+[2026-04-12 13:25:37.366][64964][info] PgPool: 32 connections established
+[2026-04-13 20:48:19.025][1][info] PgPool: 12 connections established
+[2026-04-13 20:48:19.033][1][warning] api/openapi.json not found — /docs will serve a stub spec
+[2026-04-13 20:48:19.033][1][info] Docs routes registered: GET /openapi.json  GET /docs
+[2026-04-13 20:48:19.033][1][info] Loomic Server starting
+[2026-04-13 20:48:19.033][1][info] Thread pool: 12 threads
+[2026-04-13 20:48:19.033][1][info] HTTP server: http://0.0.0.0:8080
+[2026-04-13 20:48:19.033][1][info] TLS TCP server: port 7777
+[2026-04-13 20:48:58.401][1][info] Shutdown signal received, stopping...
+[2026-04-13 20:48:58.401][1][info] Server stopped
+[2026-04-13 20:51:39.407][1][info] PgPool: 12 connections established
+[2026-04-13 20:51:39.409][1][warning] api/openapi.json not found — /docs will serve a stub spec
+[2026-04-13 20:51:39.409][1][info] Docs routes registered: GET /openapi.json  GET /docs
+[2026-04-13 20:51:39.409][1][info] Loomic Server starting
+[2026-04-13 20:51:39.409][1][info] Thread pool: 12 threads
+[2026-04-13 20:51:39.409][1][info] HTTP server: http://0.0.0.0:8080
+[2026-04-13 20:51:39.409][1][info] TLS TCP server: port 7777
+[2026-04-13 20:53:42.670][1][info] Shutdown signal received, stopping...
+[2026-04-13 20:53:42.670][1][info] Server stopped

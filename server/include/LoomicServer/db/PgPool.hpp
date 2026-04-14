@@ -1,10 +1,12 @@
 #pragma once
 
+#include <chrono>
 #include <condition_variable>
 #include <functional>
 #include <memory>
 #include <mutex>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include <boost/asio/awaitable.hpp>
@@ -17,6 +19,12 @@ namespace Loomic {
 /// Pool size == thread_count so acquire() never blocks in practice.
 class PgPool {
 public:
+    enum class RetryClass {
+        ReadOnly,
+        RetrySafeWrite,
+        NonRetryableWrite,
+    };
+
     using DbFunc = std::function<pqxx::result(pqxx::connection&)>;
 
     PgPool(const std::string& conn_str,
@@ -25,14 +33,34 @@ public:
     ~PgPool();
 
     /// Hops to thread_pool, acquires a connection, runs func, releases it.
-    boost::asio::awaitable<pqxx::result> execute(DbFunc func);
+    boost::asio::awaitable<pqxx::result> execute(
+        DbFunc func,
+        RetryClass retry_class = RetryClass::NonRetryableWrite);
 
 private:
-    pqxx::connection* acquire();
-    void release(pqxx::connection* conn);
+    struct Slot {
+        std::unique_ptr<pqxx::connection>           conn;
+        std::chrono::steady_clock::time_point       created_at{};
+        std::chrono::steady_clock::time_point       last_used_at{};
+        std::chrono::steady_clock::time_point       last_validated_at{};
+    };
 
-    std::vector<std::unique_ptr<pqxx::connection>> connections_;
-    std::vector<pqxx::connection*>                 free_list_;
+    std::size_t acquire();
+    void release(std::size_t index);
+    void ensure_connection(Slot& slot);
+    void recreate_connection(Slot& slot, std::string_view reason);
+    void probe_connection(Slot& slot);
+    static bool should_retry_once(RetryClass retry_class) noexcept;
+    static bool should_probe_idle_connection(
+        const Slot& slot,
+        std::chrono::steady_clock::time_point now) noexcept;
+    static bool should_recycle_connection(
+        const Slot& slot,
+        std::chrono::steady_clock::time_point now) noexcept;
+
+    std::string                                    conn_str_;
+    std::vector<Slot>                              connections_;
+    std::vector<std::size_t>                       free_list_;
     std::mutex                                     mutex_;
     std::condition_variable                        cv_;
     boost::asio::thread_pool&                      pool_;

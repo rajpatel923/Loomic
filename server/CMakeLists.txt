@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
+#cmake_policy(SET CMP0167 NEW)
 
 project(
     LoomicServer
@@ -11,6 +12,7 @@ project(
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # ── Output directories ────────────────────────────────────────────────────────
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -19,10 +21,8 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 # ── vcpkg packages ────────────────────────────────────────────────────────────
 find_package(Boost          REQUIRED COMPONENTS system)
-find_package(protobuf       QUIET)  # Phase 2 — not linked yet
 find_package(spdlog         REQUIRED)
 find_package(GTest          REQUIRED)
-find_package(absl           REQUIRED)
 find_package(nlohmann_json  REQUIRED)
 find_package(OpenSSL        REQUIRED)
 find_package(hiredis        REQUIRED)
@@ -30,24 +30,6 @@ find_package(jwt-cpp        REQUIRED)
 find_package(prometheus-cpp REQUIRED)
 find_package(libpqxx        REQUIRED)
 
-# ── libxcrypt (crypt_r / crypt_gensalt_rn) ────────────────────────────────────
-# macOS: keg-only via Homebrew; Linux: system package (libxcrypt-dev / glibc)
-if(APPLE)
-    execute_process(
-        COMMAND brew --prefix libxcrypt
-        OUTPUT_VARIABLE _BREW_XCRYPT OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET
-    )
-    find_path(CRYPT_INCLUDE_DIR crypt.h HINTS "${_BREW_XCRYPT}/include" REQUIRED)
-    find_library(CRYPT_LIBRARY NAMES crypt HINTS "${_BREW_XCRYPT}/lib" REQUIRED)
-else()
-    find_path(CRYPT_INCLUDE_DIR crypt.h REQUIRED)
-    find_library(CRYPT_LIBRARY NAMES crypt REQUIRED)
-endif()
-add_library(crypt::crypt IMPORTED UNKNOWN)
-set_target_properties(crypt::crypt PROPERTIES
-    INTERFACE_INCLUDE_DIRECTORIES "${CRYPT_INCLUDE_DIR}"
-    IMPORTED_LOCATION             "${CRYPT_LIBRARY}"
-)
 
 # ── LoomicServer_lib (static) ─────────────────────────────────────────────────
 add_library(LoomicServer_lib STATIC
@@ -56,6 +38,7 @@ add_library(LoomicServer_lib STATIC
     src/core/Server.cpp
     src/http/HttpServer.cpp
     src/http/AuthHandler.cpp
+    src/http/DocsHandler.cpp
     src/tcp/TcpServer.cpp
     src/db/PgPool.cpp
     src/middleware/RateLimiter.cpp
@@ -74,6 +57,14 @@ target_compile_options(LoomicServer_lib PRIVATE
     $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -O2>
 )
 
+# Workaround: clang-cl rejects [[gnu::noinline]] / [[gnu::cold]] placed after
+# __declspec(dllimport) (the PQXX_LIBEXPORT expansion).  Pre-defining
+# PQXX_LIBEXPORT as empty bypasses the guard in pqxx/internal/header-pre.hxx
+# so the GNU attributes land in front of the return type — a valid C++ position.
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND WIN32)
+    target_compile_definitions(LoomicServer_lib PRIVATE PQXX_LIBEXPORT=)
+endif()
+
 target_link_libraries(LoomicServer_lib
     PUBLIC
         Boost::headers
@@ -82,16 +73,14 @@ target_link_libraries(LoomicServer_lib
         nlohmann_json::nlohmann_json
         OpenSSL::SSL
         OpenSSL::Crypto
-        absl::flat_hash_map
-        absl::strings
         libpqxx::pqxx
         jwt-cpp::jwt-cpp
-        crypt::crypt
 )
 
 # ── LoomicServer (executable) ─────────────────────────────────────────────────
 add_executable(LoomicServer
     src/main.cpp
+        src/http/HealthHandler.cpp
 )
 
 target_link_libraries(LoomicServer
@@ -99,9 +88,9 @@ target_link_libraries(LoomicServer
         LoomicServer_lib
 )
 
-# ── Protobuf code-gen stub (Phase 2) ──────────────────────────────────────────
-# find_package(protobuf REQUIRED) is already called above.
-# Proto file generation will be wired here in Phase 2.
+# ── Proto integration ─────────────────────────────────────────────────────────
+# TODO: wire protobuf code generation here when proto sources become part of
+# the build.
 
 # ── Tests ─────────────────────────────────────────────────────────────────────
 option(BUILD_TESTS "Build test suite" OFF)
