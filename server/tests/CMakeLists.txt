@@ -25,3 +25,29 @@ target_link_libraries(test_auth
 )
 
 add_test(NAME test_auth COMMAND test_auth)
+
+# ── test_frame ─────────────────────────────────────────────────────────────────
+add_executable(test_frame
+    test_frame.cpp
+)
+
+target_link_libraries(test_frame
+    PRIVATE
+        LoomicServer_lib
+        GTest::gtest_main
+)
+
+add_test(NAME test_frame COMMAND test_frame)
+
+# ── test_session ───────────────────────────────────────────────────────────────
+add_executable(test_session
+    test_session.cpp
+)
+
+target_link_libraries(test_session
+    PRIVATE
+        LoomicServer_lib
+        GTest::gtest_main
+)
+
+add_test(NAME test_session COMMAND test_session)

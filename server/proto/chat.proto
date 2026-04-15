@@ -1,0 +1,18 @@
+syntax = "proto3";
+package loomic;
+
+enum MessageType {
+    CHAT   = 0;
+    SYSTEM = 1;
+    PING   = 2;
+    PONG   = 3;
+}
+
+message ChatMessage {
+    uint64      msg_id       = 1;
+    uint64      sender_id    = 2;
+    uint64      recipient_id = 3;
+    bytes       content      = 4;
+    int64       timestamp_ms = 5;
+    MessageType type         = 6;
+}

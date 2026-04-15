@@ -2,16 +2,38 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Loomic API",
-    "description": "Loomic backend REST API. All authenticated endpoints require a Bearer JWT obtained from `POST /auth/login`.",
+    "description": "Loomic backend REST API. All authenticated endpoints require a Bearer JWT obtained from `POST /auth/login`.\n\nReal-time messaging is delivered over a separate **TLS TCP connection on port 9000** using a binary wire protocol. Clients must authenticate the TCP session by sending an AUTH frame (containing a valid Bearer JWT obtained from `/auth/login`) immediately after the TLS handshake.",
     "version": "0.1.0",
     "contact": {
       "name": "Loomic"
     }
   },
+  "x-tcp-protocol": {
+    "port": 9000,
+    "transport": "TLS TCP",
+    "framing": "30-byte fixed header + variable payload",
+    "authentication": "First frame must be AUTH (0x02) carrying the Bearer JWT from /auth/login",
+    "header": {
+      "payload_len":   "uint32 LE, bytes 0-3",
+      "msg_type":      "uint8, byte 4  — 0x01=CHAT 0x02=AUTH 0x03=PING 0x04=PONG 0x05=ERROR",
+      "flags":         "uint8, byte 5  — reserved, set to 0",
+      "msg_id":        "uint64 LE, bytes 6-13  — Snowflake ID assigned by server",
+      "sender_id":     "uint64 LE, bytes 14-21 — Snowflake user ID of sender",
+      "recipient_id":  "uint64 LE, bytes 22-29 — Snowflake user ID of recipient"
+    },
+    "messageSerialization": "Payload of CHAT frames is a serialized loomic.ChatMessage protobuf (see proto/chat.proto)",
+    "rateLimiting":   "5 messages/second, burst of 20; excess returns ERROR frame",
+    "heartbeat":      "Send PING (0x03) at least once every 30 seconds; server responds with PONG (0x04) and resets the timeout",
+    "offlineDelivery": "Messages sent to offline recipients are queued in Redis and delivered on next connect"
+  },
   "servers": [
     {
       "url": "http://localhost:8080",
       "description": "Local development"
+    },
+    {
+      "url": "http://35.232.85.186:8080",
+      "description": "Production"
     }
   ],
   "tags": [
@@ -22,6 +44,10 @@
     {
       "name": "Auth",
       "description": "User registration, login, and token management"
+    },
+    {
+      "name": "Messaging",
+      "description": "Real-time chat over TLS TCP (port 9000). See x-tcp-protocol for wire format details."
     }
   ],
   "components": {

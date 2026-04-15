@@ -1,8 +1,11 @@
 #include "LoomicServer/tcp/TcpServer.hpp"
+#include "LoomicServer/tcp/Session.hpp"
 #include "LoomicServer/util/Logger.hpp"
 
 #include <boost/asio/co_spawn.hpp>
 #include <boost/asio/detached.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/ssl/stream.hpp>
 #include <boost/asio/use_awaitable.hpp>
 #include <boost/asio/this_coro.hpp>
 
@@ -13,8 +16,20 @@ namespace Loomic {
 
 TcpServer::TcpServer(net::io_context& ioc,
                      ssl::context& ssl_ctx,
-                     uint16_t port)
-    : ioc_(ioc), ssl_ctx_(ssl_ctx), port_(port)
+                     uint16_t port,
+                     std::shared_ptr<SessionRegistry>  registry,
+                     std::shared_ptr<JwtService>       jwt,
+                     std::shared_ptr<RedisClient>      redis,
+                     std::shared_ptr<CassandraClient>  cass,
+                     std::shared_ptr<SnowflakeGen>     snowflake)
+    : ioc_(ioc)
+    , ssl_ctx_(ssl_ctx)
+    , port_(port)
+    , registry_(std::move(registry))
+    , jwt_(std::move(jwt))
+    , redis_(std::move(redis))
+    , cass_(std::move(cass))
+    , snowflake_(std::move(snowflake))
 {}
 
 void TcpServer::start()
@@ -33,27 +48,31 @@ net::awaitable<void> TcpServer::listen()
 
     try {
         for (;;) {
-            auto raw_socket = co_await acceptor.async_accept(net::use_awaitable);
-            ssl::stream<net::ip::tcp::socket> tls_socket(std::move(raw_socket), ssl_ctx_);
+            auto raw = co_await acceptor.async_accept(net::use_awaitable);
+
+            // Spawn a per-connection coroutine that does the TLS handshake
+            // and then hands the socket to a Session.
             net::co_spawn(executor,
-                          handle_connection(std::move(tls_socket)),
-                          net::detached);
+                [this, raw = std::move(raw)]() mutable -> net::awaitable<void>
+                {
+                    ssl::stream<net::ip::tcp::socket> tls(std::move(raw), ssl_ctx_);
+                    try {
+                        co_await tls.async_handshake(ssl::stream_base::server,
+                                                      net::use_awaitable);
+                    } catch (...) {
+                        co_return; // Drop connection silently on handshake failure.
+                    }
+                    auto session = std::make_shared<Session>(
+                        std::move(tls),
+                        registry_, jwt_, redis_, cass_, snowflake_);
+                    net::co_spawn(session->strand(), session->run(), net::detached);
+                },
+                net::detached);
         }
     } catch (const boost::system::system_error& e) {
         if (e.code() != net::error::operation_aborted) {
             LOG_WARN("TcpServer listener stopped: {}", e.what());
         }
-    }
-}
-
-net::awaitable<void> TcpServer::handle_connection(
-    ssl::stream<net::ip::tcp::socket> socket)
-{
-    try {
-        co_await socket.async_handshake(ssl::stream_base::server, net::use_awaitable);
-        // Phase 3: read wire frames here.
-    } catch (...) {
-        // Drop connection silently if TLS handshake fails.
     }
 }
 

@@ -20,6 +20,9 @@ class PgPool;
 class SnowflakeGen;
 class JwtService;
 class PasswordService;
+class RedisClient;
+class CassandraClient;
+class SessionRegistry;
 
 class Server {
 public:
@@ -35,7 +38,7 @@ private:
     void setup_tls(const Config& cfg);
     void register_routes();
 
-    // Declaration order matters: ssl_ctx_ must be constructed before tcp_.
+    // Declaration order matters: ssl_ctx_ before tcp_, services before tcp_.
     unsigned int                            thread_count_;
     boost::asio::ssl::context               ssl_ctx_;
     boost::asio::thread_pool                thread_pool_;
@@ -45,6 +48,9 @@ private:
     std::shared_ptr<SnowflakeGen>           snowflake_;
     std::shared_ptr<JwtService>             jwt_;
     std::shared_ptr<PasswordService>        pwd_;
+    std::shared_ptr<RedisClient>            redis_;
+    std::shared_ptr<CassandraClient>        cass_;
+    std::shared_ptr<SessionRegistry>        registry_;
     HttpServer                              http_;
     TcpServer                               tcp_;
     std::vector<std::thread>                threads_;

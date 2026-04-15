@@ -86,3 +86,50 @@ TEST(ConfigTest, DefaultValues)
     EXPECT_EQ(cfg.metrics_port, 9090);
     EXPECT_EQ(cfg.log_level, "info");
 }
+
+TEST(ConfigTest, DefaultValues_Phase3Fields)
+{
+    // Phase 3 Cassandra / Redis defaults — no env vars, no file overrides.
+    Loomic::Config cfg;
+
+    EXPECT_EQ(cfg.cassandra_port,     10350);
+    EXPECT_EQ(cfg.cassandra_keyspace, "loomic");
+    EXPECT_EQ(cfg.cassandra_ssl,      true);
+    EXPECT_EQ(cfg.redis_ssl,          false);
+    EXPECT_EQ(cfg.redis_password,     "");
+}
+
+TEST(ConfigTest, EnvOverride_Phase3)
+{
+    // Set all Phase 3 env vars
+    ::setenv("LOOMIC_CASSANDRA_CONTACT_POINTS", "cass.example.com",  1);
+    ::setenv("LOOMIC_CASSANDRA_PORT",           "10350",             1);
+    ::setenv("LOOMIC_CASSANDRA_USERNAME",       "testuser",          1);
+    ::setenv("LOOMIC_CASSANDRA_PASSWORD",       "testpass",          1);
+    ::setenv("LOOMIC_CASSANDRA_KEYSPACE",       "myspace",           1);
+    ::setenv("LOOMIC_CASSANDRA_SSL",            "false",             1);
+    ::setenv("LOOMIC_REDIS_PASSWORD",           "redispass",         1);
+    ::setenv("LOOMIC_REDIS_SSL",                "true",              1);
+
+    Loomic::Config cfg;
+    Loomic::Config::from_env(cfg);
+
+    EXPECT_EQ(cfg.cassandra_contact_points, "cass.example.com");
+    EXPECT_EQ(cfg.cassandra_port,           10350);
+    EXPECT_EQ(cfg.cassandra_username,       "testuser");
+    EXPECT_EQ(cfg.cassandra_password,       "testpass");
+    EXPECT_EQ(cfg.cassandra_keyspace,       "myspace");
+    EXPECT_EQ(cfg.cassandra_ssl,            false);
+    EXPECT_EQ(cfg.redis_password,           "redispass");
+    EXPECT_EQ(cfg.redis_ssl,                true);
+
+    // Clean up so other tests are not affected
+    ::unsetenv("LOOMIC_CASSANDRA_CONTACT_POINTS");
+    ::unsetenv("LOOMIC_CASSANDRA_PORT");
+    ::unsetenv("LOOMIC_CASSANDRA_USERNAME");
+    ::unsetenv("LOOMIC_CASSANDRA_PASSWORD");
+    ::unsetenv("LOOMIC_CASSANDRA_KEYSPACE");
+    ::unsetenv("LOOMIC_CASSANDRA_SSL");
+    ::unsetenv("LOOMIC_REDIS_PASSWORD");
+    ::unsetenv("LOOMIC_REDIS_SSL");
+}
