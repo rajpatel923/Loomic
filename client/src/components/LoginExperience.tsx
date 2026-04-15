@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { saveStoredSession, readStoredSession } from "@/lib/session";
 
 type LoginResponse = {
   access_token: string;
@@ -17,38 +19,62 @@ type RegisterResponse = {
   username: string;
 };
 
-type StoredSession = LoginResponse & {
-  username: string;
-  persisted: boolean;
-};
-
 type AuthView = "login" | "create-account";
 
-const SESSION_STORAGE_KEY = "loomic.session";
+function AuthPanel({
+  children,
+  view,
+  onSwitchToLogin,
+  onSwitchToCreateAccount,
+}: {
+  children: React.ReactNode;
+  view: AuthView;
+  onSwitchToLogin: () => void;
+  onSwitchToCreateAccount: () => void;
+}) {
+  return (
+    <section className="mx-auto w-full max-w-md section-fade">
+      <div className="mb-6 text-center">
+        <p className="eyebrow mb-2 text-[10px] text-[var(--accent)]">Welcome Back</p>
+        <h1 className="font-display text-5xl leading-none tracking-[-0.06em] text-[var(--foreground)] sm:text-6xl">
+          Loomic
+        </h1>
+      </div>
 
-function readStoredSession() {
-  if (typeof window === "undefined") {
-    return null;
-  }
+      <div className="surface-panel rounded-[1.5rem] p-6 sm:p-7">
+        <div className="relative z-10 grid grid-cols-2 rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] p-1">
+          <button
+            className={`relative z-10 rounded-full px-4 py-3 text-sm touch-manipulation ${
+              view === "login"
+                ? "bg-[rgba(241,205,146,0.14)] text-[var(--foreground)]"
+                : "text-[var(--muted)]"
+            }`}
+            onClick={onSwitchToLogin}
+            type="button"
+          >
+            Login
+          </button>
+          <button
+            className={`relative z-10 rounded-full px-4 py-3 text-sm touch-manipulation ${
+              view === "create-account"
+                ? "bg-[rgba(241,205,146,0.14)] text-[var(--foreground)]"
+                : "text-[var(--muted)]"
+            }`}
+            onClick={onSwitchToCreateAccount}
+            type="button"
+          >
+            Create Account
+          </button>
+        </div>
 
-  const fromSession = window.sessionStorage.getItem(SESSION_STORAGE_KEY);
-  const fromLocal = window.localStorage.getItem(SESSION_STORAGE_KEY);
-  const raw = fromSession ?? fromLocal;
-
-  if (!raw) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(raw) as StoredSession;
-  } catch {
-    window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
-    window.localStorage.removeItem(SESSION_STORAGE_KEY);
-    return null;
-  }
+        {children}
+      </div>
+    </section>
+  );
 }
 
 export default function LoginExperience() {
+  const router = useRouter();
   const [view, setView] = useState<AuthView>("login");
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -57,11 +83,18 @@ export default function LoginExperience() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [session, setSession] = useState<StoredSession | null>(null);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    setSession(readStoredSession());
-  }, []);
+    const session = readStoredSession();
+
+    if (session) {
+      router.replace("/chat");
+      return;
+    }
+
+    setReady(true);
+  }, [router]);
 
   function switchToLogin() {
     setView("login");
@@ -102,24 +135,17 @@ export default function LoginExperience() {
           return;
         }
 
-        const nextSession: StoredSession = {
-          ...(payload as LoginResponse),
-          username,
-          persisted: rememberMe,
-        };
+        saveStoredSession(
+          {
+            ...(payload as LoginResponse),
+            username,
+            persisted: rememberMe,
+          },
+          rememberMe,
+        );
 
-        const serialized = JSON.stringify(nextSession);
-
-        if (rememberMe) {
-          window.localStorage.setItem(SESSION_STORAGE_KEY, serialized);
-          window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
-        } else {
-          window.sessionStorage.setItem(SESSION_STORAGE_KEY, serialized);
-          window.localStorage.removeItem(SESSION_STORAGE_KEY);
-        }
-
-        setSession(nextSession);
         setPassword("");
+        router.push("/chat");
         return;
       }
 
@@ -159,56 +185,24 @@ export default function LoginExperience() {
     }
   }
 
-  function handleSignOut() {
-    window.localStorage.removeItem(SESSION_STORAGE_KEY);
-    window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
-    setSession(null);
-    setPassword("");
-    setError(null);
-    setNotice(null);
+  if (!ready) {
+    return (
+      <section className="mx-auto w-full max-w-md section-fade">
+        <div className="surface-panel rounded-[1.5rem] px-6 py-10 text-center sm:px-7">
+          <p className="eyebrow text-[10px] text-[var(--accent)]">Loomic</p>
+          <p className="mt-4 text-sm text-[var(--muted)]">Checking your session...</p>
+        </div>
+      </section>
+    );
   }
 
   return (
-    <section className="surface-panel mx-auto w-full max-w-md rounded-[1.5rem] p-6 sm:p-7">
-      <div className="relative z-10 grid grid-cols-2 rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] p-1">
-        <button
-          className={`relative z-10 rounded-full px-4 py-3 text-sm touch-manipulation ${
-            view === "login"
-              ? "bg-[rgba(241,205,146,0.14)] text-[var(--foreground)]"
-              : "text-[var(--muted)]"
-          }`}
-          onClick={switchToLogin}
-          type="button"
-        >
-          Login
-        </button>
-        <button
-          className={`relative z-10 rounded-full px-4 py-3 text-sm touch-manipulation ${
-            view === "create-account"
-              ? "bg-[rgba(241,205,146,0.14)] text-[var(--foreground)]"
-              : "text-[var(--muted)]"
-          }`}
-          onClick={switchToCreateAccount}
-          type="button"
-        >
-          Create Account
-        </button>
-      </div>
-
-      {session ? (
-        <div className="mt-6 space-y-4">
-          <div className="rounded-[1rem] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-4 py-5">
-            <p className="text-lg text-[var(--foreground)]">Signed in as {session.username}</p>
-          </div>
-          <button
-            className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-[rgba(241,205,146,0.3)] px-5 text-sm text-[var(--foreground)] hover:bg-[rgba(241,205,146,0.08)]"
-            onClick={handleSignOut}
-            type="button"
-          >
-            Sign Out
-          </button>
-        </div>
-      ) : view === "login" ? (
+    <AuthPanel
+      onSwitchToCreateAccount={switchToCreateAccount}
+      onSwitchToLogin={switchToLogin}
+      view={view}
+    >
+      {view === "login" ? (
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
           <input
             autoComplete="username"
@@ -250,13 +244,6 @@ export default function LoginExperience() {
             type="submit"
           >
             {pending ? "Signing In..." : "Sign In"}
-          </button>
-          <button
-            className="w-full text-sm text-[var(--muted)] underline decoration-[rgba(241,205,146,0.35)] underline-offset-4 hover:text-[var(--foreground)]"
-            onClick={switchToCreateAccount}
-            type="button"
-          >
-            Need an account? Create one here.
           </button>
         </form>
       ) : (
@@ -301,15 +288,8 @@ export default function LoginExperience() {
           >
             {pending ? "Creating Account..." : "Create Account"}
           </button>
-          <button
-            className="w-full text-sm text-[var(--muted)] underline decoration-[rgba(241,205,146,0.35)] underline-offset-4 hover:text-[var(--foreground)]"
-            onClick={switchToLogin}
-            type="button"
-          >
-            Already have an account? Back to login.
-          </button>
         </form>
       )}
-    </section>
+    </AuthPanel>
   );
 }

@@ -22,7 +22,7 @@ const mono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "Loomic",
   description:
-    "A refined sign-in experience for Loomic.",
+    "A refined sign-in and simple chat experience for Loomic.",
 };
 
 export default function RootLayout({
