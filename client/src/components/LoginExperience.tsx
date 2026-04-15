@@ -20,6 +20,29 @@ type RegisterResponse = {
 };
 
 type AuthView = "login" | "create-account";
+const MIN_PASSWORD_LENGTH = 6;
+
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function FieldRequirementNotice({ message }: { message: string | null }) {
+  if (!message) {
+    return null;
+  }
+
+  return (
+    <span className="group relative inline-flex items-center" tabIndex={0}>
+      <span
+        aria-hidden="true"
+        className="h-0 w-0 border-l-[6px] border-r-[6px] border-b-[11px] border-l-transparent border-r-transparent border-b-[#f58f7c]"
+      />
+      <span className="pointer-events-none absolute right-0 top-full z-20 mt-2 hidden w-52 rounded-xl border border-[rgba(245,143,124,0.35)] bg-[rgba(27,27,31,0.96)] px-3 py-2 text-xs leading-5 text-[var(--foreground)] shadow-[0_12px_30px_rgba(0,0,0,0.28)] group-hover:block group-focus-within:block">
+        {message}
+      </span>
+    </span>
+  );
+}
 
 function AuthPanel({
   children,
@@ -84,6 +107,45 @@ export default function LoginExperience() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+  const trimmedUsername = username.trim();
+  const trimmedEmail = email.trim();
+  const usernameIsValid = trimmedUsername.length > 0;
+  const emailIsValid = trimmedEmail.length > 0 && isValidEmail(trimmedEmail);
+  const passwordIsValid = password.length >= MIN_PASSWORD_LENGTH;
+  const createAccountIssues: string[] = [];
+
+  if (!usernameIsValid) {
+    createAccountIssues.push("Add a username.");
+  }
+
+  if (trimmedEmail.length === 0) {
+    createAccountIssues.push("Add an email address.");
+  } else if (!emailIsValid) {
+    createAccountIssues.push("Enter a valid email address.");
+  }
+
+  if (password.length === 0) {
+    createAccountIssues.push("Create a password.");
+  } else if (!passwordIsValid) {
+    createAccountIssues.push(
+      `Use at least ${MIN_PASSWORD_LENGTH} characters (${MIN_PASSWORD_LENGTH - password.length} more to go).`,
+    );
+  }
+
+  const canCreateAccount = createAccountIssues.length === 0;
+  const usernameRequirement = usernameIsValid ? null : "Username is required.";
+  const emailRequirement =
+    trimmedEmail.length === 0
+      ? "Enter an email address."
+      : emailIsValid
+        ? null
+        : "Enter a valid email address, like name@example.com.";
+  const passwordRequirement =
+    password.length === 0
+      ? `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`
+      : passwordIsValid
+        ? null
+        : `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`;
 
   useEffect(() => {
     const session = readStoredSession();
@@ -248,29 +310,51 @@ export default function LoginExperience() {
         </form>
       ) : (
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
-          <input
-            autoComplete="username"
-            className="w-full rounded-[1rem] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-[var(--foreground)]"
-            onChange={(event) => setUsername(event.target.value)}
-            placeholder="Username"
-            value={username}
-          />
-          <input
-            autoComplete="email"
-            className="w-full rounded-[1rem] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-[var(--foreground)]"
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="Email"
-            type="email"
-            value={email}
-          />
-          <input
-            autoComplete="new-password"
-            className="w-full rounded-[1rem] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-[var(--foreground)]"
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="Password"
-            type="password"
-            value={password}
-          />
+          <div className="space-y-2">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-sm text-[var(--foreground)]">Username</span>
+              <FieldRequirementNotice message={usernameRequirement} />
+            </div>
+            <input
+              autoComplete="username"
+              className="w-full rounded-[1rem] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-[var(--foreground)]"
+              onChange={(event) => setUsername(event.target.value)}
+              placeholder="Username"
+              required
+              value={username}
+            />
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-sm text-[var(--foreground)]">Email</span>
+              <FieldRequirementNotice message={emailRequirement} />
+            </div>
+            <input
+              autoComplete="email"
+              className="w-full rounded-[1rem] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-[var(--foreground)]"
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="Email"
+              required
+              type="email"
+              value={email}
+            />
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-sm text-[var(--foreground)]">Password</span>
+              <FieldRequirementNotice message={passwordRequirement} />
+            </div>
+            <input
+              autoComplete="new-password"
+              className="w-full rounded-[1rem] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-[var(--foreground)]"
+              minLength={MIN_PASSWORD_LENGTH}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="Password"
+              required
+              type="password"
+              value={password}
+            />
+          </div>
           {error ? (
             <div className="rounded-[1rem] border border-[rgba(245,143,124,0.28)] bg-[rgba(245,143,124,0.08)] px-4 py-3 text-sm text-[var(--foreground)]">
               {error}
@@ -278,12 +362,7 @@ export default function LoginExperience() {
           ) : null}
           <button
             className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-[rgba(241,205,146,0.14)] px-5 text-sm text-[var(--foreground)] hover:bg-[rgba(241,205,146,0.22)] disabled:cursor-not-allowed disabled:opacity-60"
-            disabled={
-              pending ||
-              username.trim().length === 0 ||
-              email.trim().length === 0 ||
-              password.length < 8
-            }
+            disabled={pending || !canCreateAccount}
             type="submit"
           >
             {pending ? "Creating Account..." : "Create Account"}
