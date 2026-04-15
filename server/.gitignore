@@ -25,6 +25,10 @@ CLION_SETUP.md
 # Logs
 logs/
 
+# Vendored dependency headers (macOS Homebrew collision workaround)
+include/absl/
+include/google/
+
 # Protobuf generated
 *.pb.h
 *.pb.cc

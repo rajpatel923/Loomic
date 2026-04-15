@@ -9,9 +9,15 @@
     "gtest",
     "nlohmann-json",
     "openssl",
-    "hiredis",
+    {
+      "name": "hiredis",
+      "features": ["ssl"]
+    },
     "jwt-cpp",
     "prometheus-cpp",
-    "libpqxx"
+    "libpqxx",
+    "protobuf",
+    "abseil",
+    "cassandra-cpp-driver"
   ]
 }
