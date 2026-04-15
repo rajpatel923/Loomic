@@ -32,9 +32,19 @@ Config Config::from_file(const std::filesystem::path& path)
     if (j.contains("tls_key_path"))  cfg.tls_key_path  = j["tls_key_path"].get<std::string>();
 
     // Data stores
-    if (j.contains("scylla_hosts")) cfg.scylla_hosts = j["scylla_hosts"].get<std::string>();
-    if (j.contains("redis_host"))   cfg.redis_host   = j["redis_host"].get<std::string>();
-    if (j.contains("redis_port"))   cfg.redis_port   = j["redis_port"].get<uint16_t>();
+    if (j.contains("redis_host"))     cfg.redis_host     = j["redis_host"].get<std::string>();
+    if (j.contains("redis_port"))     cfg.redis_port     = j["redis_port"].get<uint16_t>();
+    if (j.contains("redis_password")) cfg.redis_password = j["redis_password"].get<std::string>();
+    if (j.contains("redis_ssl"))      cfg.redis_ssl      = j["redis_ssl"].get<bool>();
+
+    // Azure Cosmos for Cassandra
+    if (j.contains("cassandra_contact_points")) cfg.cassandra_contact_points = j["cassandra_contact_points"].get<std::string>();
+    if (j.contains("cassandra_port"))           cfg.cassandra_port           = j["cassandra_port"].get<uint16_t>();
+    if (j.contains("cassandra_username"))       cfg.cassandra_username       = j["cassandra_username"].get<std::string>();
+    if (j.contains("cassandra_password"))       cfg.cassandra_password       = j["cassandra_password"].get<std::string>();
+    if (j.contains("cassandra_keyspace"))       cfg.cassandra_keyspace       = j["cassandra_keyspace"].get<std::string>();
+    if (j.contains("cassandra_ssl"))            cfg.cassandra_ssl            = j["cassandra_ssl"].get<bool>();
+    if (j.contains("cassandra_ca_cert"))        cfg.cassandra_ca_cert        = j["cassandra_ca_cert"].get<std::string>();
 
     // Required fields
     if (!j.contains("pg_conn_string") || j["pg_conn_string"].get<std::string>().empty()) {
@@ -63,19 +73,34 @@ void Config::from_env(Config& cfg)
         const char* val = std::getenv(name);
         return val ? std::string(val) : std::string{};
     };
+    auto to_int = [](const std::string& v, const char* name) -> int {
+        try { return std::stoi(v); }
+        catch (...) {
+            throw std::runtime_error(
+                std::string("Config: env var ") + name + " has non-integer value \"" + v + "\"");
+        }
+    };
 
     if (auto v = get("LOOMIC_BIND_ADDRESS");     !v.empty()) cfg.bind_address     = v;
-    if (auto v = get("LOOMIC_PORT");             !v.empty()) cfg.port             = static_cast<uint16_t>(std::stoi(v));
-    if (auto v = get("LOOMIC_HTTP_HEALTH_PORT"); !v.empty()) cfg.http_health_port = static_cast<uint16_t>(std::stoi(v));
-    if (auto v = get("LOOMIC_THREAD_COUNT");     !v.empty()) cfg.thread_count     = static_cast<unsigned>(std::stoi(v));
+    if (auto v = get("LOOMIC_PORT");             !v.empty()) cfg.port             = static_cast<uint16_t>(to_int(v, "LOOMIC_PORT"));
+    if (auto v = get("LOOMIC_HTTP_HEALTH_PORT"); !v.empty()) cfg.http_health_port = static_cast<uint16_t>(to_int(v, "LOOMIC_HTTP_HEALTH_PORT"));
+    if (auto v = get("LOOMIC_THREAD_COUNT");     !v.empty()) cfg.thread_count     = static_cast<unsigned>(to_int(v, "LOOMIC_THREAD_COUNT"));
     if (auto v = get("LOOMIC_PG_CONN_STRING");   !v.empty()) cfg.pg_conn_string   = v;
     if (auto v = get("LOOMIC_JWT_SECRET");       !v.empty()) cfg.jwt_secret       = v;
     if (auto v = get("LOOMIC_LOG_LEVEL");        !v.empty()) cfg.log_level        = v;
     if (auto v = get("LOOMIC_LOG_FILE");         !v.empty()) cfg.log_file         = v;
-    if (auto v = get("LOOMIC_REDIS_HOST");       !v.empty()) cfg.redis_host       = v;
-    if (auto v = get("LOOMIC_REDIS_PORT");       !v.empty()) cfg.redis_port       = static_cast<uint16_t>(std::stoi(v));
-    if (auto v = get("LOOMIC_METRICS_PORT");     !v.empty()) cfg.metrics_port     = static_cast<uint16_t>(std::stoi(v));
-    if (auto v = get("LOOMIC_SCYLLA_HOSTS");     !v.empty()) cfg.scylla_hosts     = v;
+    if (auto v = get("LOOMIC_REDIS_HOST");                !v.empty()) cfg.redis_host                = v;
+    if (auto v = get("LOOMIC_REDIS_PORT");                !v.empty()) cfg.redis_port                = static_cast<uint16_t>(to_int(v, "LOOMIC_REDIS_PORT"));
+    if (auto v = get("LOOMIC_REDIS_PASSWORD");            !v.empty()) cfg.redis_password            = v;
+    if (auto v = get("LOOMIC_REDIS_SSL");                 !v.empty()) cfg.redis_ssl                 = (v == "true" || v == "1");
+    if (auto v = get("LOOMIC_METRICS_PORT");              !v.empty()) cfg.metrics_port              = static_cast<uint16_t>(to_int(v, "LOOMIC_METRICS_PORT"));
+    if (auto v = get("LOOMIC_CASSANDRA_CONTACT_POINTS");  !v.empty()) cfg.cassandra_contact_points  = v;
+    if (auto v = get("LOOMIC_CASSANDRA_PORT");            !v.empty()) cfg.cassandra_port            = static_cast<uint16_t>(to_int(v, "LOOMIC_CASSANDRA_PORT"));
+    if (auto v = get("LOOMIC_CASSANDRA_USERNAME");        !v.empty()) cfg.cassandra_username        = v;
+    if (auto v = get("LOOMIC_CASSANDRA_PASSWORD");        !v.empty()) cfg.cassandra_password        = v;
+    if (auto v = get("LOOMIC_CASSANDRA_KEYSPACE");        !v.empty()) cfg.cassandra_keyspace        = v;
+    if (auto v = get("LOOMIC_CASSANDRA_SSL");             !v.empty()) cfg.cassandra_ssl             = (v == "true" || v == "1");
+    if (auto v = get("LOOMIC_CASSANDRA_CA_CERT");         !v.empty()) cfg.cassandra_ca_cert         = v;
 }
 
 void Config::load_dotenv(const std::filesystem::path& path)

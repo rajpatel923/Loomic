@@ -18,10 +18,20 @@ struct Config {
     std::string tls_key_path;
 
     // Data stores
-    std::string scylla_hosts;
     std::string pg_conn_string;   // required
     std::string redis_host        = "127.0.0.1";
     uint16_t    redis_port        = 6379;
+    std::string redis_password;
+    bool        redis_ssl         = false;
+
+    // Azure Cosmos for Apache Cassandra
+    std::string cassandra_contact_points;
+    uint16_t    cassandra_port     = 10350;
+    std::string cassandra_username;
+    std::string cassandra_password;
+    std::string cassandra_keyspace = "loomic";
+    bool        cassandra_ssl      = true;
+    std::string cassandra_ca_cert; // PEM-encoded CA certificate for TLS verification
 
     // Auth
     std::string jwt_secret;       // required

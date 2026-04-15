@@ -5,6 +5,9 @@
 #include "LoomicServer/auth/JwtService.hpp"
 #include "LoomicServer/auth/PasswordService.hpp"
 #include "LoomicServer/db/PgPool.hpp"
+#include "LoomicServer/db/RedisClient.hpp"
+#include "LoomicServer/db/CassandraClient.hpp"
+#include "LoomicServer/tcp/SessionRegistry.hpp"
 #include "LoomicServer/http/AuthHandler.hpp"
 #include "LoomicServer/http/DocsHandler.hpp"
 #include <openssl/ssl.h>
@@ -30,8 +33,13 @@ Server::Server(const Config& cfg)
     , snowflake_(std::make_shared<SnowflakeGen>())
     , jwt_(std::make_shared<JwtService>(cfg.jwt_secret))
     , pwd_(std::make_shared<PasswordService>(thread_pool_))
+    , redis_(std::make_shared<RedisClient>(cfg.redis_host, cfg.redis_port,
+                                           cfg.redis_password, cfg.redis_ssl))
+    , cass_(std::make_shared<CassandraClient>(cfg))
+    , registry_(std::make_shared<SessionRegistry>())
     , http_(io_ctxs_[0], cfg.http_health_port)
-    , tcp_(io_ctxs_[0], ssl_ctx_, cfg.port)
+    , tcp_(io_ctxs_[0], ssl_ctx_, cfg.port,
+           registry_, jwt_, redis_, cass_, snowflake_)
 {
     setup_tls(cfg);
     register_routes();

@@ -2,6 +2,8 @@
 FROM ubuntu:24.04 AS builder
 
 ENV DEBIAN_FRONTEND=noninteractive
+# Use system ninja/cmake instead of vcpkg downloading x86_64 binaries (required for arm64)
+ENV VCPKG_FORCE_SYSTEM_BINARIES=1
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         cmake \
@@ -33,9 +35,11 @@ RUN git clone https://github.com/microsoft/vcpkg.git vcpkg \
     && ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
 
 # Copy dependency manifest first — unchanged vcpkg.json skips re-install
-COPY vcpkg.json CMakeLists.txt CMakePresets.json ./
+COPY vcpkg.json vcpkg-configuration.json CMakeLists.txt CMakePresets.json ./
 COPY src/ src/
 COPY include/ include/
+COPY proto/ proto/
+COPY vcpkg-overlay-ports/ vcpkg-overlay-ports/
 COPY tests/ tests/
 
 # cmake configure triggers vcpkg install automatically
