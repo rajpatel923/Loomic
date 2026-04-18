@@ -68,6 +68,12 @@ CassandraClient::CassandraClient(const Config& cfg)
                                   cfg.cassandra_username.c_str(),
                                   cfg.cassandra_password.c_str());
 
+    // Keep connections alive through Azure NAT/firewall idle timeouts (~4-20 min).
+    // TCP keepalive probes at OS level + driver heartbeat at application level.
+    cass_cluster_set_tcp_keepalive(cluster_, cass_true, 30); // OS-level probe every 30s
+    cass_cluster_set_connection_heartbeat_interval(cluster_, 30); // CQL OPTIONS every 30s
+    cass_cluster_set_connection_idle_timeout(cluster_, 60);       // mark dead after 60s
+
     if (cfg.cassandra_ssl) {
         ssl_ = cass_ssl_new();
         if (!cfg.cassandra_ca_cert.empty()) {
