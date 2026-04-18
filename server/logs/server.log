@@ -328,3 +328,421 @@
 [2026-04-15 05:33:56.730][1][info] TLS TCP server: port 7777
 [2026-04-15 05:34:07.116][1][info] Shutdown signal received, stopping...
 [2026-04-15 05:34:07.116][1][info] Server stopped
+[2026-04-15 19:03:58.076][1][info] PgPool: 12 connections established
+[2026-04-15 19:03:58.225][1][info] RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274
+[2026-04-15 19:04:05.472][1][info] PgPool: 12 connections established
+[2026-04-15 19:04:05.608][1][info] RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274
+[2026-04-15 19:04:12.744][1][info] PgPool: 12 connections established
+[2026-04-15 19:04:12.895][1][info] RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274
+[2026-04-15 19:04:20.777][1][info] PgPool: 12 connections established
+[2026-04-15 19:04:21.021][1][info] RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274
+[2026-04-15 19:04:29.060][1][info] PgPool: 12 connections established
+[2026-04-15 19:04:29.208][1][info] RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274
+[2026-04-15 19:04:37.574][1][info] PgPool: 12 connections established
+[2026-04-15 19:04:37.844][1][info] RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274
+[2026-04-15 19:04:48.099][1][info] PgPool: 12 connections established
+[2026-04-15 19:04:48.272][1][info] RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274
+[2026-04-15 19:05:01.920][1][info] PgPool: 12 connections established
+[2026-04-15 19:05:02.053][1][info] RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274
+[2026-04-15 19:10:36.467][1][info] PgPool: 12 connections established
+[2026-04-15 19:10:36.605][1][info] RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274
+[2026-04-15 19:10:38.736][1][info] CassandraClient connected to loomic-cosmos.cassandra.cosmos.azure.com
+[2026-04-15 19:10:38.745][1][info] OpenAPI spec loaded (16065 bytes)
+[2026-04-15 19:10:38.745][1][info] Docs routes registered: GET /openapi.json  GET /docs
+[2026-04-15 19:10:38.745][1][info] Loomic Server starting
+[2026-04-15 19:10:38.745][1][info] Thread pool: 12 threads
+[2026-04-15 19:10:38.745][1][info] HTTP server: http://0.0.0.0:8080
+[2026-04-15 19:10:38.745][1][info] TLS TCP server: port 7777
+[2026-04-15 19:48:59.415][1][info] Shutdown signal received, stopping...
+[2026-04-15 19:48:59.415][1][info] Server stopped
+[2026-04-15 19:55:27.573][1][info] PgPool: 12 connections established
+[2026-04-15 19:55:27.695][1][info] RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274
+[2026-04-15 19:55:30.280][1][info] CassandraClient connected to loomic-cosmos.cassandra.cosmos.azure.com
+[2026-04-15 19:55:30.292][1][info] OpenAPI spec loaded (24248 bytes)
+[2026-04-15 19:55:30.292][1][info] Docs routes registered: GET /openapi.json  GET /docs
+[2026-04-15 19:55:30.292][1][info] Loomic Server starting
+[2026-04-15 19:55:30.292][1][info] Thread pool: 12 threads
+[2026-04-15 19:55:30.292][1][info] HTTP server: http://0.0.0.0:8080
+[2026-04-15 19:55:30.292][1][info] TLS TCP server: port 7777
+[2026-04-15 20:14:32.239][1][warning] PgPool: recreating PostgreSQL connection (idle_validation_failed)
+[2026-04-15 20:15:05.671][1][warning] WebSocketSession 302899521069780992: heartbeat timeout, closing
+[2026-04-15 20:15:05.717][1][warning] WebSocketSession 302899522068025344: heartbeat timeout, closing
+[2026-04-15 20:16:24.463][1][warning] WebSocketSession 302899851979395072: heartbeat timeout, closing
+[2026-04-15 20:16:24.463][1][warning] WebSocketSession 302899852910530560: heartbeat timeout, closing
+[2026-04-15 20:32:18.152][1][warning] PgPool: recreating PostgreSQL connection (idle_validation_failed)
+[2026-04-15 20:32:51.973][1][warning] WebSocketSession 302903993166729216: heartbeat timeout, closing
+[2026-04-15 20:32:51.973][1][warning] WebSocketSession 302903992223010816: heartbeat timeout, closing
+[2026-04-15 20:33:48.367][1][warning] WebSocketSession 302904357341368320: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-15 20:34:18.368][1][warning] WebSocketSession 302904357341368320: heartbeat timeout, closing
+[2026-04-15 20:34:24.091][1][warning] WebSocketSession 302904356414427136: heartbeat timeout, closing
+[2026-04-15 20:34:24.091][1][warning] WebSocketSession 302904357341368320: heartbeat timeout, closing
+[2026-04-15 20:37:25.642][1][info] Shutdown signal received, stopping...
+[2026-04-15 20:37:25.643][1][info] Server stopped
+[2026-04-15 20:37:35.338][1][info] PgPool: 12 connections established
+[2026-04-15 20:37:35.483][1][info] RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274
+[2026-04-15 20:37:37.897][1][info] CassandraClient connected to loomic-cosmos.cassandra.cosmos.azure.com
+[2026-04-15 20:37:37.903][1][info] OpenAPI spec loaded (24248 bytes)
+[2026-04-15 20:37:37.903][1][info] Docs routes registered: GET /openapi.json  GET /docs
+[2026-04-15 20:37:37.903][1][info] Loomic Server starting
+[2026-04-15 20:37:37.903][1][info] Thread pool: 12 threads
+[2026-04-15 20:37:37.903][1][info] HTTP server: http://0.0.0.0:8080
+[2026-04-15 20:37:37.903][1][info] TLS TCP server: port 7777
+[2026-04-15 20:37:51.329][1][warning] WebSocketSession 302905376188141568: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-15 20:37:52.045][1][warning] WebSocketSession 302905375269588992: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-15 20:37:52.100][1][warning] WebSocketSession 302905376188141568: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-15 20:38:21.330][1][warning] WebSocketSession 302905376188141568: heartbeat timeout, closing
+[2026-04-15 20:38:22.045][1][warning] WebSocketSession 302905375269588992: heartbeat timeout, closing
+[2026-04-15 20:38:22.100][1][warning] WebSocketSession 302905376188141568: heartbeat timeout, closing
+[2026-04-15 20:39:17.946][1][warning] WebSocketSession 302905739708469248: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-15 20:39:18.660][1][warning] WebSocketSession 302905738559229952: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-15 20:39:18.729][1][warning] WebSocketSession 302905739708469248: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-15 20:39:47.947][1][warning] WebSocketSession 302905739708469248: heartbeat timeout, closing
+[2026-04-15 20:39:48.661][1][warning] WebSocketSession 302905738559229952: heartbeat timeout, closing
+[2026-04-15 20:39:48.733][1][warning] WebSocketSession 302905739708469248: heartbeat timeout, closing
+[2026-04-15 20:40:17.911][1][info] Shutdown signal received, stopping...
+[2026-04-15 20:40:17.911][1][info] Server stopped
+[2026-04-15 20:40:26.655][1][info] PgPool: 12 connections established
+[2026-04-15 20:40:26.828][1][info] RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274
+[2026-04-15 20:40:29.159][1][info] CassandraClient connected to loomic-cosmos.cassandra.cosmos.azure.com
+[2026-04-15 20:40:29.163][1][info] OpenAPI spec loaded (24248 bytes)
+[2026-04-15 20:40:29.163][1][info] Docs routes registered: GET /openapi.json  GET /docs
+[2026-04-15 20:40:29.163][1][info] Loomic Server starting
+[2026-04-15 20:40:29.163][1][info] Thread pool: 12 threads
+[2026-04-15 20:40:29.163][1][info] HTTP server: http://0.0.0.0:8080
+[2026-04-15 20:40:29.163][1][info] TLS TCP server: port 7777
+[2026-04-15 20:40:37.119][1][warning] WebSocketSession 302906071331115008: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-15 20:40:37.838][1][warning] WebSocketSession 302906070425145344: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-15 20:40:37.892][1][warning] WebSocketSession 302906071331115008: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-15 20:41:07.119][1][warning] WebSocketSession 302906071331115008: heartbeat timeout, closing
+[2026-04-15 20:41:07.838][1][warning] WebSocketSession 302906070425145344: heartbeat timeout, closing
+[2026-04-15 20:41:07.893][1][warning] WebSocketSession 302906071331115008: heartbeat timeout, closing
+[2026-04-15 20:41:29.712][1][warning] WebSocketSession 302906292211552256: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-15 20:41:30.443][1][warning] WebSocketSession 302906291251056640: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-15 20:41:30.507][1][warning] WebSocketSession 302906292211552256: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-15 20:41:59.714][1][warning] WebSocketSession 302906292211552256: heartbeat timeout, closing
+[2026-04-15 20:42:00.445][1][warning] WebSocketSession 302906291251056640: heartbeat timeout, closing
+[2026-04-15 20:42:00.512][1][warning] WebSocketSession 302906292211552256: heartbeat timeout, closing
+[2026-04-16 21:25:39.949][1][info] Shutdown signal received, stopping...
+[2026-04-16 21:25:39.949][1][info] Server stopped
+[2026-04-17 18:36:39.462][1][info] PgPool: 12 connections established
+[2026-04-17 18:36:39.687][1][info] RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274
+[2026-04-17 18:36:42.302][1][info] CassandraClient connected to loomic-cosmos.cassandra.cosmos.azure.com
+[2026-04-17 18:36:42.309][1][info] OpenAPI spec loaded (24248 bytes)
+[2026-04-17 18:36:42.309][1][info] Docs routes registered: GET /openapi.json  GET /docs
+[2026-04-17 18:36:42.309][1][info] Loomic Server starting
+[2026-04-17 18:36:42.309][1][info] Thread pool: 12 threads
+[2026-04-17 18:36:42.309][1][info] HTTP server: http://0.0.0.0:8080
+[2026-04-17 18:36:42.309][1][info] TLS TCP server: port 7777
+[2026-04-17 19:13:23.956][1][warning] PgPool: recreating PostgreSQL connection (max_lifetime_recycle)
+[2026-04-17 19:13:27.403][1][warning] WebSocketSession 303608911548649472: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 19:13:28.111][1][warning] WebSocketSession 303608910600736768: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 19:13:28.157][1][warning] WebSocketSession 303608911548649472: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 19:13:57.403][1][warning] WebSocketSession 303608911548649472: heartbeat timeout, closing
+[2026-04-17 19:13:58.111][1][warning] WebSocketSession 303608910600736768: heartbeat timeout, closing
+[2026-04-17 19:13:58.159][1][warning] WebSocketSession 303608911548649472: heartbeat timeout, closing
+[2026-04-17 19:17:11.119][1][warning] WebSocketSession 303609850875613184: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 19:17:11.834][1][warning] WebSocketSession 303609849999003648: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 19:17:11.884][1][warning] WebSocketSession 303609850875613184: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 19:17:19.920][1][warning] Session 303609850875613184: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-17 19:17:19.920][1][warning] Session 303609849999003648: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-17 19:17:41.120][1][warning] WebSocketSession 303609850875613184: heartbeat timeout, closing
+[2026-04-17 19:17:41.835][1][warning] WebSocketSession 303609849999003648: heartbeat timeout, closing
+[2026-04-17 19:17:41.886][1][warning] WebSocketSession 303609850875613184: heartbeat timeout, closing
+[2026-04-17 19:17:49.920][1][warning] Session 303609850875613184: heartbeat timeout, closing connection
+[2026-04-17 19:17:49.920][1][warning] Session 303609849999003648: heartbeat timeout, closing connection
+[2026-04-17 19:19:59.746][1][warning] WebSocketSession 303610551852863488: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 19:20:00.461][1][warning] WebSocketSession 303610547851497472: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 19:20:00.558][1][warning] WebSocketSession 303610551852863488: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 19:20:08.753][1][warning] Session 303610551852863488: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-17 19:20:08.753][1][warning] Session 303610547851497472: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-17 19:20:29.747][1][warning] WebSocketSession 303610551852863488: heartbeat timeout, closing
+[2026-04-17 19:20:30.461][1][warning] WebSocketSession 303610547851497472: heartbeat timeout, closing
+[2026-04-17 19:20:30.561][1][warning] WebSocketSession 303610551852863488: heartbeat timeout, closing
+[2026-04-17 19:20:38.850][1][warning] Session 303610551852863488: heartbeat timeout, closing connection
+[2026-04-17 19:20:38.854][1][warning] Session 303610547851497472: heartbeat timeout, closing connection
+[2026-04-17 19:27:24.463][1][warning] PgPool: recreating PostgreSQL connection (idle_validation_failed)
+[2026-04-17 19:27:27.842][1][warning] WebSocketSession 303612437146374144: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 19:27:28.554][1][warning] WebSocketSession 303612436068438016: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 19:27:28.601][1][warning] WebSocketSession 303612437146374144: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 19:27:36.665][1][warning] Session 303612437146374144: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-17 19:27:36.665][1][warning] Session 303612436068438016: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-17 19:27:57.844][1][warning] WebSocketSession 303612437146374144: heartbeat timeout, closing
+[2026-04-17 19:27:58.555][1][warning] WebSocketSession 303612436068438016: heartbeat timeout, closing
+[2026-04-17 19:27:58.603][1][warning] WebSocketSession 303612437146374144: heartbeat timeout, closing
+[2026-04-17 19:28:06.669][1][warning] Session 303612437146374144: heartbeat timeout, closing connection
+[2026-04-17 19:28:06.669][1][warning] Session 303612436068438016: heartbeat timeout, closing connection
+[2026-04-17 19:39:59.312][1][warning] PgPool: PostgreSQL connection dropped: Lost connection to the database server.
+[2026-04-17 19:39:59.312][1][warning] PgPool: recreating PostgreSQL connection (broken_connection)
+[2026-04-17 19:40:03.101][1][warning] WebSocketSession 303615603636178944: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 19:40:18.463][1][warning] WebSocketSession 303615669147013120: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 19:40:33.100][1][warning] WebSocketSession 303615603636178944: heartbeat timeout, closing
+[2026-04-17 19:40:38.841][1][warning] WebSocketSession 303615602709237760: heartbeat timeout, closing
+[2026-04-17 19:40:38.841][1][warning] WebSocketSession 303615603636178944: heartbeat timeout, closing
+[2026-04-17 19:40:48.465][1][warning] WebSocketSession 303615669147013120: heartbeat timeout, closing
+[2026-04-17 19:40:54.195][1][warning] WebSocketSession 303615668236849152: heartbeat timeout, closing
+[2026-04-17 19:40:54.195][1][warning] WebSocketSession 303615669147013120: heartbeat timeout, closing
+[2026-04-17 19:42:21.962][1][warning] WebSocketSession 303616187919503360: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 19:42:51.957][1][warning] WebSocketSession 303616187919503360: heartbeat timeout, closing
+[2026-04-17 19:42:57.710][1][warning] WebSocketSession 303616186988367872: heartbeat timeout, closing
+[2026-04-17 19:42:57.710][1][warning] WebSocketSession 303616187919503360: heartbeat timeout, closing
+[2026-04-17 20:05:23.535][1][info] Shutdown signal received, stopping...
+[2026-04-17 20:05:23.535][1][info] Server stopped
+[2026-04-17 20:15:01.304][1][info] PgPool: 12 connections established
+[2026-04-17 20:15:01.450][1][info] RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274
+[2026-04-17 20:15:03.807][1][info] CassandraClient connected to loomic-cosmos.cassandra.cosmos.azure.com
+[2026-04-17 20:15:03.814][1][info] OpenAPI spec loaded (24248 bytes)
+[2026-04-17 20:15:03.814][1][info] Docs routes registered: GET /openapi.json  GET /docs
+[2026-04-17 20:15:03.814][1][info] Loomic Server starting
+[2026-04-17 20:15:03.814][1][info] Thread pool: 12 threads
+[2026-04-17 20:15:03.814][1][info] HTTP server: http://0.0.0.0:8080
+[2026-04-17 20:15:03.814][1][info] TLS TCP server: port 7777
+[2026-04-17 20:23:31.255][1][warning] PgPool: recreating PostgreSQL connection (idle_validation_failed)
+[2026-04-17 20:23:34.867][1][warning] WebSocketSession 303626558805905408: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 20:23:35.579][1][warning] WebSocketSession 303626557824438272: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 20:23:35.633][1][warning] WebSocketSession 303626558805905408: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 20:24:04.869][1][warning] WebSocketSession 303626558805905408: heartbeat timeout, closing
+[2026-04-17 20:24:05.580][1][warning] WebSocketSession 303626557824438272: heartbeat timeout, closing
+[2026-04-17 20:24:05.634][1][warning] WebSocketSession 303626558805905408: heartbeat timeout, closing
+[2026-04-17 20:52:49.028][1][info] Shutdown signal received, stopping...
+[2026-04-17 20:52:49.028][1][info] Server stopped
+[2026-04-17 20:58:47.081][1][info] PgPool: 12 connections established
+[2026-04-17 20:58:47.285][1][info] RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274
+[2026-04-17 20:58:49.656][1][info] CassandraClient connected to loomic-cosmos.cassandra.cosmos.azure.com
+[2026-04-17 20:58:49.663][1][info] OpenAPI spec loaded (24248 bytes)
+[2026-04-17 20:58:49.663][1][info] Docs routes registered: GET /openapi.json  GET /docs
+[2026-04-17 20:58:49.663][1][info] Loomic Server starting
+[2026-04-17 20:58:49.663][1][info] Thread pool: 12 threads
+[2026-04-17 20:58:49.663][1][info] HTTP server: http://0.0.0.0:8080
+[2026-04-17 20:58:49.664][1][info] TLS TCP server: port 7777
+[2026-04-17 20:59:45.964][1][warning] WebSocketSession 303635664803467264: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 20:59:46.675][1][warning] WebSocketSession 303635663817805824: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 20:59:46.726][1][warning] WebSocketSession 303635664803467264: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 20:59:48.850][1][warning] Session 303635664803467264: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-17 20:59:48.850][1][warning] Session 303635663817805824: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-17 21:00:15.965][1][warning] WebSocketSession 303635664803467264: heartbeat timeout, closing
+[2026-04-17 21:00:16.675][1][warning] WebSocketSession 303635663817805824: heartbeat timeout, closing
+[2026-04-17 21:00:16.727][1][warning] WebSocketSession 303635664803467264: heartbeat timeout, closing
+[2026-04-17 21:00:18.850][1][warning] Session 303635664803467264: heartbeat timeout, closing connection
+[2026-04-17 21:00:18.851][1][warning] Session 303635663817805824: heartbeat timeout, closing connection
+[2026-04-17 21:10:02.740][1][info] Shutdown signal received, stopping...
+[2026-04-17 21:10:02.740][1][info] Server stopped
+[2026-04-17 16:10:02.451][51298252][info] PgPool: 14 connections established
+[2026-04-17 16:10:02.649][51298252][info] RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274
+[2026-04-17 16:10:04.982][51298252][info] CassandraClient connected to loomic-cosmos.cassandra.cosmos.azure.com
+[2026-04-17 16:10:04.985][51298252][info] OpenAPI spec loaded (24248 bytes)
+[2026-04-17 16:10:04.985][51298252][info] Docs routes registered: GET /openapi.json  GET /docs
+[2026-04-17 16:10:04.985][51298252][info] Loomic Server starting
+[2026-04-17 16:10:04.985][51298252][info] Thread pool: 14 threads
+[2026-04-17 16:10:04.985][51298252][info] HTTP server: http://0.0.0.0:8080
+[2026-04-17 16:10:04.985][51298252][info] TLS TCP server: port 7777
+[2026-04-17 16:10:21.500][51298252][warning] WebSocketSession 303638330862473216: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /Users/rajpatel/Documents/GitHub/Loomic/server/build/debug/vcpkg_installed/arm64-osx/include/boost/beast/websocket/impl/read.hpp:708:50 in function 'void boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp>>::read_some_op<boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp>>::read_op<boost::asio::detail::awaitable_handler<boost::asio::any_io_executor, boost::system::error_code, unsigned long>, boost::beast::basic_flat_buffer<std::allocator<char>>>, boost::asio::mutable_buffer>::operator()(error_code, std::size_t, bool) [NextLayer = boost::beast::basic_stream<boost::asio::ip::tcp>, deflateSupported = true]']
+[2026-04-17 16:10:22.211][51298252][warning] WebSocketSession 303638329755176960: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /Users/rajpatel/Documents/GitHub/Loomic/server/build/debug/vcpkg_installed/arm64-osx/include/boost/beast/websocket/impl/read.hpp:708:50 in function 'void boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp>>::read_some_op<boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp>>::read_op<boost::asio::detail::awaitable_handler<boost::asio::any_io_executor, boost::system::error_code, unsigned long>, boost::beast::basic_flat_buffer<std::allocator<char>>>, boost::asio::mutable_buffer>::operator()(error_code, std::size_t, bool) [NextLayer = boost::beast::basic_stream<boost::asio::ip::tcp>, deflateSupported = true]']
+[2026-04-17 16:10:22.262][51298252][warning] WebSocketSession 303638330862473216: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /Users/rajpatel/Documents/GitHub/Loomic/server/build/debug/vcpkg_installed/arm64-osx/include/boost/beast/websocket/impl/read.hpp:708:50 in function 'void boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp>>::read_some_op<boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp>>::read_op<boost::asio::detail::awaitable_handler<boost::asio::any_io_executor, boost::system::error_code, unsigned long>, boost::beast::basic_flat_buffer<std::allocator<char>>>, boost::asio::mutable_buffer>::operator()(error_code, std::size_t, bool) [NextLayer = boost::beast::basic_stream<boost::asio::ip::tcp>, deflateSupported = true]']
+[2026-04-17 16:10:23.677][51298252][warning] Session 303638330862473216: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-17 16:10:23.678][51298252][warning] Session 303638329755176960: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-17 16:10:51.501][51298252][warning] WebSocketSession 303638330862473216: heartbeat timeout, closing
+[2026-04-17 16:10:52.213][51298252][warning] WebSocketSession 303638329755176960: heartbeat timeout, closing
+[2026-04-17 16:10:52.264][51298252][warning] WebSocketSession 303638330862473216: heartbeat timeout, closing
+[2026-04-17 16:10:53.679][51298252][warning] Session 303638330862473216: heartbeat timeout, closing connection
+[2026-04-17 16:10:53.779][51298252][warning] Session 303638329755176960: heartbeat timeout, closing connection
+[2026-04-17 16:11:29.188][51298252][info] Shutdown signal received, stopping...
+[2026-04-17 16:11:29.188][51298252][info] Server stopped
+[2026-04-17 21:17:08.728][1][info] PgPool: 12 connections established
+[2026-04-17 21:17:08.944][1][info] RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274
+[2026-04-17 21:17:11.751][1][info] CassandraClient connected to loomic-cosmos.cassandra.cosmos.azure.com
+[2026-04-17 21:17:11.754][1][info] OpenAPI spec loaded (24248 bytes)
+[2026-04-17 21:17:11.754][1][info] Docs routes registered: GET /openapi.json  GET /docs
+[2026-04-17 21:17:11.754][1][info] Loomic Server starting
+[2026-04-17 21:17:11.754][1][info] Thread pool: 12 threads
+[2026-04-17 21:17:11.754][1][info] HTTP server: http://0.0.0.0:8080
+[2026-04-17 21:17:11.754][1][info] TLS TCP server: port 7777
+[2026-04-17 21:18:16.932][1][warning] WebSocketSession 303640325425991680: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 21:18:17.638][1][warning] WebSocketSession 303640324528410624: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 21:18:17.684][1][warning] WebSocketSession 303640325425991680: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 21:18:19.057][1][warning] Session 303640325425991680: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-17 21:18:19.057][1][warning] Session 303640324528410624: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-17 21:18:46.933][1][warning] WebSocketSession 303640325425991680: heartbeat timeout, closing
+[2026-04-17 21:18:47.639][1][warning] WebSocketSession 303640324528410624: heartbeat timeout, closing
+[2026-04-17 21:18:47.685][1][warning] WebSocketSession 303640325425991680: heartbeat timeout, closing
+[2026-04-17 21:18:49.059][1][warning] Session 303640325425991680: heartbeat timeout, closing connection
+[2026-04-17 21:18:49.151][1][warning] Session 303640324528410624: heartbeat timeout, closing connection
+[2026-04-17 21:21:18.579][1][warning] WebSocketSession 303641087409393664: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 21:21:19.290][1][warning] WebSocketSession 303641086507618304: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 21:21:19.337][1][warning] WebSocketSession 303641087409393664: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 21:21:20.569][1][warning] Session 303641087409393664: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-17 21:21:20.569][1][warning] Session 303641086507618304: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-17 21:21:48.580][1][warning] WebSocketSession 303641087409393664: heartbeat timeout, closing
+[2026-04-17 21:21:49.291][1][warning] WebSocketSession 303641086507618304: heartbeat timeout, closing
+[2026-04-17 21:21:49.338][1][warning] WebSocketSession 303641087409393664: heartbeat timeout, closing
+[2026-04-17 21:21:50.662][1][warning] Session 303641087409393664: heartbeat timeout, closing connection
+[2026-04-17 21:21:50.663][1][warning] Session 303641086507618304: heartbeat timeout, closing connection
+[2026-04-17 21:23:19.044][1][warning] WebSocketSession 303641593145987072: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 21:23:19.758][1][warning] WebSocketSession 303641592269377536: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 21:23:19.807][1][warning] WebSocketSession 303641593145987072: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 21:23:21.054][1][warning] Session 303641593145987072: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-17 21:23:21.054][1][warning] Session 303641592269377536: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-17 21:23:49.045][1][warning] WebSocketSession 303641593145987072: heartbeat timeout, closing
+[2026-04-17 21:23:49.759][1][warning] WebSocketSession 303641592269377536: heartbeat timeout, closing
+[2026-04-17 21:23:49.808][1][warning] WebSocketSession 303641593145987072: heartbeat timeout, closing
+[2026-04-17 21:23:51.055][1][warning] Session 303641593145987072: heartbeat timeout, closing connection
+[2026-04-17 21:23:51.055][1][warning] Session 303641592269377536: heartbeat timeout, closing connection
+[2026-04-17 21:24:00.975][1][warning] WebSocketSession 303641768958627840: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 21:24:01.681][1][warning] WebSocketSession 303641768119767040: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 21:24:01.729][1][warning] WebSocketSession 303641768958627840: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 21:24:02.969][1][warning] Session 303641768958627840: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-17 21:24:02.969][1][warning] Session 303641768119767040: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-17 21:24:30.975][1][warning] WebSocketSession 303641768958627840: heartbeat timeout, closing
+[2026-04-17 21:24:31.683][1][warning] WebSocketSession 303641768119767040: heartbeat timeout, closing
+[2026-04-17 21:24:31.731][1][warning] WebSocketSession 303641768958627840: heartbeat timeout, closing
+[2026-04-17 21:24:32.970][1][warning] Session 303641768958627840: heartbeat timeout, closing connection
+[2026-04-17 21:24:33.066][1][warning] Session 303641768119767040: heartbeat timeout, closing connection
+[2026-04-17 21:24:41.561][1][warning] WebSocketSession 303641939238981632: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 21:24:42.271][1][warning] WebSocketSession 303641938320429056: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 21:24:42.333][1][warning] WebSocketSession 303641939238981632: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 21:24:43.577][1][warning] Session 303641939238981632: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-17 21:24:43.577][1][warning] Session 303641938320429056: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-17 21:24:50.593][1][warning] WebSocketSession 303641977159684096: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 21:24:51.303][1][warning] WebSocketSession 303641976215965696: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 21:24:51.350][1][warning] WebSocketSession 303641977159684096: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 21:24:52.588][1][warning] Session 303641977159684096: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-17 21:24:52.588][1][warning] Session 303641976215965696: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-17 21:25:11.564][1][warning] WebSocketSession 303641939238981632: heartbeat timeout, closing
+[2026-04-17 21:25:12.273][1][warning] WebSocketSession 303641938320429056: heartbeat timeout, closing
+[2026-04-17 21:25:12.335][1][warning] WebSocketSession 303641939238981632: heartbeat timeout, closing
+[2026-04-17 21:25:13.673][1][warning] Session 303641939238981632: heartbeat timeout, closing connection
+[2026-04-17 21:25:13.674][1][warning] Session 303641938320429056: heartbeat timeout, closing connection
+[2026-04-17 21:25:20.596][1][warning] WebSocketSession 303641977159684096: heartbeat timeout, closing
+[2026-04-17 21:25:21.306][1][warning] WebSocketSession 303641976215965696: heartbeat timeout, closing
+[2026-04-17 21:25:21.353][1][warning] WebSocketSession 303641977159684096: heartbeat timeout, closing
+[2026-04-17 21:25:22.590][1][warning] Session 303641977159684096: heartbeat timeout, closing connection
+[2026-04-17 21:25:22.683][1][warning] Session 303641976215965696: heartbeat timeout, closing connection
+[2026-04-17 21:26:44.796][1][warning] WebSocketSession 303642455301951488: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 21:26:45.510][1][warning] WebSocketSession 303642454052048896: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 21:26:45.562][1][warning] WebSocketSession 303642455301951488: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 21:26:46.989][1][warning] Session 303642454052048896: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-17 21:26:46.989][1][warning] Session 303642455301951488: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-17 21:27:14.800][1][warning] WebSocketSession 303642455301951488: heartbeat timeout, closing
+[2026-04-17 21:27:15.512][1][warning] WebSocketSession 303642454052048896: heartbeat timeout, closing
+[2026-04-17 21:27:15.564][1][warning] WebSocketSession 303642455301951488: heartbeat timeout, closing
+[2026-04-17 21:27:16.993][1][warning] Session 303642454052048896: heartbeat timeout, closing connection
+[2026-04-17 21:27:16.993][1][warning] Session 303642455301951488: heartbeat timeout, closing connection
+[2026-04-17 21:55:32.380][1][warning] PgPool: recreating PostgreSQL connection (max_lifetime_recycle)
+[2026-04-17 21:55:35.781][1][warning] WebSocketSession 303649715709284352: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-17 21:56:05.784][1][warning] WebSocketSession 303649715709284352: heartbeat timeout, closing
+[2026-04-17 21:56:11.512][1][warning] WebSocketSession 303649715709284352: heartbeat timeout, closing
+[2026-04-17 21:56:11.512][1][warning] WebSocketSession 303649714702651392: heartbeat timeout, closing
+[2026-04-17 21:58:03.396][1][info] Shutdown signal received, stopping...
+[2026-04-17 21:58:03.396][1][info] Server stopped
+[2026-04-17 16:59:32.484][51435258][info] PgPool: 14 connections established
+[2026-04-17 16:59:32.752][51435258][info] RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274
+[2026-04-17 16:59:35.036][51435258][info] CassandraClient connected to loomic-cosmos.cassandra.cosmos.azure.com
+[2026-04-17 16:59:35.040][51435258][info] OpenAPI spec loaded (24248 bytes)
+[2026-04-17 16:59:35.040][51435258][info] Docs routes registered: GET /openapi.json  GET /docs
+[2026-04-17 16:59:35.040][51435258][info] Loomic Server starting
+[2026-04-17 16:59:35.040][51435258][info] Thread pool: 14 threads
+[2026-04-17 16:59:35.040][51435258][info] HTTP server: http://0.0.0.0:8080
+[2026-04-17 16:59:35.041][51435258][info] TLS TCP server: port 7777
+[2026-04-17 16:59:47.487][51435258][warning] WebSocketSession 303650771344297984: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /Users/rajpatel/Documents/GitHub/Loomic/server/build/debug/vcpkg_installed/arm64-osx/include/boost/beast/websocket/impl/read.hpp:708:50 in function 'void boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp>>::read_some_op<boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp>>::read_op<boost::asio::detail::awaitable_handler<boost::asio::any_io_executor, boost::system::error_code, unsigned long>, boost::beast::basic_flat_buffer<std::allocator<char>>>, boost::asio::mutable_buffer>::operator()(error_code, std::size_t, bool) [NextLayer = boost::beast::basic_stream<boost::asio::ip::tcp>, deflateSupported = true]']
+[2026-04-17 16:59:48.200][51435258][warning] WebSocketSession 303650770278944768: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /Users/rajpatel/Documents/GitHub/Loomic/server/build/debug/vcpkg_installed/arm64-osx/include/boost/beast/websocket/impl/read.hpp:708:50 in function 'void boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp>>::read_some_op<boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp>>::read_op<boost::asio::detail::awaitable_handler<boost::asio::any_io_executor, boost::system::error_code, unsigned long>, boost::beast::basic_flat_buffer<std::allocator<char>>>, boost::asio::mutable_buffer>::operator()(error_code, std::size_t, bool) [NextLayer = boost::beast::basic_stream<boost::asio::ip::tcp>, deflateSupported = true]']
+[2026-04-17 16:59:48.250][51435258][warning] WebSocketSession 303650771344297984: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /Users/rajpatel/Documents/GitHub/Loomic/server/build/debug/vcpkg_installed/arm64-osx/include/boost/beast/websocket/impl/read.hpp:708:50 in function 'void boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp>>::read_some_op<boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp>>::read_op<boost::asio::detail::awaitable_handler<boost::asio::any_io_executor, boost::system::error_code, unsigned long>, boost::beast::basic_flat_buffer<std::allocator<char>>>, boost::asio::mutable_buffer>::operator()(error_code, std::size_t, bool) [NextLayer = boost::beast::basic_stream<boost::asio::ip::tcp>, deflateSupported = true]']
+[2026-04-17 16:59:49.668][51435258][warning] Session 303650771344297984: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-17 16:59:49.669][51435258][warning] Session 303650770278944768: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-17 17:00:17.488][51435258][warning] WebSocketSession 303650771344297984: heartbeat timeout, closing
+[2026-04-17 17:00:18.201][51435258][warning] WebSocketSession 303650770278944768: heartbeat timeout, closing
+[2026-04-17 17:00:18.253][51435258][warning] WebSocketSession 303650771344297984: heartbeat timeout, closing
+[2026-04-17 17:00:19.768][51435258][warning] Session 303650771344297984: heartbeat timeout, closing connection
+[2026-04-17 17:00:19.768][51435258][warning] Session 303650770278944768: heartbeat timeout, closing connection
+[2026-04-17 17:01:26.529][51435258][warning] WebSocketSession 303651186039328768: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /Users/rajpatel/Documents/GitHub/Loomic/server/build/debug/vcpkg_installed/arm64-osx/include/boost/beast/websocket/impl/read.hpp:708:50 in function 'void boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp>>::read_some_op<boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp>>::read_op<boost::asio::detail::awaitable_handler<boost::asio::any_io_executor, boost::system::error_code, unsigned long>, boost::beast::basic_flat_buffer<std::allocator<char>>>, boost::asio::mutable_buffer>::operator()(error_code, std::size_t, bool) [NextLayer = boost::beast::basic_stream<boost::asio::ip::tcp>, deflateSupported = true]']
+[2026-04-17 17:01:27.264][51435258][warning] WebSocketSession 303651184764260352: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /Users/rajpatel/Documents/GitHub/Loomic/server/build/debug/vcpkg_installed/arm64-osx/include/boost/beast/websocket/impl/read.hpp:708:50 in function 'void boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp>>::read_some_op<boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp>>::read_op<boost::asio::detail::awaitable_handler<boost::asio::any_io_executor, boost::system::error_code, unsigned long>, boost::beast::basic_flat_buffer<std::allocator<char>>>, boost::asio::mutable_buffer>::operator()(error_code, std::size_t, bool) [NextLayer = boost::beast::basic_stream<boost::asio::ip::tcp>, deflateSupported = true]']
+[2026-04-17 17:01:27.314][51435258][warning] WebSocketSession 303651186039328768: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /Users/rajpatel/Documents/GitHub/Loomic/server/build/debug/vcpkg_installed/arm64-osx/include/boost/beast/websocket/impl/read.hpp:708:50 in function 'void boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp>>::read_some_op<boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp>>::read_op<boost::asio::detail::awaitable_handler<boost::asio::any_io_executor, boost::system::error_code, unsigned long>, boost::beast::basic_flat_buffer<std::allocator<char>>>, boost::asio::mutable_buffer>::operator()(error_code, std::size_t, bool) [NextLayer = boost::beast::basic_stream<boost::asio::ip::tcp>, deflateSupported = true]']
+[2026-04-17 17:01:28.648][51435258][warning] Session 303651186039328768: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-17 17:01:28.648][51435258][warning] Session 303651184764260352: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-17 17:01:56.531][51435258][warning] WebSocketSession 303651186039328768: heartbeat timeout, closing
+[2026-04-17 17:01:57.266][51435258][warning] WebSocketSession 303651184764260352: heartbeat timeout, closing
+[2026-04-17 17:01:57.315][51435258][warning] WebSocketSession 303651186039328768: heartbeat timeout, closing
+[2026-04-17 17:01:58.649][51435258][warning] Session 303651186039328768: heartbeat timeout, closing connection
+[2026-04-17 17:01:58.836][51435258][warning] Session 303651184764260352: heartbeat timeout, closing connection
+[2026-04-17 17:06:19.154][51435258][warning] WebSocketSession 303652414349643776: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /Users/rajpatel/Documents/GitHub/Loomic/server/build/debug/vcpkg_installed/arm64-osx/include/boost/beast/websocket/impl/read.hpp:708:50 in function 'void boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp>>::read_some_op<boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp>>::read_op<boost::asio::detail::awaitable_handler<boost::asio::any_io_executor, boost::system::error_code, unsigned long>, boost::beast::basic_flat_buffer<std::allocator<char>>>, boost::asio::mutable_buffer>::operator()(error_code, std::size_t, bool) [NextLayer = boost::beast::basic_stream<boost::asio::ip::tcp>, deflateSupported = true]']
+[2026-04-17 17:06:19.867][51435258][warning] WebSocketSession 303652413284290560: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /Users/rajpatel/Documents/GitHub/Loomic/server/build/debug/vcpkg_installed/arm64-osx/include/boost/beast/websocket/impl/read.hpp:708:50 in function 'void boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp>>::read_some_op<boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp>>::read_op<boost::asio::detail::awaitable_handler<boost::asio::any_io_executor, boost::system::error_code, unsigned long>, boost::beast::basic_flat_buffer<std::allocator<char>>>, boost::asio::mutable_buffer>::operator()(error_code, std::size_t, bool) [NextLayer = boost::beast::basic_stream<boost::asio::ip::tcp>, deflateSupported = true]']
+[2026-04-17 17:06:19.918][51435258][warning] WebSocketSession 303652414349643776: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /Users/rajpatel/Documents/GitHub/Loomic/server/build/debug/vcpkg_installed/arm64-osx/include/boost/beast/websocket/impl/read.hpp:708:50 in function 'void boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp>>::read_some_op<boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp>>::read_op<boost::asio::detail::awaitable_handler<boost::asio::any_io_executor, boost::system::error_code, unsigned long>, boost::beast::basic_flat_buffer<std::allocator<char>>>, boost::asio::mutable_buffer>::operator()(error_code, std::size_t, bool) [NextLayer = boost::beast::basic_stream<boost::asio::ip::tcp>, deflateSupported = true]']
+[2026-04-17 17:06:21.172][51435258][warning] Session 303652414349643776: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-17 17:06:21.172][51435258][warning] Session 303652413284290560: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-17 17:06:49.155][51435258][warning] WebSocketSession 303652414349643776: heartbeat timeout, closing
+[2026-04-17 17:06:49.868][51435258][warning] WebSocketSession 303652413284290560: heartbeat timeout, closing
+[2026-04-17 17:06:49.919][51435258][warning] WebSocketSession 303652414349643776: heartbeat timeout, closing
+[2026-04-17 17:06:51.283][51435258][warning] Session 303652414349643776: heartbeat timeout, closing connection
+[2026-04-17 17:06:51.283][51435258][warning] Session 303652413284290560: heartbeat timeout, closing connection
+[2026-04-17 17:07:16.533][51435258][info] Shutdown signal received, stopping...
+[2026-04-17 17:07:16.533][51435258][info] Server stopped
+[2026-04-17 19:03:06.358][51534824][info] PgPool: 14 connections established
+[2026-04-17 19:03:06.554][51534824][info] RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274
+[2026-04-17 19:03:10.013][51534824][info] CassandraClient connected to loomic-cosmos.cassandra.cosmos.azure.com
+[2026-04-17 19:03:10.018][51534824][info] OpenAPI spec loaded (24248 bytes)
+[2026-04-17 19:03:10.018][51534824][info] Docs routes registered: GET /openapi.json  GET /docs
+[2026-04-17 19:03:10.018][51534824][info] Loomic Server starting
+[2026-04-17 19:03:10.018][51534824][info] Thread pool: 14 threads
+[2026-04-17 19:03:10.018][51534824][info] HTTP server: http://0.0.0.0:8080
+[2026-04-17 19:03:10.018][51534824][info] TLS TCP server: port 7777
+[2026-04-17 19:03:55.582][51534824][info] Shutdown signal received, stopping...
+[2026-04-17 19:03:55.582][51534824][info] Server stopped
+[2026-04-17 19:04:12.712][51537768][info] PgPool: 14 connections established
+[2026-04-17 19:04:12.904][51537768][info] RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274
+[2026-04-17 19:04:15.888][51537768][info] CassandraClient connected to loomic-cosmos.cassandra.cosmos.azure.com
+[2026-04-17 19:04:15.893][51537768][info] OpenAPI spec loaded (24248 bytes)
+[2026-04-17 19:04:15.893][51537768][info] Docs routes registered: GET /openapi.json  GET /docs
+[2026-04-17 19:04:15.893][51537768][info] Loomic Server starting
+[2026-04-17 19:04:15.893][51537768][info] Thread pool: 14 threads
+[2026-04-17 19:04:15.893][51537768][info] HTTP server: http://0.0.0.0:8080
+[2026-04-17 19:04:15.893][51537768][info] TLS TCP server: port 7777
+[2026-04-17 19:04:58.416][51537768][info] Shutdown signal received, stopping...
+[2026-04-17 19:04:58.417][51537768][info] Server stopped
+[2026-04-17 19:07:01.621][51547812][info] PgPool: 14 connections established
+[2026-04-17 19:07:01.819][51547812][info] RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274
+[2026-04-17 19:07:04.695][51547812][info] CassandraClient connected to loomic-cosmos.cassandra.cosmos.azure.com
+[2026-04-17 19:07:04.700][51547812][info] OpenAPI spec loaded (24248 bytes)
+[2026-04-17 19:07:04.701][51547812][info] Docs routes registered: GET /openapi.json  GET /docs
+[2026-04-17 19:07:04.701][51547812][info] Loomic Server starting
+[2026-04-17 19:07:04.701][51547812][info] Thread pool: 14 threads
+[2026-04-17 19:07:04.701][51547812][info] HTTP server: http://0.0.0.0:8080
+[2026-04-17 19:07:04.701][51547812][info] TLS TCP server: port 7777
+[2026-04-17 19:12:33.977][51547812][info] Shutdown signal received, stopping...
+[2026-04-17 19:12:33.977][51547812][info] Server stopped
+[2026-04-17 19:13:26.447][51563305][info] PgPool: 14 connections established
+[2026-04-17 19:13:26.646][51563305][info] RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274
+[2026-04-17 19:13:29.419][51563305][info] CassandraClient connected to loomic-cosmos.cassandra.cosmos.azure.com
+[2026-04-17 19:13:29.424][51563305][info] OpenAPI spec loaded (24248 bytes)
+[2026-04-17 19:13:29.424][51563305][info] Docs routes registered: GET /openapi.json  GET /docs
+[2026-04-17 19:13:29.424][51563305][info] Loomic Server starting
+[2026-04-17 19:13:29.424][51563305][info] Thread pool: 14 threads
+[2026-04-17 19:13:29.424][51563305][info] HTTP server: http://0.0.0.0:8080
+[2026-04-17 19:13:29.425][51563305][info] TLS TCP server: port 7777
+[2026-04-17 19:13:36.110][51563305][info] Shutdown signal received, stopping...
+[2026-04-17 19:13:36.110][51563305][info] Server stopped
+[2026-04-17 19:15:42.272][51577135][info] PgPool: 14 connections established
+[2026-04-17 19:15:42.469][51577135][info] RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274
+[2026-04-17 19:15:45.054][51577135][info] CassandraClient connected to loomic-cosmos.cassandra.cosmos.azure.com
+[2026-04-17 19:15:45.058][51577135][info] OpenAPI spec loaded (24248 bytes)
+[2026-04-17 19:15:45.058][51577135][info] Docs routes registered: GET /openapi.json  GET /docs
+[2026-04-17 19:15:45.058][51577135][info] Loomic Server starting
+[2026-04-17 19:15:45.058][51577135][info] Thread pool: 14 threads
+[2026-04-17 19:15:45.058][51577135][info] HTTP server: http://0.0.0.0:8080
+[2026-04-17 19:15:45.058][51577135][info] TLS TCP server: port 7777
+[2026-04-17 19:22:09.525][51577135][info] Shutdown signal received, stopping...
+[2026-04-17 19:22:09.525][51577135][info] Server stopped
+[2026-04-18 00:34:09.040][1][info] PgPool: 12 connections established
+[2026-04-18 00:34:09.230][1][info] RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274
+[2026-04-18 00:34:12.187][1][info] CassandraClient connected to loomic-cosmos.cassandra.cosmos.azure.com
+[2026-04-18 00:34:12.188][1][info] OpenAPI spec loaded (24248 bytes)
+[2026-04-18 00:34:12.188][1][info] Docs routes registered: GET /openapi.json  GET /docs
+[2026-04-18 00:34:12.188][1][info] Loomic Server starting
+[2026-04-18 00:34:12.188][1][info] Thread pool: 12 threads
+[2026-04-18 00:34:12.188][1][info] HTTP server: http://0.0.0.0:8080
+[2026-04-18 00:34:12.188][1][info] TLS TCP server: port 7777
+[2026-04-18 00:58:21.816][1][warning] PgPool: recreating PostgreSQL connection (idle_validation_failed)
+[2026-04-18 00:58:25.928][1][warning] WebSocketSession 303695726007816192: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-18 00:58:26.635][1][warning] WebSocketSession 303695724804050944: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-18 00:58:26.699][1][warning] WebSocketSession 303695726007816192: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']
+[2026-04-18 00:58:28.191][1][warning] Session 303695726007816192: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-18 00:58:28.192][1][warning] Session 303695724804050944: disconnected: stream truncated [asio.ssl.stream:1]
+[2026-04-18 00:58:34.198][1][info] Shutdown signal received, stopping...
+[2026-04-18 00:58:34.198][1][info] Server stopped

@@ -29,12 +29,14 @@ void Logger::init(const Config& cfg)
 
     // Stdout color sink
     auto stdout_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+    stdout_sink->set_level(spdlog::level::err);
     sinks.push_back(stdout_sink);
 
     // Rotating file sink (100 MB, 5 files)
     if (!cfg.log_file.empty()) {
         auto file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
             cfg.log_file, 100 * 1024 * 1024, 5);
+        file_sink->set_level(spdlog::level::from_str(cfg.log_level));
         sinks.push_back(file_sink);
     }
 

@@ -3,12 +3,16 @@
 
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
+#include <boost/beast/websocket.hpp>
 #include <boost/asio/co_spawn.hpp>
 #include <boost/asio/detached.hpp>
 #include <boost/asio/use_awaitable.hpp>
 #include <boost/asio/this_coro.hpp>
 
 #include <nlohmann/json.hpp>
+
+#include <string_view>
+#include <vector>
 
 namespace beast = boost::beast;
 namespace net   = boost::asio;
@@ -31,6 +35,53 @@ Response make_error(http::status status, std::string_view msg)
     return make_json(status, j.dump());
 }
 
+// Split a string_view by a delimiter into a vector of string_views.
+static std::vector<std::string_view> split_path(std::string_view s, char delim)
+{
+    std::vector<std::string_view> parts;
+    size_t start = 0;
+    while (start < s.size()) {
+        auto pos = s.find(delim, start);
+        if (pos == std::string_view::npos) {
+            parts.push_back(s.substr(start));
+            break;
+        }
+        if (pos > start) {
+            parts.push_back(s.substr(start, pos - start));
+        }
+        start = pos + 1;
+    }
+    return parts;
+}
+
+bool HttpServer::match_path(std::string_view pattern, std::string_view target,
+                             PathParams& params)
+{
+    // Strip query string from target before matching
+    auto qpos = target.find('?');
+    if (qpos != std::string_view::npos) {
+        target = target.substr(0, qpos);
+    }
+
+    auto pat_parts = split_path(pattern, '/');
+    auto tgt_parts = split_path(target,  '/');
+
+    if (pat_parts.size() != tgt_parts.size()) return false;
+
+    for (size_t i = 0; i < pat_parts.size(); ++i) {
+        auto& p = pat_parts[i];
+        auto& t = tgt_parts[i];
+        if (p.size() >= 2 && p.front() == '{' && p.back() == '}') {
+            // Path parameter: extract name and bind value
+            std::string name(p.substr(1, p.size() - 2));
+            params[name] = std::string(t);
+        } else if (p != t) {
+            return false;
+        }
+    }
+    return true;
+}
+
 HttpServer::HttpServer(net::io_context& ioc, uint16_t port)
     : ioc_(ioc), port_(port)
 {}
@@ -38,6 +89,11 @@ HttpServer::HttpServer(net::io_context& ioc, uint16_t port)
 void HttpServer::add_route(http::verb method, std::string path, Handler handler)
 {
     routes_.push_back({method, std::move(path), std::move(handler)});
+}
+
+void HttpServer::set_ws_upgrade_handler(WsUpgradeHandler h)
+{
+    ws_upgrade_handler_ = std::move(h);
 }
 
 void HttpServer::start()
@@ -75,11 +131,37 @@ net::awaitable<void> HttpServer::handle_connection(net::ip::tcp::socket socket)
         Request req;
         co_await http::async_read(socket, buffer, req, net::use_awaitable);
 
+        // ── WebSocket upgrade ────────────────────────────────────────────────
+        if (ws_upgrade_handler_ && beast::websocket::is_upgrade(req)
+            && req.target() == "/ws")
+        {
+            co_await ws_upgrade_handler_(
+                std::move(socket), std::move(buffer), std::move(req));
+            co_return;
+        }
+
+        // ── CORS preflight ───────────────────────────────────────────────────
+        if (req.method() == http::verb::options) {
+            Response res{http::status::no_content, req.version()};
+            res.set("Access-Control-Allow-Origin", "*");
+            res.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+            res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+            res.set("Access-Control-Max-Age", "86400");
+            res.keep_alive(false);
+            res.prepare_payload();
+            co_await http::async_write(socket, res, net::use_awaitable);
+            co_return;
+        }
+
+        // ── Route matching ───────────────────────────────────────────────────
         Response res;
         bool handled = false;
+        std::string target(req.target());
         for (const auto& route : routes_) {
-            if (route.method == req.method() && route.path == req.target()) {
-                res = co_await route.handler(req);
+            if (route.method != req.method()) continue;
+            PathParams params;
+            if (match_path(route.path, target, params)) {
+                res = co_await route.handler(req, params);
                 handled = true;
                 break;
             }
@@ -87,6 +169,11 @@ net::awaitable<void> HttpServer::handle_connection(net::ip::tcp::socket socket)
         if (!handled) {
             res = make_error(http::status::not_found, "not found");
         }
+
+        // ── Inject CORS headers on every response ────────────────────────────
+        res.set("Access-Control-Allow-Origin", "*");
+        res.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+        res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
         res.version(req.version());
         res.keep_alive(false);
@@ -97,7 +184,6 @@ net::awaitable<void> HttpServer::handle_connection(net::ip::tcp::socket socket)
         beast::error_code ec;
         socket.shutdown(net::ip::tcp::socket::shutdown_send, ec);
     } catch (...) {
-        // Connection errors and client disconnects are expected.
     }
 }
 

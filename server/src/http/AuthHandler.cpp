@@ -61,7 +61,7 @@ void register_auth_routes(HttpServer& server,
 {
     // ── POST /auth/register ───────────────────────────────────────────────────
     server.add_route(http::verb::post, "/auth/register",
-        [pg, snowflake, pwd](Request req) -> net::awaitable<Response> {
+        [pg, snowflake, pwd](const Request& req, const PathParams&) -> net::awaitable<Response> {
             nlohmann::json body;
             try {
                 body = nlohmann::json::parse(req.body());
@@ -128,7 +128,7 @@ void register_auth_routes(HttpServer& server,
 
     // ── POST /auth/login ──────────────────────────────────────────────────────
     server.add_route(http::verb::post, "/auth/login",
-        [pg, jwt, pwd](Request req) -> net::awaitable<Response> {
+        [pg, jwt, pwd](const Request& req, const PathParams&) -> net::awaitable<Response> {
             nlohmann::json body;
             try {
                 body = nlohmann::json::parse(req.body());
@@ -196,9 +196,53 @@ void register_auth_routes(HttpServer& server,
             co_return make_json(http::status::ok, resp.dump());
         });
 
+    // ── POST /auth/logout ─────────────────────────────────────────────────────
+    server.add_route(http::verb::post, "/auth/logout",
+        [pg, jwt](const Request& req, const PathParams&) -> net::awaitable<Response> {
+            // Require a valid access token to prevent token fishing
+            auto user = require_auth(std::string(req[http::field::authorization]), *jwt);
+            if (!user) {
+                co_return make_error(http::status::forbidden, "missing or invalid token");
+            }
+
+            nlohmann::json body;
+            try {
+                body = nlohmann::json::parse(req.body());
+            } catch (...) {
+                co_return make_error(http::status::bad_request, "invalid JSON");
+            }
+
+            auto refresh_token = body.value("refresh_token", std::string{});
+            if (refresh_token.empty()) {
+                co_return make_error(http::status::bad_request, "missing refresh_token");
+            }
+
+            // Delete the refresh token — idempotent (204 even if not found)
+            try {
+                co_await pg->execute(
+                    [rt = refresh_token, uid = user->uid](pqxx::connection& conn) {
+                        pqxx::work txn(conn);
+                        auto r = txn.exec_params(
+                            "DELETE FROM refresh_tokens WHERE token=$1 AND user_id=$2",
+                            rt, uid);
+                        txn.commit();
+                        return r;
+                    },
+                    PgPool::RetryClass::NonRetryableWrite);
+            } catch (const std::exception& e) {
+                LOG_ERROR("logout delete refresh token: {}", e.what());
+                co_return make_error(http::status::internal_server_error, "database error");
+            }
+
+            Response res{http::status::no_content, req.version()};
+            res.keep_alive(false);
+            res.prepare_payload();
+            co_return res;
+        });
+
     // ── POST /auth/refresh ────────────────────────────────────────────────────
     server.add_route(http::verb::post, "/auth/refresh",
-        [pg, jwt](Request req) -> net::awaitable<Response> {
+        [pg, jwt](const Request& req, const PathParams&) -> net::awaitable<Response> {
             nlohmann::json body;
             try {
                 body = nlohmann::json::parse(req.body());

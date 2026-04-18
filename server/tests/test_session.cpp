@@ -21,7 +21,7 @@ std::shared_ptr<Loomic::Session> make_session()
     static boost::asio::ssl::context ssl_ctx(boost::asio::ssl::context::tls_server);
     return std::make_shared<Loomic::Session>(
         Loomic::SslStream(ioc.get_executor(), ssl_ctx),
-        nullptr, nullptr, nullptr, nullptr, nullptr);
+        nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, std::string{});
 }
 
 // ── TokenBucket ───────────────────────────────────────────────────────────────

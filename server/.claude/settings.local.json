@@ -48,7 +48,23 @@
       "Bash(find /Users/rajpatel/Documents/GitHub/Loomic/server/build -name \"cassandra*\" -maxdepth 5 2>/dev/null | head -20; echo \"---\"; find /Users/rajpatel/Documents/GitHub/Loomic/server/vcpkg -name \"cassandra*\" -maxdepth 5 2>/dev/null | head -10)",
       "Bash(find /Users/rajpatel/Documents/GitHub/Loomic/server/vcpkg/downloads -name \"apache-cassandra*\" 2>/dev/null; head -3 /Users/rajpatel/Documents/GitHub/Loomic/server/vcpkg/downloads/apache-cassandra-cpp-driver-2.17.1.tar.gz 2>/dev/null | xxd | head; tar -tzf /Users/rajpatel/Documents/GitHub/Loomic/server/vcpkg/downloads/apache-cassandra-cpp-driver-2.17.1.tar.gz 2>/dev/null | grep CMakeLists | head -5)",
       "Bash(tar -xOzf /Users/rajpatel/Documents/GitHub/Loomic/server/vcpkg/downloads/apache-cassandra-cpp-driver-2.17.1.tar.gz cassandra-cpp-driver-2.17.1/CMakeLists.txt 2>/dev/null | head -30)",
-      "Bash(tar -xOzf /Users/rajpatel/Documents/GitHub/Loomic/server/vcpkg/downloads/apache-cassandra-cpp-driver-2.17.1.tar.gz cassandra-cpp-driver-2.17.1/CMakeLists.txt 2>/dev/null | grep -n \"Clang\\\\|compiler_id\\\\|CXX_COMPILER\" | head -20)"
+      "Bash(tar -xOzf /Users/rajpatel/Documents/GitHub/Loomic/server/vcpkg/downloads/apache-cassandra-cpp-driver-2.17.1.tar.gz cassandra-cpp-driver-2.17.1/CMakeLists.txt 2>/dev/null | grep -n \"Clang\\\\|compiler_id\\\\|CXX_COMPILER\" | head -20)",
+      "Bash(cmake --build build/debug --target LoomicServer_lib 2>&1 | tail -30)",
+      "Bash(cmake --build build/debug --target LoomicServer_lib 2>&1 | grep \"error:\" | head -20)",
+      "Bash(cmake --build build/debug --target LoomicServer_lib 2>&1 | grep -E \"error:|warning:\" | grep \"error:\" | head -20)",
+      "Bash(cmake --build build/debug 2>&1 | grep -E \"^.*error:\" | head -20)",
+      "Bash(cmake --build build/debug 2>&1 | grep \"error:\" | grep -v \"note:\\\\|In file\\\\|In member\\\\|In included\\\\|expanded from\\\\|absl\\\\|protobuf\\\\|pb.h\" | head -20)",
+      "Bash(cmake --build build/debug 2>&1 | grep \"error:\" | grep -v \"__memory\\\\|absl\\\\|note:\\\\|protobuf\\\\|pb.h\" | head -20)",
+      "Bash(cmake --build build/debug 2>&1 | tail -15)",
+      "Bash(cmake --build build/debug 2>&1 | grep \"error:\" | grep -v \"__memory\\\\|note:\\\\|absl\\\\|pb.h\" | head -20)",
+      "Bash(cmake --build build/debug 2>&1 | tail -5)",
+      "Bash(python3 -c \"import json,sys; json.load\\(open\\('api/openapi.json'\\)\\); print\\('valid JSON'\\)\")",
+      "Bash(grep -n \"CORS\\\\|cors\\\\|Access-Control\" /Users/rajpatel/Documents/GitHub/Loomic/server/src/http/*.cpp /Users/rajpatel/Documents/GitHub/Loomic/server/include/LoomicServer/http/*.hpp 2>/dev/null)",
+      "Bash(cmake --build build/ 2>&1 | tail -60)",
+      "Bash(ls /Users/rajpatel/Documents/GitHub/Loomic/server/build* 2>/dev/null || ls /Users/rajpatel/Documents/GitHub/Loomic/server/ | head -30)",
+      "Bash(cmake --build /Users/rajpatel/Documents/GitHub/Loomic/server/cmake-build-debug/ 2>&1 | tail -80)",
+      "Bash(cmake --build /Users/rajpatel/Documents/GitHub/Loomic/server/cmake-build-debug/ 2>&1 | grep -E \"\\(error:|warning: unused|Linking|error\\)\" | grep -v \"absl_nullable\\\\|absl_nonnull\\\\|Wnullability\\\\|Wdeprecated\" | head -30)",
+      "Bash(cd /Users/rajpatel/Documents/GitHub/Loomic/python_test && python3 -c \"import chat_pb2; print\\('ok'\\)\" 2>&1)"
     ]
   }
 }

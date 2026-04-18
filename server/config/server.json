@@ -3,14 +3,14 @@
   "port": 7777,
   "http_health_port": 8080,
   "thread_count": 0,
-  "tls_cert_path": "/app/certs/server.crt",
-  "tls_key_path": "/app/certs/server.key",
-  "scylla_hosts": "127.0.0.1",
+  "tls_cert_path": "certs/server.crt",
+  "tls_key_path": "certs/server.key",
+  "cassandra_contact_points": "127.0.0.1",
   "pg_conn_string": "SET_VIA_ENV",
   "redis_host": "127.0.0.1",
   "redis_port": 6379,
   "jwt_secret": "SET_VIA_ENV",
   "log_level": "info",
-  "log_file": "/app/logs/server.log",
+  "log_file": "logs/server.log",
   "metrics_port": 9090
 }

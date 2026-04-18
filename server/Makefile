@@ -1,4 +1,4 @@
-.PHONY: cert build-debug build-release test clean
+.PHONY: cert build-debug build-release test run-debug clean
 
 cert:
 	bash certs/gen_cert.sh
@@ -13,6 +13,9 @@ build-release:
 
 test: build-debug
 	ctest --preset debug
+
+run-debug: build-debug
+	./build/debug/bin/LoomicServer --config config/server.json
 
 clean:
 	rm -rf build/

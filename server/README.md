@@ -237,6 +237,29 @@ Windows:
 Invoke-RestMethod http://localhost:8080/health
 ```
 
+## Fast Local Dev Loop
+
+Docker is useful for dependency parity, but it is the wrong inner-loop for this repo because every code change forces an image rebuild. The faster workflow is:
+
+```bash
+cmake --preset debug
+cmake --build --preset debug
+./build/debug/bin/LoomicServer --config config/server.json
+```
+
+Notes:
+
+- The binary already calls `Config::load_dotenv()` on startup, so running it directly from the repo root loads `.env` automatically. You do not need `docker compose` just to get env vars.
+- `config/server.json` now uses relative `certs/` and `logs/` paths, so the same file works both locally and in Docker because the working directory is the repo root locally and `/app` in the container.
+- If you want databases to stay containerized while the app runs natively, run only the backing services in Docker and keep the server process local.
+- After the first configure, incremental rebuilds should only recompile changed files, which is usually seconds instead of a full image rebuild.
+
+Convenience target:
+
+```bash
+make run-debug
+```
+
 ## Makefile Shortcuts
 
 The Makefile is a convenience wrapper for POSIX shells only:
