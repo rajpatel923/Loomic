@@ -63,7 +63,6 @@ RedisClient::~RedisClient()
 net::awaitable<void> RedisClient::lpush(const std::string& key,
                                          std::span<const uint8_t> data)
 {
-    // Copy key and data before suspending — spans are not lifetime-extended.
     std::vector<uint8_t> buf(data.begin(), data.end());
     std::string k = key;
 
@@ -73,6 +72,11 @@ net::awaitable<void> RedisClient::lpush(const std::string& key,
     auto* reply = static_cast<redisReply*>(
         redisCommand(ctx_, "LPUSH %s %b", k.c_str(), buf.data(), buf.size()));
     if (reply) freeReplyObject(reply);
+
+    // 7-day TTL on offline queue
+    auto* exp_reply = static_cast<redisReply*>(
+        redisCommand(ctx_, "EXPIRE %s 604800", k.c_str()));
+    if (exp_reply) freeReplyObject(exp_reply);
 }
 
 net::awaitable<std::vector<std::vector<uint8_t>>>
@@ -85,8 +89,6 @@ RedisClient::lrange_and_del(const std::string& key)
     std::lock_guard lock(mutex_);
     std::vector<std::vector<uint8_t>> result;
 
-    // LRANGE returns newest-first because we used LPUSH; reverse to get
-    // chronological order for delivery.
     auto* reply = static_cast<redisReply*>(
         redisCommand(ctx_, "LRANGE %s 0 -1", k.c_str()));
     if (reply) {
@@ -110,6 +112,43 @@ RedisClient::lrange_and_del(const std::string& key)
     }
 
     co_return result;
+}
+
+net::awaitable<void> RedisClient::set_presence(uint64_t user_id, std::string_view server_id)
+{
+    std::string key    = "presence:" + std::to_string(user_id);
+    std::string val(server_id);
+
+    co_await net::post(pool_, net::use_awaitable);
+
+    std::lock_guard lock(mutex_);
+    auto* reply = static_cast<redisReply*>(
+        redisCommand(ctx_, "SETEX %s 60 %s", key.c_str(), val.c_str()));
+    if (reply) freeReplyObject(reply);
+}
+
+net::awaitable<void> RedisClient::refresh_presence(uint64_t user_id)
+{
+    std::string key = "presence:" + std::to_string(user_id);
+
+    co_await net::post(pool_, net::use_awaitable);
+
+    std::lock_guard lock(mutex_);
+    auto* reply = static_cast<redisReply*>(
+        redisCommand(ctx_, "EXPIRE %s 60", key.c_str()));
+    if (reply) freeReplyObject(reply);
+}
+
+net::awaitable<void> RedisClient::del_presence(uint64_t user_id)
+{
+    std::string key = "presence:" + std::to_string(user_id);
+
+    co_await net::post(pool_, net::use_awaitable);
+
+    std::lock_guard lock(mutex_);
+    auto* reply = static_cast<redisReply*>(
+        redisCommand(ctx_, "DEL %s", key.c_str()));
+    if (reply) freeReplyObject(reply);
 }
 
 } // namespace Loomic

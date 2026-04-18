@@ -10,7 +10,12 @@
 #include "LoomicServer/tcp/SessionRegistry.hpp"
 #include "LoomicServer/http/AuthHandler.hpp"
 #include "LoomicServer/http/DocsHandler.hpp"
+#include "LoomicServer/http/ConversationsHandler.hpp"
+#include "LoomicServer/http/UsersHandler.hpp"
+#include "LoomicServer/ws/WebSocketSession.hpp"
 #include <openssl/ssl.h>
+
+#include <boost/asio/ip/host_name.hpp>
 
 #include <fstream>
 #include <sstream>
@@ -39,7 +44,9 @@ Server::Server(const Config& cfg)
     , registry_(std::make_shared<SessionRegistry>())
     , http_(io_ctxs_[0], cfg.http_health_port)
     , tcp_(io_ctxs_[0], ssl_ctx_, cfg.port,
-           registry_, jwt_, redis_, cass_, snowflake_)
+           registry_, jwt_, redis_, cass_, snowflake_,
+           pg_,
+           net::ip::host_name() + ":" + std::to_string(cfg.port))
 {
     setup_tls(cfg);
     register_routes();
@@ -63,14 +70,20 @@ void Server::setup_tls(const Config& cfg)
 void Server::register_routes()
 {
     http_.add_route(http::verb::get, "/health",
-        [](Request /*req*/) -> net::awaitable<Response> {
+        [](const Request& /*req*/, const PathParams&) -> net::awaitable<Response> {
             co_return make_json(http::status::ok, R"({"status":"ok"})");
         });
 
     register_auth_routes(http_, pg_, snowflake_, jwt_, pwd_);
 
+    // ── Conversations ──────────────────────────────────────────────────────
+    conv_handler_ = std::make_shared<ConversationsHandler>(cass_, pg_, jwt_, snowflake_);
+    conv_handler_->register_routes(http_);
+
+    // ── Users ──────────────────────────────────────────────────────────────
+    register_users_routes(http_, pg_, jwt_);
+
     // ── Docs ──────────────────────────────────────────────────────────────
-    // Read the OpenAPI spec from disk once at startup and cache it in memory.
     std::string spec_json;
     {
         std::ifstream ifs("api/openapi.json");
@@ -85,6 +98,19 @@ void Server::register_routes()
         }
     }
     register_docs_routes(http_, std::move(spec_json));
+
+    // ── WebSocket upgrade handler ──────────────────────────────────────────
+    http_.set_ws_upgrade_handler(
+        [this](net::ip::tcp::socket sock,
+               boost::beast::flat_buffer buf,
+               Request req) -> net::awaitable<void>
+        {
+            auto session = std::make_shared<WebSocketSession>(
+                std::move(sock), registry_, jwt_, redis_,
+                cass_, snowflake_, pg_,
+                net::ip::host_name() + ":ws");
+            co_await session->run(std::move(buf), std::move(req));
+        });
 }
 
 void Server::run()

@@ -23,6 +23,7 @@ class PasswordService;
 class RedisClient;
 class CassandraClient;
 class SessionRegistry;
+class ConversationsHandler;
 
 class Server {
 public:
@@ -39,6 +40,8 @@ private:
     void register_routes();
 
     // Declaration order matters: ssl_ctx_ before tcp_, services before tcp_.
+    // cfg_ is a reference to the Config passed to the constructor; store it
+    // before any member that uses cfg at construction time.
     unsigned int                            thread_count_;
     boost::asio::ssl::context               ssl_ctx_;
     boost::asio::thread_pool                thread_pool_;
@@ -51,6 +54,7 @@ private:
     std::shared_ptr<RedisClient>            redis_;
     std::shared_ptr<CassandraClient>        cass_;
     std::shared_ptr<SessionRegistry>        registry_;
+    std::shared_ptr<ConversationsHandler>   conv_handler_;
     HttpServer                              http_;
     TcpServer                               tcp_;
     std::vector<std::thread>                threads_;
