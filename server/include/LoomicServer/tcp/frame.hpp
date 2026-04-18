@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <span>
 #include <vector>
 
@@ -36,10 +37,23 @@ struct FrameHeader {
 #pragma pack(pop)
 static_assert(sizeof(FrameHeader) == 30, "FrameHeader must be exactly 30 bytes");
 
+struct OutboundMessage {
+    uint64_t             conv_id{};
+    uint64_t             msg_id{};
+    uint64_t             sender_id{};
+    uint64_t             recipient_id{};
+    int64_t              timestamp_ms{};
+    MsgType              msg_type{MsgType::CHAT};
+    std::vector<uint8_t> content;
+};
+
 // Awaitable frame I/O helpers (implemented in frame.cpp).
 net::awaitable<FrameHeader>          read_frame_header(SslStream& s);
 net::awaitable<std::vector<uint8_t>> read_frame_payload(SslStream& s, uint32_t len);
 net::awaitable<void>                 write_frame(SslStream& s, const FrameHeader& hdr,
                                                   std::span<const uint8_t> payload);
+std::vector<uint8_t>                 serialize_delivery(const OutboundMessage& message);
+std::optional<OutboundMessage>       deserialize_delivery(std::span<const uint8_t> payload);
+std::vector<uint8_t>                 build_chat_frame(const OutboundMessage& message);
 
 } // namespace Loomic

@@ -65,7 +65,7 @@ void register_docs_routes(HttpServer& server, std::string spec_json)
     // Serves the cached spec with CORS headers so external tooling (e.g. a
     // locally-run Swagger UI or Redoc) can fetch the spec freely.
     server.add_route(http::verb::get, "/openapi.json",
-        [spec = std::move(spec_json)](Request /*req*/) -> net::awaitable<Response> {
+        [spec = std::move(spec_json)](const Request& /*req*/, const PathParams&) -> net::awaitable<Response> {
             Response res;
             res.result(http::status::ok);
             res.set(http::field::content_type,                "application/json");
@@ -80,7 +80,7 @@ void register_docs_routes(HttpServer& server, std::string spec_json)
     // Serves the Swagger UI HTML page. The page self-fetches /openapi.json
     // from the same origin, so the spec and UI are always in sync.
     server.add_route(http::verb::get, "/docs",
-        [](Request /*req*/) -> net::awaitable<Response> {
+        [](const Request& /*req*/, const PathParams&) -> net::awaitable<Response> {
             Response res;
             res.result(http::status::ok);
             res.set(http::field::content_type, "text/html; charset=utf-8");

@@ -85,6 +85,8 @@ void Config::from_env(Config& cfg)
     if (auto v = get("LOOMIC_PORT");             !v.empty()) cfg.port             = static_cast<uint16_t>(to_int(v, "LOOMIC_PORT"));
     if (auto v = get("LOOMIC_HTTP_HEALTH_PORT"); !v.empty()) cfg.http_health_port = static_cast<uint16_t>(to_int(v, "LOOMIC_HTTP_HEALTH_PORT"));
     if (auto v = get("LOOMIC_THREAD_COUNT");     !v.empty()) cfg.thread_count     = static_cast<unsigned>(to_int(v, "LOOMIC_THREAD_COUNT"));
+    if (auto v = get("LOOMIC_TLS_CERT_PATH");    !v.empty()) cfg.tls_cert_path     = v;
+    if (auto v = get("LOOMIC_TLS_KEY_PATH");     !v.empty()) cfg.tls_key_path      = v;
     if (auto v = get("LOOMIC_PG_CONN_STRING");   !v.empty()) cfg.pg_conn_string   = v;
     if (auto v = get("LOOMIC_JWT_SECRET");       !v.empty()) cfg.jwt_secret       = v;
     if (auto v = get("LOOMIC_LOG_LEVEL");        !v.empty()) cfg.log_level        = v;

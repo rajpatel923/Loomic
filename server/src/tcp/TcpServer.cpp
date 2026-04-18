@@ -21,7 +21,9 @@ TcpServer::TcpServer(net::io_context& ioc,
                      std::shared_ptr<JwtService>       jwt,
                      std::shared_ptr<RedisClient>      redis,
                      std::shared_ptr<CassandraClient>  cass,
-                     std::shared_ptr<SnowflakeGen>     snowflake)
+                     std::shared_ptr<SnowflakeGen>     snowflake,
+                     std::shared_ptr<PgPool>           pg,
+                     std::string                       server_id)
     : ioc_(ioc)
     , ssl_ctx_(ssl_ctx)
     , port_(port)
@@ -30,6 +32,8 @@ TcpServer::TcpServer(net::io_context& ioc,
     , redis_(std::move(redis))
     , cass_(std::move(cass))
     , snowflake_(std::move(snowflake))
+    , pg_(std::move(pg))
+    , server_id_(std::move(server_id))
 {}
 
 void TcpServer::start()
@@ -64,7 +68,8 @@ net::awaitable<void> TcpServer::listen()
                     }
                     auto session = std::make_shared<Session>(
                         std::move(tls),
-                        registry_, jwt_, redis_, cass_, snowflake_);
+                        registry_, jwt_, redis_, cass_, snowflake_,
+                        pg_, server_id_);
                     net::co_spawn(session->strand(), session->run(), net::detached);
                 },
                 net::detached);
