@@ -22,6 +22,39 @@ export function getApiBaseUrl() {
   );
 }
 
+export function getTcpHost() {
+  if (process.env.LOOMIC_TCP_HOST) {
+    return process.env.LOOMIC_TCP_HOST;
+  }
+
+  return new URL(getApiBaseUrl()).hostname;
+}
+
+export function getChatPort() {
+  const value = process.env.LOOMIC_TCP_PORT;
+
+  if (!value) {
+    return 9000;
+  }
+
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) ? parsed : 9000;
+}
+
+export function getChatServerName(host: string) {
+  return process.env.LOOMIC_TCP_SERVERNAME ?? host;
+}
+
+export function shouldVerifyChatTls() {
+  const value = process.env.LOOMIC_TCP_VERIFY_TLS;
+
+  if (!value) {
+    return false;
+  }
+
+  return value === "true" || value === "1";
+}
+
 export async function buildProxyResponse(
   response: Response,
   context?: {
