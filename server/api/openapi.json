@@ -15,8 +15,8 @@
     "authentication": "First frame must be AUTH (0x02) carrying the Bearer JWT from /auth/login",
     "header": {
       "payload_len":   "uint32 LE, bytes 0-3",
-      "msg_type":      "uint8, byte 4  — 0x01=CHAT 0x02=AUTH 0x03=PING 0x04=PONG 0x05=ERROR",
-      "flags":         "uint8, byte 5  — reserved, set to 0",
+      "msg_type":      "uint8, byte 4  — 0x01=CHAT 0x02=AUTH 0x03=PING 0x04=PONG 0x05=ERROR 0x06=DELETE_NOTIFY",
+      "flags":         "uint8, byte 5  — bit 0 (0x01) = IS_GROUP: recipient_id is a group_id; server fans-out to all group members",
       "msg_id":        "uint64 LE, bytes 6-13  — Snowflake ID assigned by server",
       "sender_id":     "uint64 LE, bytes 14-21 — Snowflake user ID of sender",
       "recipient_id":  "uint64 LE, bytes 22-29 — Snowflake user ID of recipient"
@@ -55,7 +55,15 @@
     },
     {
       "name": "Users",
-      "description": "User discovery. All endpoints require a Bearer JWT."
+      "description": "User discovery and profile management. All endpoints require a Bearer JWT."
+    },
+    {
+      "name": "Groups",
+      "description": "Group chat management — create groups, manage members. All endpoints require a Bearer JWT."
+    },
+    {
+      "name": "Messages",
+      "description": "Message deletion and file upload/download."
     }
   ],
   "components": {
@@ -639,12 +647,288 @@
         }
       }
     },
+    "/users/{id}": {
+      "get": {
+        "tags": ["Users"],
+        "operationId": "getUserById",
+        "summary": "Get user profile",
+        "description": "Returns public profile for the given user ID.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile.",
+            "content": { "application/json": { "schema": {
+              "type": "object",
+              "properties": {
+                "id":         { "type": "string" },
+                "username":   { "type": "string" },
+                "bio":        { "type": "string" },
+                "avatar_url": { "type": "string" }
+              }
+            }}}
+          },
+          "404": { "description": "User not found." }
+        }
+      },
+      "patch": {
+        "tags": ["Users"],
+        "operationId": "patchUser",
+        "summary": "Update own profile",
+        "description": "Update `bio` and/or `avatar_url` for the authenticated user. Only the authenticated user may modify their own profile.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": {
+            "type": "object",
+            "properties": {
+              "bio":        { "type": "string" },
+              "avatar_url": { "type": "string" }
+            }
+          }}}
+        },
+        "responses": {
+          "200": { "description": "Profile updated." },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/users/{id}/presence": {
+      "get": {
+        "tags": ["Users"],
+        "operationId": "getUserPresence",
+        "summary": "Get user online presence",
+        "description": "Returns whether the user is currently connected and which server they are on.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Presence status.",
+            "content": { "application/json": { "schema": {
+              "type": "object",
+              "properties": {
+                "user_id":   { "type": "string" },
+                "online":    { "type": "boolean" },
+                "server_id": { "type": "string", "nullable": true }
+              }
+            }}}
+          },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/groups": {
+      "post": {
+        "tags": ["Groups"],
+        "operationId": "createGroup",
+        "summary": "Create a group",
+        "description": "Creates a group chat. The authenticated user becomes the admin. Additional members can be supplied in `member_ids`.",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": {
+            "type": "object",
+            "required": ["name"],
+            "properties": {
+              "name":       { "type": "string", "example": "Team Alpha" },
+              "member_ids": { "type": "array", "items": { "type": "string" } }
+            }
+          }}}
+        },
+        "responses": {
+          "201": {
+            "description": "Group created.",
+            "content": { "application/json": { "schema": {
+              "type": "object",
+              "properties": {
+                "group_id":   { "type": "string" },
+                "name":       { "type": "string" },
+                "created_at": { "type": "string", "format": "date-time" }
+              }
+            }}}
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/groups/{id}": {
+      "get": {
+        "tags": ["Groups"],
+        "operationId": "getGroup",
+        "summary": "Get group info and member list",
+        "description": "Returns group metadata and all members. Caller must be a member.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Group details.",
+            "content": { "application/json": { "schema": {
+              "type": "object",
+              "properties": {
+                "group_id":   { "type": "string" },
+                "name":       { "type": "string" },
+                "creator_id": { "type": "string" },
+                "created_at": { "type": "string", "format": "date-time" },
+                "members": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "user_id":  { "type": "string" },
+                      "username": { "type": "string" },
+                      "role":     { "type": "string", "enum": ["admin", "member"] }
+                    }
+                  }
+                }
+              }
+            }}}
+          },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "description": "Group not found." }
+        }
+      },
+      "patch": {
+        "tags": ["Groups"],
+        "operationId": "patchGroup",
+        "summary": "Rename group",
+        "description": "Updates the group name. Caller must be an admin.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": {
+            "type": "object",
+            "required": ["name"],
+            "properties": { "name": { "type": "string" } }
+          }}}
+        },
+        "responses": {
+          "200": { "description": "Group renamed." },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/groups/{id}/members": {
+      "post": {
+        "tags": ["Groups"],
+        "operationId": "addGroupMember",
+        "summary": "Add a member to a group",
+        "description": "Adds a user to the group. Caller must be an admin.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": {
+            "type": "object",
+            "required": ["user_id"],
+            "properties": { "user_id": { "type": "string" } }
+          }}}
+        },
+        "responses": {
+          "201": { "description": "Member added." },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/groups/{id}/members/{uid}": {
+      "delete": {
+        "tags": ["Groups"],
+        "operationId": "removeGroupMember",
+        "summary": "Remove a member from a group",
+        "description": "Removes a member. Caller must be an admin, or the member themselves (self-remove).",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id",  "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "uid", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "204": { "description": "Member removed." },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/messages/{msg_id}": {
+      "delete": {
+        "tags": ["Messages"],
+        "operationId": "deleteMessage",
+        "summary": "Delete a message",
+        "description": "Deletes a message from Cassandra and fans out a `DELETE_NOTIFY` frame (msg_type=0x06) to all online conversation/group members.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "msg_id", "in": "path",  "required": true,  "schema": { "type": "string" } },
+          { "name": "conv_id","in": "query", "required": true,  "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "204": { "description": "Message deleted." },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/upload": {
+      "post": {
+        "tags": ["Messages"],
+        "operationId": "uploadFile",
+        "summary": "Upload a file",
+        "description": "Accepts `multipart/form-data` with a `file` part. Stores the file server-side and returns a URL.",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "multipart/form-data": { "schema": {
+            "type": "object",
+            "properties": { "file": { "type": "string", "format": "binary" } }
+          }}}
+        },
+        "responses": {
+          "200": {
+            "description": "File uploaded.",
+            "content": { "application/json": { "schema": {
+              "type": "object",
+              "properties": { "url": { "type": "string", "example": "/files/abc123.jpg" } }
+            }}}
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/files/{uuid}": {
+      "get": {
+        "tags": ["Messages"],
+        "operationId": "getFile",
+        "summary": "Download an uploaded file",
+        "description": "Streams the file identified by `{uuid}` (including extension, e.g. `abc123.jpg`). Content-Type is inferred from the extension.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "uuid", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "File content." },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "description": "File not found." }
+        }
+      }
+    },
     "/ws": {
       "get": {
         "tags": ["Messaging"],
         "operationId": "websocketConnect",
         "summary": "WebSocket real-time chat endpoint",
-        "description": "Upgrade to a WebSocket connection for real-time chat. After the HTTP upgrade, all communication uses JSON text frames.\n\n**Authentication** — send as first frame:\n```json\n{\"type\":\"auth\",\"token\":\"<jwt>\"}\n```\n\n**Send a message:**\n```json\n{\"type\":\"chat\",\"conv_id\":\"<str>\",\"content\":\"hello\"}\n```\n\n**Heartbeat:**\n```json\n{\"type\":\"ping\"}\n```\nServer responds with `{\"type\":\"pong\"}`.\n\n**Receive a message:**\n```json\n{\"type\":\"chat\",\"msg_id\":\"<str>\",\"conv_id\":\"<str>\",\"sender_id\":\"<str>\",\"content\":\"...\",\"ts_ms\":1234}\n```\n\nAll IDs are decimal strings to preserve Snowflake precision in JavaScript.",
+        "description": "Upgrade to a WebSocket connection for real-time chat. After the HTTP upgrade, all communication uses JSON text frames.\n\n**Authentication** — send as first frame:\n```json\n{\"type\":\"auth\",\"token\":\"<jwt>\"}\n```\n\n**Send a DM:**\n```json\n{\"type\":\"chat\",\"conv_id\":\"<str>\",\"content\":\"hello\"}\n```\n\n**Send a group message:**\n```json\n{\"type\":\"group_chat\",\"group_id\":\"<str>\",\"content\":\"hello\"}\n```\n\n**Heartbeat:**\n```json\n{\"type\":\"ping\"}\n```\nServer responds with `{\"type\":\"pong\"}`.\n\n**Receive a message:**\n```json\n{\"type\":\"chat\",\"msg_id\":\"<str>\",\"conv_id\":\"<str>\",\"sender_id\":\"<str>\",\"content\":\"...\",\"ts_ms\":1234}\n```\n\nAll IDs are decimal strings to preserve Snowflake precision in JavaScript.",
         "responses": {
           "101": {
             "description": "Switching Protocols — WebSocket connection established."

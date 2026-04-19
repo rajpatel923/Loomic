@@ -68,6 +68,8 @@ add_library(LoomicServer_lib STATIC
     src/http/AuthHandler.cpp
     src/http/DocsHandler.cpp
     src/http/ConversationsHandler.cpp
+    src/http/GroupsHandler.cpp
+    src/http/MessagesHandler.cpp
     src/http/UsersHandler.cpp
     src/tcp/TcpServer.cpp
     src/ws/WebSocketSession.cpp

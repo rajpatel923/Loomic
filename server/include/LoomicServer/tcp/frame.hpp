@@ -16,12 +16,15 @@ namespace net = boost::asio;
 using SslStream = net::ssl::stream<net::ip::tcp::socket>;
 
 enum class MsgType : uint8_t {
-    CHAT  = 0x01,
-    AUTH  = 0x02,
-    PING  = 0x03,
-    PONG  = 0x04,
-    ERROR = 0x05,
+    CHAT          = 0x01,
+    AUTH          = 0x02,
+    PING          = 0x03,
+    PONG          = 0x04,
+    ERROR         = 0x05,
+    DELETE_NOTIFY = 0x06,
 };
+
+static constexpr uint8_t kFlagIsGroup = 0x01;  // flags bit 0 — recipient_id is a group_id
 
 // 30-byte fixed header, little-endian.
 // #pragma pack ensures no alignment padding between fields.
@@ -44,6 +47,7 @@ struct OutboundMessage {
     uint64_t             recipient_id{};
     int64_t              timestamp_ms{};
     MsgType              msg_type{MsgType::CHAT};
+    uint8_t              flags{0};          // propagated from FrameHeader flags byte
     std::vector<uint8_t> content;
 };
 

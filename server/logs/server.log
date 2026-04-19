@@ -746,3 +746,15 @@
 [2026-04-18 00:58:28.192][1][warning] Session 303695724804050944: disconnected: stream truncated [asio.ssl.stream:1]
 [2026-04-18 00:58:34.198][1][info] Shutdown signal received, stopping...
 [2026-04-18 00:58:34.198][1][info] Server stopped
+[2026-04-19 14:36:34.004][1][info] PgPool: 12 connections established
+[2026-04-19 14:36:34.184][1][info] RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274
+[2026-04-19 14:36:36.529][1][info] CassandraClient connected to loomic-cosmos.cassandra.cosmos.azure.com
+[2026-04-19 14:36:36.536][1][info] OpenAPI spec loaded (35153 bytes)
+[2026-04-19 14:36:36.536][1][info] Docs routes registered: GET /openapi.json  GET /docs
+[2026-04-19 14:36:36.536][1][info] Loomic Server starting
+[2026-04-19 14:36:36.536][1][info] Thread pool: 12 threads
+[2026-04-19 14:36:36.536][1][info] HTTP server: http://0.0.0.0:8080
+[2026-04-19 14:36:36.536][1][info] TLS TCP server: port 7777
+[2026-04-19 14:43:06.150][1][warning] PgPool: recreating PostgreSQL connection (idle_validation_failed)
+[2026-04-19 15:08:35.822][1][info] Shutdown signal received, stopping...
+[2026-04-19 15:08:35.823][1][info] Server stopped

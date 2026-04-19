@@ -15,7 +15,11 @@ namespace net = boost::asio;
 
 namespace {
 
-constexpr std::array<std::uint8_t, 4> kDeliveryMagic{'L', 'M', 'S', '1'};
+// LMS2 is the current wire format — includes a flags byte after msg_type.
+// LMS1 is the legacy format (no flags byte) — decoded with flags=0 so that
+// messages already sitting in the Redis offline queue remain deliverable.
+constexpr std::array<std::uint8_t, 4> kDeliveryMagic  {'L', 'M', 'S', '2'};
+constexpr std::array<std::uint8_t, 4> kDeliveryMagicV1{'L', 'M', 'S', '1'};
 
 template <typename T>
 void append_pod(std::vector<uint8_t>& out, const T& value)
@@ -108,6 +112,8 @@ std::vector<uint8_t> serialize_delivery(const OutboundMessage& message)
     const auto msg_type = static_cast<uint8_t>(message.msg_type);
     append_pod(out, msg_type);
 
+    append_pod(out, message.flags);  // LMS2: flags byte after msg_type
+
     const auto payload_len = static_cast<uint32_t>(message.content.size());
     append_pod(out, payload_len);
     out.insert(out.end(), message.content.begin(), message.content.end());
@@ -120,29 +126,57 @@ std::optional<OutboundMessage> deserialize_delivery(std::span<const uint8_t> pay
         return deserialize_legacy_frame(payload);
     }
 
-    if (!std::equal(kDeliveryMagic.begin(), kDeliveryMagic.end(), payload.begin())) {
-        return deserialize_legacy_frame(payload);
+    // Check for current LMS2 magic
+    if (std::equal(kDeliveryMagic.begin(), kDeliveryMagic.end(), payload.begin())) {
+        std::size_t offset = kDeliveryMagic.size();
+        OutboundMessage message;
+        uint8_t msg_type   = 0;
+        uint8_t flags      = 0;
+        uint32_t payload_len = 0;
+
+        if (!read_pod(payload, offset, message.conv_id)
+            || !read_pod(payload, offset, message.msg_id)
+            || !read_pod(payload, offset, message.sender_id)
+            || !read_pod(payload, offset, message.recipient_id)
+            || !read_pod(payload, offset, message.timestamp_ms)
+            || !read_pod(payload, offset, msg_type)
+            || !read_pod(payload, offset, flags)
+            || !read_pod(payload, offset, payload_len)
+            || offset + payload_len != payload.size()) {
+            return std::nullopt;
+        }
+
+        message.msg_type = static_cast<MsgType>(msg_type);
+        message.flags    = flags;
+        message.content.assign(payload.begin() + static_cast<std::ptrdiff_t>(offset), payload.end());
+        return message;
     }
 
-    std::size_t offset = kDeliveryMagic.size();
-    OutboundMessage message;
-    uint8_t msg_type = 0;
-    uint32_t payload_len = 0;
+    // Check for legacy LMS1 magic (no flags byte — flags defaults to 0)
+    if (std::equal(kDeliveryMagicV1.begin(), kDeliveryMagicV1.end(), payload.begin())) {
+        std::size_t offset = kDeliveryMagicV1.size();
+        OutboundMessage message;
+        uint8_t  msg_type    = 0;
+        uint32_t payload_len = 0;
 
-    if (!read_pod(payload, offset, message.conv_id)
-        || !read_pod(payload, offset, message.msg_id)
-        || !read_pod(payload, offset, message.sender_id)
-        || !read_pod(payload, offset, message.recipient_id)
-        || !read_pod(payload, offset, message.timestamp_ms)
-        || !read_pod(payload, offset, msg_type)
-        || !read_pod(payload, offset, payload_len)
-        || offset + payload_len != payload.size()) {
-        return std::nullopt;
+        if (!read_pod(payload, offset, message.conv_id)
+            || !read_pod(payload, offset, message.msg_id)
+            || !read_pod(payload, offset, message.sender_id)
+            || !read_pod(payload, offset, message.recipient_id)
+            || !read_pod(payload, offset, message.timestamp_ms)
+            || !read_pod(payload, offset, msg_type)
+            || !read_pod(payload, offset, payload_len)
+            || offset + payload_len != payload.size()) {
+            return std::nullopt;
+        }
+
+        message.msg_type = static_cast<MsgType>(msg_type);
+        message.flags    = 0;
+        message.content.assign(payload.begin() + static_cast<std::ptrdiff_t>(offset), payload.end());
+        return message;
     }
 
-    message.msg_type = static_cast<MsgType>(msg_type);
-    message.content.assign(payload.begin() + static_cast<std::ptrdiff_t>(offset), payload.end());
-    return message;
+    return deserialize_legacy_frame(payload);
 }
 
 std::vector<uint8_t> build_chat_frame(const OutboundMessage& message)
@@ -158,10 +192,11 @@ std::vector<uint8_t> build_chat_frame(const OutboundMessage& message)
     std::string proto_bytes = proto_msg.SerializeAsString();
 
     FrameHeader header{};
-    header.payload_len = static_cast<uint32_t>(proto_bytes.size());
-    header.msg_type = static_cast<uint8_t>(message.msg_type);
-    header.msg_id = message.msg_id;
-    header.sender_id = message.sender_id;
+    header.payload_len  = static_cast<uint32_t>(proto_bytes.size());
+    header.msg_type     = static_cast<uint8_t>(message.msg_type);
+    header.flags        = message.flags;
+    header.msg_id       = message.msg_id;
+    header.sender_id    = message.sender_id;
     header.recipient_id = message.recipient_id;
 
     std::vector<uint8_t> frame(sizeof(FrameHeader) + proto_bytes.size());

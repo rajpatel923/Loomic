@@ -60,6 +60,7 @@ private:
     boost::asio::awaitable<void> upsert_conv_members(uint64_t conv_id,
                                                       uint64_t user_a,
                                                       uint64_t user_b);
+    boost::asio::awaitable<std::vector<uint64_t>> load_group_members_from_pg(uint64_t group_id);
     void reset_heartbeat();
 
     SslStream                        socket_;

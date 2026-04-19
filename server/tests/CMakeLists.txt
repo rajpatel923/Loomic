@@ -51,3 +51,16 @@ target_link_libraries(test_session
 )
 
 add_test(NAME test_session COMMAND test_session)
+
+# ── test_groups ────────────────────────────────────────────────────────────────
+add_executable(test_groups
+    test_groups.cpp
+)
+
+target_link_libraries(test_groups
+    PRIVATE
+        LoomicServer_lib
+        GTest::gtest_main
+)
+
+add_test(NAME test_groups COMMAND test_groups)
