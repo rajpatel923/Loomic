@@ -155,6 +155,8 @@ net::awaitable<void> WebSocketSession::read_loop()
             }
         } else if (type == "chat") {
             co_await route_message(text);
+        } else if (type == "group_chat") {
+            co_await route_group_message(text);
         }
     }
 }
@@ -281,17 +283,24 @@ void WebSocketSession::reset_heartbeat()
 void WebSocketSession::enqueue(std::vector<uint8_t> frame)
 {
     auto message = deserialize_delivery(frame);
-    if (!message) {
-        return;
-    }
+    if (!message) return;
 
     nlohmann::json j;
-    j["type"]      = "chat";
-    j["msg_id"]    = std::to_string(message->msg_id);
-    j["conv_id"]   = std::to_string(message->conv_id);
-    j["sender_id"] = std::to_string(message->sender_id);
-    j["content"]   = std::string(message->content.begin(), message->content.end());
-    j["ts_ms"]     = message->timestamp_ms;
+    if (message->msg_type == MsgType::DELETE_NOTIFY) {
+        j["type"]    = "delete_notify";
+        j["msg_id"]  = std::to_string(message->msg_id);
+        j["conv_id"] = std::to_string(message->conv_id);
+    } else {
+        j["type"]      = "chat";
+        j["msg_id"]    = std::to_string(message->msg_id);
+        j["conv_id"]   = std::to_string(message->conv_id);
+        j["sender_id"] = std::to_string(message->sender_id);
+        j["content"]   = std::string(message->content.begin(), message->content.end());
+        j["ts_ms"]     = message->timestamp_ms;
+        if (message->flags & kFlagIsGroup) {
+            j["group_id"] = std::to_string(message->conv_id);
+        }
+    }
 
     write_queue_.push_back(j.dump());
     if (!writing_) {
@@ -316,6 +325,102 @@ net::awaitable<void> WebSocketSession::do_write()
         LOG_WARN("WebSocketSession {}: write error: {}", user_id_, e.what());
     }
     writing_ = false;
+}
+
+// ── route_group_message ───────────────────────────────────────────────────────
+
+net::awaitable<void> WebSocketSession::route_group_message(std::string_view json_sv)
+{
+    auto self = shared_from_this();
+
+    nlohmann::json j;
+    try {
+        j = nlohmann::json::parse(json_sv);
+    } catch (...) { co_return; }
+
+    auto group_id_str = j.value("group_id", std::string{});
+    auto content      = j.value("content", std::string{});
+    if (group_id_str.empty() || content.empty()) co_return;
+
+    uint64_t group_id = 0;
+    {
+        auto [p, ec] = std::from_chars(group_id_str.data(),
+                                        group_id_str.data() + group_id_str.size(),
+                                        group_id);
+        if (ec != std::errc{}) co_return;
+    }
+
+    uint64_t msg_id = static_cast<uint64_t>(snowflake_->next());
+    int64_t  ts_ms  = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+
+    OutboundMessage message;
+    message.conv_id      = group_id;
+    message.msg_id       = msg_id;
+    message.sender_id    = user_id_;
+    message.recipient_id = group_id;
+    message.timestamp_ms = ts_ms;
+    message.msg_type     = MsgType::CHAT;
+    message.flags        = kFlagIsGroup;
+    message.content.assign(content.begin(), content.end());
+
+    auto delivery_bytes = serialize_delivery(message);
+
+    // Persist async
+    net::co_spawn(
+        co_await net::this_coro::executor,
+        cass_->store_message_async(
+            group_id, msg_id, user_id_, group_id,
+            std::vector<uint8_t>(message.content.begin(), message.content.end()),
+            ts_ms, static_cast<uint8_t>(MsgType::CHAT)),
+        net::detached);
+
+    // Resolve members: Redis first, then Postgres
+    auto members = co_await redis_->smembers_group(group_id);
+    if (members.empty()) {
+        members = co_await load_group_members_from_pg(group_id);
+    }
+
+    for (auto member_id : members) {
+        if (member_id == user_id_) continue;
+        auto session = registry_->lookup(member_id);
+        if (session) {
+            net::post(session->strand(),
+                      [session, delivery = delivery_bytes]() mutable {
+                          session->enqueue(std::move(delivery));
+                      });
+        } else {
+            co_await redis_->lpush("offline:" + std::to_string(member_id),
+                                   std::span<const uint8_t>(delivery_bytes));
+        }
+    }
+}
+
+// ── load_group_members_from_pg ────────────────────────────────────────────────
+
+net::awaitable<std::vector<uint64_t>>
+WebSocketSession::load_group_members_from_pg(uint64_t group_id)
+{
+    try {
+        auto rows = co_await pg_->execute(
+            [group_id](pqxx::connection& conn) {
+                pqxx::nontransaction ntxn(conn);
+                return ntxn.exec_params(
+                    "SELECT user_id FROM group_members WHERE group_id=$1",
+                    static_cast<int64_t>(group_id));
+            },
+            PgPool::RetryClass::ReadOnly);
+
+        std::vector<uint64_t> members;
+        members.reserve(rows.size());
+        for (const auto& row : rows) {
+            members.push_back(static_cast<uint64_t>(row[0].as<int64_t>()));
+        }
+        co_return members;
+    } catch (const std::exception& e) {
+        LOG_WARN("ws load_group_members_from_pg group_id={}: {}", group_id, e.what());
+        co_return std::vector<uint64_t>{};
+    }
 }
 
 } // namespace Loomic

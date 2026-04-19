@@ -64,7 +64,12 @@
       "Bash(ls /Users/rajpatel/Documents/GitHub/Loomic/server/build* 2>/dev/null || ls /Users/rajpatel/Documents/GitHub/Loomic/server/ | head -30)",
       "Bash(cmake --build /Users/rajpatel/Documents/GitHub/Loomic/server/cmake-build-debug/ 2>&1 | tail -80)",
       "Bash(cmake --build /Users/rajpatel/Documents/GitHub/Loomic/server/cmake-build-debug/ 2>&1 | grep -E \"\\(error:|warning: unused|Linking|error\\)\" | grep -v \"absl_nullable\\\\|absl_nonnull\\\\|Wnullability\\\\|Wdeprecated\" | head -30)",
-      "Bash(cd /Users/rajpatel/Documents/GitHub/Loomic/python_test && python3 -c \"import chat_pb2; print\\('ok'\\)\" 2>&1)"
+      "Bash(cd /Users/rajpatel/Documents/GitHub/Loomic/python_test && python3 -c \"import chat_pb2; print\\('ok'\\)\" 2>&1)",
+      "Bash(cmake --build build --target LoomicServer 2>&1 | tail -40)",
+      "Bash(cmake --build build/debug --target LoomicServer 2>&1 | tail -60)",
+      "Bash(cmake --build build/debug --target test_groups 2>&1 | tail -10 && ctest --test-dir build/debug -R test_groups -V 2>&1 | tail -30)",
+      "Bash(ctest --test-dir build/debug -V 2>&1 | grep -E \"\\(PASSED|FAILED|OK|RUN|test suite\\)\" | tail -30)",
+      "Bash(ctest --test-dir build/debug 2>&1 | tail -10)"
     ]
   }
 }

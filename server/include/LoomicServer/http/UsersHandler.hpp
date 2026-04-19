@@ -7,10 +7,20 @@ namespace Loomic {
 class HttpServer;
 class PgPool;
 class JwtService;
+class RedisClient;
 
-/// Register GET /users/search on the given HTTP server.
-void register_users_routes(HttpServer&                   http,
-                           std::shared_ptr<PgPool>       pg,
-                           std::shared_ptr<JwtService>   jwt);
+class UsersHandler {
+public:
+    UsersHandler(std::shared_ptr<PgPool>      pg,
+                 std::shared_ptr<JwtService>  jwt,
+                 std::shared_ptr<RedisClient> redis);
+
+    void register_routes(HttpServer& http);
+
+private:
+    std::shared_ptr<PgPool>      pg_;
+    std::shared_ptr<JwtService>  jwt_;
+    std::shared_ptr<RedisClient> redis_;
+};
 
 } // namespace Loomic

@@ -61,6 +61,8 @@ private:
     boost::asio::awaitable<void> heartbeat_loop();
     void                         reset_heartbeat();
     boost::asio::awaitable<void> route_message(std::string_view json);
+    boost::asio::awaitable<void> route_group_message(std::string_view json);
+    boost::asio::awaitable<std::vector<uint64_t>> load_group_members_from_pg(uint64_t group_id);
 
     WsStream                         ws_;
     StrandType                       strand_;

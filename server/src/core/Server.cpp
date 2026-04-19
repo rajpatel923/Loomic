@@ -11,6 +11,8 @@
 #include "LoomicServer/http/AuthHandler.hpp"
 #include "LoomicServer/http/DocsHandler.hpp"
 #include "LoomicServer/http/ConversationsHandler.hpp"
+#include "LoomicServer/http/GroupsHandler.hpp"
+#include "LoomicServer/http/MessagesHandler.hpp"
 #include "LoomicServer/http/UsersHandler.hpp"
 #include "LoomicServer/ws/WebSocketSession.hpp"
 #include <openssl/ssl.h>
@@ -80,8 +82,18 @@ void Server::register_routes()
     conv_handler_ = std::make_shared<ConversationsHandler>(cass_, pg_, jwt_, snowflake_);
     conv_handler_->register_routes(http_);
 
+    // ── Groups ─────────────────────────────────────────────────────────────
+    groups_handler_ = std::make_shared<GroupsHandler>(pg_, jwt_, snowflake_, redis_);
+    groups_handler_->register_routes(http_);
+
+    // ── Messages ───────────────────────────────────────────────────────────
+    messages_handler_ = std::make_shared<MessagesHandler>(
+        cass_, pg_, jwt_, redis_, registry_, snowflake_);
+    messages_handler_->register_routes(http_);
+
     // ── Users ──────────────────────────────────────────────────────────────
-    register_users_routes(http_, pg_, jwt_);
+    users_handler_ = std::make_shared<UsersHandler>(pg_, jwt_, redis_);
+    users_handler_->register_routes(http_);
 
     // ── Docs ──────────────────────────────────────────────────────────────
     std::string spec_json;

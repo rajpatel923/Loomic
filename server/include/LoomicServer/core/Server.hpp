@@ -24,6 +24,9 @@ class RedisClient;
 class CassandraClient;
 class SessionRegistry;
 class ConversationsHandler;
+class GroupsHandler;
+class MessagesHandler;
+class UsersHandler;
 
 class Server {
 public:
@@ -55,6 +58,9 @@ private:
     std::shared_ptr<CassandraClient>        cass_;
     std::shared_ptr<SessionRegistry>        registry_;
     std::shared_ptr<ConversationsHandler>   conv_handler_;
+    std::shared_ptr<GroupsHandler>          groups_handler_;
+    std::shared_ptr<MessagesHandler>        messages_handler_;
+    std::shared_ptr<UsersHandler>           users_handler_;
     HttpServer                              http_;
     TcpServer                               tcp_;
     std::vector<std::thread>                threads_;

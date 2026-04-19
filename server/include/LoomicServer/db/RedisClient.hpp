@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <mutex>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
@@ -38,6 +39,18 @@ public:
 
     /// DEL presence:{user_id}
     net::awaitable<void> del_presence(uint64_t user_id);
+
+    /// GET presence:{user_id} — returns server_id string if online, nullopt if absent.
+    net::awaitable<std::optional<std::string>> get_presence(uint64_t user_id);
+
+    /// SADD group:{group_id}:members {user_id}
+    net::awaitable<void> sadd_group_member(uint64_t group_id, uint64_t user_id);
+
+    /// SREM group:{group_id}:members {user_id}
+    net::awaitable<void> srem_group_member(uint64_t group_id, uint64_t user_id);
+
+    /// SMEMBERS group:{group_id}:members — returns member user IDs (empty on miss).
+    net::awaitable<std::vector<uint64_t>> smembers_group(uint64_t group_id);
 
 private:
     redisContext*    ctx_;
