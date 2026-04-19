@@ -1,11 +1,6 @@
 import type { Metadata } from "next";
-import { Bodoni_Moda, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import "./globals.css";
-
-const editorial = Bodoni_Moda({
-  variable: "--font-editorial",
-  subsets: ["latin"],
-});
 
 const sans = IBM_Plex_Sans({
   variable: "--font-sans-ui",
@@ -21,8 +16,7 @@ const mono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: "Loomic",
-  description:
-    "A refined sign-in and simple chat experience for Loomic.",
+  description: "Minimal messaging for Loomic.",
 };
 
 export default function RootLayout({
@@ -31,11 +25,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${editorial.variable} ${sans.variable} ${mono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="en" className={`${sans.variable} ${mono.variable} h-full antialiased`}>
+      <body className="flex h-full min-h-full flex-col overflow-hidden">{children}</body>
     </html>
   );
 }

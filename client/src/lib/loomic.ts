@@ -22,6 +22,15 @@ export function getApiBaseUrl() {
   );
 }
 
+export function getWebSocketUrl() {
+  const url = new URL(getApiBaseUrl());
+  url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+  url.pathname = "/ws";
+  url.search = "";
+  url.hash = "";
+  return url.toString();
+}
+
 export function getTcpHost() {
   if (process.env.LOOMIC_TCP_HOST) {
     return process.env.LOOMIC_TCP_HOST;

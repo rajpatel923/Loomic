@@ -2,65 +2,140 @@
 
 import {
   startTransition,
+  useCallback,
   useDeferredValue,
   useEffect,
+  useEffectEvent,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useRouter } from "next/navigation";
 
-import type {
-  ChatConnectionSnapshot,
-  ChatRecord,
-  ChatSnapshotPayload,
-  ChatStatusPayload,
-  ChatTransportErrorPayload,
-} from "@/lib/chat-types";
+import SimpleChatLayout from "@/components/SimpleChatLayout";
 import {
   clearStoredSession,
   readStoredSession,
   type StoredSession,
 } from "@/lib/session";
 
-type ThreadSummary = {
-  peerId: string;
-  lastMessage: ChatRecord | null;
-  messageCount: number;
+type ConnectionState =
+  | "idle"
+  | "connecting"
+  | "connected"
+  | "reconnecting"
+  | "error"
+  | "disconnected";
+
+type ConnectionSnapshot = {
+  state: ConnectionState;
+  detail: string | null;
+  connectedAt: number | null;
+  lastHeartbeatAt: number | null;
+  lastMessageAt: number | null;
+  reconnectAttempt: number;
 };
 
-const EMPTY_MESSAGES: ChatRecord[] = [];
+type ConversationSummary = {
+  convId: string;
+  userId: string;
+  username: string;
+};
 
-function formatStatusTone(state: ChatConnectionSnapshot["state"]) {
-  if (state === "connected") {
-    return "text-[var(--signal)]";
-  }
+type ConversationMessage = {
+  id: string;
+  convId: string;
+  senderId: string;
+  content: string;
+  timestampMs: number;
+  direction: "incoming" | "outgoing";
+  pending?: boolean;
+  pendingVisible?: boolean;
+};
 
-  if (state === "error") {
-    return "text-[var(--danger)]";
-  }
+type HistoryState = {
+  loaded: boolean;
+  loading: boolean;
+  loadingMore: boolean;
+  hasMore: boolean;
+  oldestCursor: string | null;
+  error: string | null;
+};
 
-  if (state === "reconnecting" || state === "connecting") {
-    return "text-[var(--accent)]";
-  }
+type UserSearchResult = {
+  id: string;
+  username: string;
+};
 
-  return "text-[var(--muted)]";
+type ConversationApiResponse = {
+  conv_id: string;
+  user_id: string;
+  username: string;
+};
+
+type CreateConversationResponse = {
+  conv_id: string;
+  created_at: string;
+};
+
+type HistoryApiMessage = {
+  msg_id: string;
+  sender_id: string;
+  recipient_id: string;
+  content_b64: string;
+  msg_type: number;
+  ts_ms: number;
+};
+
+type UserSearchResponse = {
+  users: UserSearchResult[];
+};
+
+type RuntimeSocketConfig = {
+  url: string;
+};
+
+type WebSocketPayload =
+  | {
+      type: "pong";
+    }
+  | {
+      type: "error";
+      msg?: string;
+    }
+  | {
+      type: "chat";
+      msg_id: string;
+      conv_id: string;
+      sender_id: string;
+      content: string;
+      ts_ms: number;
+    };
+
+const EMPTY_MESSAGES: ConversationMessage[] = [];
+const PAGE_SIZE = 50;
+const HEARTBEAT_INTERVAL_MS = 20_000;
+
+function createInitialConnection(): ConnectionSnapshot {
+  return {
+    state: "idle",
+    detail: "Preparing the live conversation channel.",
+    connectedAt: null,
+    lastHeartbeatAt: null,
+    lastMessageAt: null,
+    reconnectAttempt: 0,
+  };
 }
 
-function formatStatusLabel(state: ChatConnectionSnapshot["state"]) {
-  switch (state) {
-    case "connected":
-      return "Connected";
-    case "connecting":
-      return "Connecting";
-    case "reconnecting":
-      return "Reconnecting";
-    case "error":
-      return "Needs Attention";
-    case "disconnected":
-      return "Disconnected";
-    default:
-      return "Idle";
-  }
+function createHistoryState(): HistoryState {
+  return {
+    loaded: false,
+    loading: false,
+    loadingMore: false,
+    hasMore: false,
+    oldestCursor: null,
+    error: null,
+  };
 }
 
 function formatClock(timestampMs: number) {
@@ -71,57 +146,540 @@ function formatClock(timestampMs: number) {
 }
 
 function formatRelativeTime(timestampMs: number) {
-  const minutesAgo = Math.max(
-    0,
-    Math.round((Date.now() - timestampMs) / 60_000),
-  );
+  const minutesAgo = Math.max(0, Math.round((Date.now() - timestampMs) / 60_000));
 
   if (minutesAgo < 1) {
-    return "just now";
+    return "Now";
   }
 
   if (minutesAgo === 1) {
-    return "1 min ago";
+    return "1m";
   }
 
   if (minutesAgo < 60) {
-    return `${minutesAgo} min ago`;
+    return `${minutesAgo}m`;
   }
 
   const hoursAgo = Math.round(minutesAgo / 60);
-  return `${hoursAgo} hr ago`;
+  if (hoursAgo < 24) {
+    return `${hoursAgo}h`;
+  }
+
+  const daysAgo = Math.round(hoursAgo / 24);
+  return `${daysAgo}d`;
 }
 
-function upsertMessages(previous: ChatRecord[], incoming: ChatRecord[]) {
-  const next = [...previous];
+function decodeBase64Content(value: string) {
+  try {
+    const binary = atob(value);
+    const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+    return new TextDecoder().decode(bytes);
+  } catch {
+    return "";
+  }
+}
+
+function normalizeHistoryMessage(
+  message: HistoryApiMessage,
+  convId: string,
+  selfUserId: string | null,
+): ConversationMessage {
+  return {
+    id: message.msg_id,
+    convId,
+    senderId: message.sender_id,
+    content: decodeBase64Content(message.content_b64),
+    timestampMs: message.ts_ms,
+    direction: selfUserId === message.sender_id ? "outgoing" : "incoming",
+  };
+}
+
+function buildOptimisticMessage(
+  convId: string,
+  senderId: string,
+  content: string,
+): ConversationMessage {
+  return {
+    id: `temp-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`,
+    convId,
+    senderId,
+    content,
+    timestampMs: Date.now(),
+    direction: "outgoing",
+    pending: true,
+    pendingVisible: true,
+  };
+}
+
+function isSameDeliveredMessage(
+  candidate: ConversationMessage,
+  incoming: ConversationMessage,
+) {
+  return (
+    candidate.pending &&
+    !incoming.pending &&
+    candidate.convId === incoming.convId &&
+    candidate.senderId === incoming.senderId &&
+    candidate.direction === incoming.direction &&
+    candidate.content === incoming.content &&
+    Math.abs(candidate.timestampMs - incoming.timestampMs) < 15_000
+  );
+}
+
+function mergeConversationMessages(
+  existing: ConversationMessage[],
+  incoming: ConversationMessage[],
+) {
+  const merged = [...existing];
 
   for (const message of incoming) {
-    const index = next.findIndex((candidate) => candidate.id === message.id);
+    const sameIdIndex = merged.findIndex((candidate) => candidate.id === message.id);
 
-    if (index >= 0) {
-      next[index] = message;
+    if (sameIdIndex >= 0) {
+      merged[sameIdIndex] = {
+        ...merged[sameIdIndex],
+        ...message,
+        pending: message.pending ?? false,
+        pendingVisible: message.pendingVisible ?? false,
+      };
       continue;
     }
 
-    next.push(message);
+    const optimisticIndex = merged.findIndex((candidate) =>
+      isSameDeliveredMessage(candidate, message),
+    );
+
+    if (optimisticIndex >= 0) {
+      merged[optimisticIndex] = {
+        ...message,
+        pending: false,
+        pendingVisible: false,
+      };
+      continue;
+    }
+
+    merged.push(message);
   }
 
-  return next.toSorted((left, right) => left.timestampMs - right.timestampMs);
+  return merged.toSorted((left, right) => {
+    if (left.timestampMs === right.timestampMs) {
+      return left.id.localeCompare(right.id);
+    }
+
+    return left.timestampMs - right.timestampMs;
+  });
+}
+
+function ensureConversationSummary(
+  conversations: ConversationSummary[],
+  nextConversation: ConversationSummary,
+) {
+  const existingIndex = conversations.findIndex(
+    (conversation) => conversation.convId === nextConversation.convId,
+  );
+
+  if (existingIndex < 0) {
+    return [...conversations, nextConversation];
+  }
+
+  const next = [...conversations];
+  next[existingIndex] = {
+    ...next[existingIndex],
+    ...nextConversation,
+  };
+  return next;
+}
+
+function buildAuthHeaders(accessToken: string) {
+  return {
+    authorization: `Bearer ${accessToken}`,
+  };
+}
+
+function dismissPendingIndicator(
+  messagesByConversation: Record<string, ConversationMessage[]>,
+  convId: string,
+  messageId: string,
+) {
+  const existingMessages = messagesByConversation[convId];
+
+  if (!existingMessages) {
+    return messagesByConversation;
+  }
+
+  return {
+    ...messagesByConversation,
+    [convId]: existingMessages.map((message) =>
+      message.id === messageId
+        ? {
+            ...message,
+            pendingVisible: false,
+          }
+        : message,
+    ),
+  };
 }
 
 export default function ChatPlaceholder() {
   const router = useRouter();
-  const [session] = useState<StoredSession | null>(() => readStoredSession());
-  const [messages, setMessages] = useState<ChatRecord[]>([]);
-  const [status, setStatus] = useState<ChatConnectionSnapshot | null>(null);
-  const [activePeerId, setActivePeerId] = useState("");
-  const [recipientDraft, setRecipientDraft] = useState("");
-  const [composerValue, setComposerValue] = useState("");
+  const [session, setSession] = useState<StoredSession | null>(() =>
+    readStoredSession(),
+  );
+  const [socketUrl, setSocketUrl] = useState<string | null>(null);
+  const [, setConnection] = useState<ConnectionSnapshot>(
+    createInitialConnection(),
+  );
   const [transportNotice, setTransportNotice] = useState<string | null>(null);
+  const [conversations, setConversations] = useState<ConversationSummary[]>([]);
+  const [conversationsLoading, setConversationsLoading] = useState(false);
+  const [conversationsError, setConversationsError] = useState<string | null>(null);
+  const [activeConversationId, setActiveConversationId] = useState("");
+  const [messagesByConversation, setMessagesByConversation] = useState<
+    Record<string, ConversationMessage[]>
+  >({});
+  const [historyByConversation, setHistoryByConversation] = useState<
+    Record<string, HistoryState>
+  >({});
+  const [threadSearch, setThreadSearch] = useState("");
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [userSearchResults, setUserSearchResults] = useState<UserSearchResult[]>([]);
+  const [userSearchPending, setUserSearchPending] = useState(false);
+  const [userSearchError, setUserSearchError] = useState<string | null>(null);
+  const [conversationActionError, setConversationActionError] = useState<
+    string | null
+  >(null);
+  const [creatingConversationId, setCreatingConversationId] = useState<
+    string | null
+  >(null);
+  const [composerValue, setComposerValue] = useState("");
   const [sendError, setSendError] = useState<string | null>(null);
   const [pendingSend, setPendingSend] = useState(false);
-  const [threadSearch, setThreadSearch] = useState("");
+
   const deferredThreadSearch = useDeferredValue(threadSearch);
+  const deferredUserSearchQuery = useDeferredValue(userSearchQuery);
+
+  const socketRef = useRef<WebSocket | null>(null);
+  const heartbeatTimerRef = useRef<number | null>(null);
+  const reconnectTimerRef = useRef<number | null>(null);
+  const reconnectAttemptsRef = useRef(0);
+  const preventReconnectRef = useRef(false);
+  const historyByConversationRef = useRef(historyByConversation);
+
+  const selfUserId = session?.user_id ?? null;
+
+  const activeConversation = conversations.find(
+    (conversation) => conversation.convId === activeConversationId,
+  );
+
+  const activeHistoryState = activeConversationId
+    ? historyByConversation[activeConversationId] ?? createHistoryState()
+    : createHistoryState();
+
+  const activeMessages = activeConversationId
+    ? messagesByConversation[activeConversationId] ?? EMPTY_MESSAGES
+    : EMPTY_MESSAGES;
+
+  useEffect(() => {
+    historyByConversationRef.current = historyByConversation;
+  }, [historyByConversation]);
+
+  const orderedConversations = useMemo(() => {
+    return conversations
+      .map((conversation) => {
+        const lastMessage =
+          messagesByConversation[conversation.convId]?.at(-1) ?? null;
+
+        return {
+          ...conversation,
+          lastMessage,
+        };
+      })
+      .toSorted((left, right) => {
+        const leftTime = left.lastMessage?.timestampMs ?? 0;
+        const rightTime = right.lastMessage?.timestampMs ?? 0;
+        return rightTime - leftTime;
+      });
+  }, [conversations, messagesByConversation]);
+
+  const visibleConversations = useMemo(() => {
+    const query = deferredThreadSearch.trim().toLowerCase();
+
+    if (!query) {
+      return orderedConversations;
+    }
+
+    return orderedConversations.filter((conversation) => {
+      const preview = conversation.lastMessage?.content.toLowerCase() ?? "";
+      return (
+        conversation.username.toLowerCase().includes(query) ||
+        conversation.userId.toLowerCase().includes(query) ||
+        preview.includes(query)
+      );
+    });
+  }, [deferredThreadSearch, orderedConversations]);
+
+  const loadConversations = useCallback(
+    async (options?: { preferredConversationId?: string; quiet?: boolean }) => {
+      if (!session) {
+        return;
+      }
+
+      const quiet = options?.quiet ?? false;
+
+      if (!quiet) {
+        setConversationsLoading(true);
+      }
+
+      setConversationsError(null);
+
+      try {
+        const response = await fetch("/api/conversations", {
+          method: "GET",
+          headers: buildAuthHeaders(session.access_token),
+          cache: "no-store",
+        });
+
+        const payload = (await response.json().catch(() => null)) as
+          | ConversationApiResponse[]
+          | { error?: string }
+          | null;
+
+        if (!response.ok) {
+          throw new Error(
+            (payload as { error?: string } | null)?.error ??
+              "Unable to load your conversations.",
+          );
+        }
+
+        const nextConversations = ((payload as ConversationApiResponse[]) ?? []).map(
+          (conversation) => ({
+            convId: conversation.conv_id,
+            userId: conversation.user_id,
+            username: conversation.username,
+          }),
+        );
+
+        startTransition(() => {
+          setConversations(nextConversations);
+          setActiveConversationId((previous) => {
+            if (
+              options?.preferredConversationId &&
+              nextConversations.some(
+                (conversation) =>
+                  conversation.convId === options.preferredConversationId,
+              )
+            ) {
+              return options.preferredConversationId;
+            }
+
+            if (
+              previous &&
+              nextConversations.some(
+                (conversation) => conversation.convId === previous,
+              )
+            ) {
+              return previous;
+            }
+
+            return nextConversations[0]?.convId ?? "";
+          });
+        });
+      } catch (error) {
+        if (!quiet) {
+          setConversationsError(
+            error instanceof Error
+              ? error.message
+              : "Unable to load your conversations.",
+          );
+        }
+      } finally {
+        if (!quiet) {
+          setConversationsLoading(false);
+        }
+      }
+    },
+    [session],
+  );
+
+  const loadConversationHistory = useCallback(
+    async (convId: string, mode: "replace" | "prepend" = "replace") => {
+      if (!session || !convId) {
+        return;
+      }
+
+      const currentState =
+        historyByConversationRef.current[convId] ?? createHistoryState();
+      const beforeCursor =
+        mode === "prepend" ? currentState.oldestCursor : null;
+
+      if (mode === "prepend" && (!beforeCursor || currentState.loadingMore)) {
+        return;
+      }
+
+      if (mode === "replace" && currentState.loading) {
+        return;
+      }
+
+      setHistoryByConversation((previous) => ({
+        ...previous,
+        [convId]: {
+          ...currentState,
+          loading: mode === "replace",
+          loadingMore: mode === "prepend",
+          error: null,
+        },
+      }));
+
+      const searchParams = new URLSearchParams({
+        limit: String(PAGE_SIZE),
+      });
+
+      if (beforeCursor) {
+        searchParams.set("before", beforeCursor);
+      }
+
+      try {
+        const response = await fetch(
+          `/api/conversations/${encodeURIComponent(convId)}/messages?${searchParams.toString()}`,
+          {
+            method: "GET",
+            headers: buildAuthHeaders(session.access_token),
+            cache: "no-store",
+          },
+        );
+
+        const payload = (await response.json().catch(() => null)) as
+          | HistoryApiMessage[]
+          | { error?: string }
+          | null;
+
+        if (!response.ok) {
+          throw new Error(
+            (payload as { error?: string } | null)?.error ??
+              "Unable to load this conversation.",
+          );
+        }
+
+        const serverMessages = ((payload as HistoryApiMessage[]) ?? []).map((message) =>
+          normalizeHistoryMessage(message, convId, selfUserId),
+        );
+
+        setMessagesByConversation((previous) => ({
+          ...previous,
+          [convId]: mergeConversationMessages(
+            previous[convId] ?? EMPTY_MESSAGES,
+            serverMessages,
+          ),
+        }));
+
+        setHistoryByConversation((previous) => ({
+          ...previous,
+          [convId]: {
+            loaded: true,
+            loading: false,
+            loadingMore: false,
+            hasMore: serverMessages.length === PAGE_SIZE,
+            oldestCursor:
+              (payload as HistoryApiMessage[]).at(-1)?.msg_id ??
+              previous[convId]?.oldestCursor ??
+              null,
+            error: null,
+          },
+        }));
+      } catch (error) {
+        setHistoryByConversation((previous) => ({
+          ...previous,
+          [convId]: {
+            ...currentState,
+            loading: false,
+            loadingMore: false,
+            error:
+              error instanceof Error
+                ? error.message
+                : "Unable to load this conversation.",
+          },
+        }));
+      }
+    },
+    [selfUserId, session],
+  );
+
+  const handleSocketPayload = useEffectEvent((payload: WebSocketPayload) => {
+    if (payload.type === "pong") {
+      setConnection((previous) => ({
+        ...previous,
+        state: "connected",
+        detail: "Live conversation sync is healthy.",
+        lastHeartbeatAt: Date.now(),
+        reconnectAttempt: reconnectAttemptsRef.current,
+      }));
+      return;
+    }
+
+    if (payload.type === "error") {
+      const message = payload.msg ?? "The messaging service rejected this session.";
+      const shouldStopReconnect = /token/i.test(message);
+
+      setTransportNotice(message);
+      setConnection((previous) => ({
+        ...previous,
+        state: "error",
+        detail: message,
+      }));
+
+      preventReconnectRef.current = shouldStopReconnect;
+      socketRef.current?.close();
+      return;
+    }
+
+    const nextMessage: ConversationMessage = {
+      id: payload.msg_id,
+      convId: payload.conv_id,
+      senderId: payload.sender_id,
+      content: payload.content,
+      timestampMs: payload.ts_ms,
+      direction: payload.sender_id === selfUserId ? "outgoing" : "incoming",
+    };
+
+    setMessagesByConversation((previous) => ({
+      ...previous,
+      [payload.conv_id]: mergeConversationMessages(
+        previous[payload.conv_id] ?? EMPTY_MESSAGES,
+        [nextMessage],
+      ),
+    }));
+
+    setConnection((previous) => ({
+      ...previous,
+      state: "connected",
+      detail: "Live conversation sync is active.",
+      lastMessageAt: nextMessage.timestampMs,
+      reconnectAttempt: reconnectAttemptsRef.current,
+    }));
+
+    if (payload.sender_id !== selfUserId) {
+      setConversations((previous) =>
+        ensureConversationSummary(previous, {
+          convId: payload.conv_id,
+          userId: payload.sender_id,
+          username:
+            previous.find((conversation) => conversation.convId === payload.conv_id)
+              ?.username ?? `User ${payload.sender_id}`,
+        }),
+      );
+
+      if (!activeConversationId) {
+        startTransition(() => {
+          setActiveConversationId(payload.conv_id);
+        });
+      }
+
+      void loadConversations({
+        preferredConversationId: payload.conv_id,
+        quiet: true,
+      });
+    }
+  });
 
   useEffect(() => {
     if (!session) {
@@ -134,231 +692,372 @@ export default function ChatPlaceholder() {
       return;
     }
 
-    const currentSession = session;
     let disposed = false;
-    let eventSource: EventSource | null = null;
 
-    async function connect() {
-      setTransportNotice(null);
+    async function fetchSocketConfig() {
+      try {
+        const response = await fetch("/api/chat/socket-config", {
+          cache: "no-store",
+        });
 
-      const connectResponse = await fetch("/api/chat/connect", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          access_token: currentSession.access_token,
-          client_session_id: currentSession.client_session_id,
-        }),
+        const payload = (await response.json()) as RuntimeSocketConfig;
+
+        if (!response.ok || !payload.url) {
+          throw new Error("Unable to resolve the Loomic WebSocket endpoint.");
+        }
+
+        if (!disposed) {
+          setSocketUrl(payload.url);
+        }
+      } catch (error) {
+        if (!disposed) {
+          setTransportNotice(
+            error instanceof Error
+              ? error.message
+              : "Unable to resolve the Loomic WebSocket endpoint.",
+          );
+        }
+      }
+    }
+
+    fetchSocketConfig().catch(() => undefined);
+
+    return () => {
+      disposed = true;
+    };
+  }, [session]);
+
+  useEffect(() => {
+    if (!session) {
+      return;
+    }
+
+    void loadConversations();
+  }, [session, loadConversations]);
+
+  useEffect(() => {
+    if (!session) {
+      return;
+    }
+
+    const query = deferredUserSearchQuery.trim();
+
+    if (query.length < 2) {
+      setUserSearchResults([]);
+      setUserSearchError(null);
+      setUserSearchPending(false);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    setUserSearchPending(true);
+    setUserSearchError(null);
+
+    fetch(`/api/users/search?q=${encodeURIComponent(query)}&limit=8`, {
+      method: "GET",
+      headers: buildAuthHeaders(session.access_token),
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        const payload = (await response.json().catch(() => null)) as
+          | UserSearchResponse
+          | { error?: string }
+          | null;
+
+        if (!response.ok) {
+          throw new Error(
+            (payload as { error?: string } | null)?.error ??
+              "Unable to search Loomic users.",
+          );
+        }
+
+        return (payload as UserSearchResponse).users ?? [];
+      })
+      .then((users) => {
+        setUserSearchResults(users.filter((user) => user.id !== selfUserId));
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        setUserSearchError(
+          error instanceof Error
+            ? error.message
+            : "Unable to search Loomic users.",
+        );
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setUserSearchPending(false);
+        }
       });
 
-      const connectPayload = (await connectResponse.json().catch(() => null)) as
-        | { error?: string; status?: ChatConnectionSnapshot }
-        | null;
+    return () => {
+      controller.abort();
+    };
+  }, [deferredUserSearchQuery, selfUserId, session]);
 
-      if (!connectResponse.ok) {
-        throw new Error(
-          connectPayload?.error ??
-            "Unable to open the secure Loomic chat bridge.",
-        );
+  useEffect(() => {
+    if (!session || !socketUrl) {
+      return;
+    }
+
+    let disposed = false;
+
+    const clearHeartbeat = () => {
+      if (heartbeatTimerRef.current !== null) {
+        window.clearInterval(heartbeatTimerRef.current);
+        heartbeatTimerRef.current = null;
+      }
+    };
+
+    const clearReconnect = () => {
+      if (reconnectTimerRef.current !== null) {
+        window.clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
+      }
+    };
+
+    const scheduleReconnect = (detail: string) => {
+      if (disposed || preventReconnectRef.current || reconnectTimerRef.current !== null) {
+        return;
       }
 
+      reconnectAttemptsRef.current += 1;
+      const waitMs = Math.min(15_000, 1_000 * 2 ** (reconnectAttemptsRef.current - 1));
+
+      setConnection((previous) => ({
+        ...previous,
+        state: "reconnecting",
+        detail,
+        reconnectAttempt: reconnectAttemptsRef.current,
+      }));
+
+      reconnectTimerRef.current = window.setTimeout(() => {
+        reconnectTimerRef.current = null;
+        openSocket();
+      }, waitMs);
+    };
+
+    const openSocket = () => {
       if (disposed) {
         return;
       }
 
-      if (connectPayload?.status) {
-        setStatus(connectPayload.status);
-      }
+      const attempt = reconnectAttemptsRef.current;
+      const nextSocket = new WebSocket(socketUrl);
+      socketRef.current = nextSocket;
 
-      eventSource = new EventSource(
-        `/api/chat/events?clientSessionId=${encodeURIComponent(currentSession.client_session_id)}`,
-      );
+      setConnection((previous) => ({
+        ...previous,
+        state: attempt > 0 ? "reconnecting" : "connecting",
+        detail:
+          attempt > 0
+            ? "Restoring the live conversation channel."
+            : "Authenticating the live conversation channel.",
+        reconnectAttempt: attempt,
+      }));
 
-      eventSource.addEventListener("snapshot", (event) => {
-        const payload = JSON.parse(
-          (event as MessageEvent<string>).data,
-        ) as ChatSnapshotPayload;
-
-        startTransition(() => {
-          setStatus(payload.status);
-          setMessages(payload.messages);
-          setActivePeerId((previous) => {
-            if (previous) {
-              return previous;
-            }
-
-            const newestPeer = payload.messages.at(-1);
-
-            if (!newestPeer) {
-              return previous;
-            }
-
-            return newestPeer.direction === "outgoing"
-              ? newestPeer.recipientId
-              : newestPeer.senderId;
-          });
-        });
-      });
-
-      eventSource.addEventListener("status", (event) => {
-        const payload = JSON.parse(
-          (event as MessageEvent<string>).data,
-        ) as ChatStatusPayload;
-        setStatus(payload.status);
-      });
-
-      eventSource.addEventListener("message", (event) => {
-        const payload = JSON.parse(
-          (event as MessageEvent<string>).data,
-        ) as ChatRecord;
-
-        startTransition(() => {
-          setMessages((previous) => upsertMessages(previous, [payload]));
-          setActivePeerId((previous) => {
-            if (previous) {
-              return previous;
-            }
-
-            return payload.direction === "outgoing"
-              ? payload.recipientId
-              : payload.senderId;
-          });
-        });
-      });
-
-      eventSource.addEventListener("transport-error", (event) => {
-        const payload = JSON.parse(
-          (event as MessageEvent<string>).data,
-        ) as ChatTransportErrorPayload;
-        setTransportNotice(payload.message);
-      });
-
-      eventSource.onerror = () => {
-        if (!disposed) {
-          setTransportNotice(
-            "The browser lost its live event stream. Loomic will keep retrying.",
-          );
+      nextSocket.addEventListener("open", () => {
+        if (disposed || socketRef.current !== nextSocket) {
+          nextSocket.close();
+          return;
         }
-      };
-    }
 
-    connect().catch((error) => {
-      if (!disposed) {
-        setTransportNotice(
-          error instanceof Error ? error.message : "Unable to start Loomic chat.",
+        clearReconnect();
+        clearHeartbeat();
+        reconnectAttemptsRef.current = 0;
+        preventReconnectRef.current = false;
+        setTransportNotice(null);
+
+        nextSocket.send(
+          JSON.stringify({
+            type: "auth",
+            token: session.access_token,
+          }),
         );
-      }
-    });
+
+        heartbeatTimerRef.current = window.setInterval(() => {
+          if (nextSocket.readyState === WebSocket.OPEN) {
+            nextSocket.send(JSON.stringify({ type: "ping" }));
+          }
+        }, HEARTBEAT_INTERVAL_MS);
+
+        setConnection((previous) => ({
+          ...previous,
+          state: "connected",
+          detail: "Live conversation sync is active.",
+          connectedAt: Date.now(),
+          reconnectAttempt: 0,
+        }));
+      });
+
+      nextSocket.addEventListener("message", (event) => {
+        try {
+          handleSocketPayload(JSON.parse(event.data) as WebSocketPayload);
+        } catch {
+          setTransportNotice("Loomic sent a message the browser could not parse.");
+        }
+      });
+
+      nextSocket.addEventListener("error", () => {
+        setTransportNotice(
+          "The live conversation channel hit a network issue. Loomic will keep retrying.",
+        );
+      });
+
+      nextSocket.addEventListener("close", () => {
+        if (socketRef.current === nextSocket) {
+          socketRef.current = null;
+        }
+
+        clearHeartbeat();
+
+        if (disposed || preventReconnectRef.current) {
+          return;
+        }
+
+        scheduleReconnect("The live conversation channel dropped. Retrying.");
+      });
+    };
+
+    openSocket();
 
     return () => {
       disposed = true;
-      eventSource?.close();
+      preventReconnectRef.current = true;
+      clearHeartbeat();
+      clearReconnect();
+      socketRef.current?.close();
+      socketRef.current = null;
     };
-  }, [session]);
+  }, [session, socketUrl]);
 
-  async function handleSignOut() {
-    if (session) {
-      await fetch("/api/chat/disconnect", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          client_session_id: session.client_session_id,
-        }),
-      }).catch(() => undefined);
-    }
-
-    clearStoredSession();
-    router.replace("/");
-  }
-
-  const threads = useMemo(() => {
-    const summaries = new Map<string, ThreadSummary>();
-
-    for (const message of messages) {
-      const peerId =
-        message.direction === "outgoing"
-          ? message.recipientId
-          : message.senderId;
-
-      const previous = summaries.get(peerId);
-      summaries.set(peerId, {
-        peerId,
-        lastMessage:
-          !previous || !previous.lastMessage
-            ? message
-            : previous.lastMessage.timestampMs <= message.timestampMs
-              ? message
-              : previous.lastMessage,
-        messageCount: (previous?.messageCount ?? 0) + 1,
-      });
-    }
-
-    if (activePeerId && !summaries.has(activePeerId)) {
-      summaries.set(activePeerId, {
-        peerId: activePeerId,
-        lastMessage: null,
-        messageCount: 0,
-      });
-    }
-
-    return [...summaries.values()].toSorted((left, right) => {
-      const leftTime = left.lastMessage?.timestampMs ?? 0;
-      const rightTime = right.lastMessage?.timestampMs ?? 0;
-      return rightTime - leftTime;
-    });
-  }, [activePeerId, messages]);
-
-  const visibleThreads = useMemo(() => {
-    const query = deferredThreadSearch.trim().toLowerCase();
-
-    if (!query) {
-      return threads;
-    }
-
-    return threads.filter((thread) => {
-      const lastPreview = thread.lastMessage?.content.toLowerCase() ?? "";
-      return (
-        thread.peerId.toLowerCase().includes(query) || lastPreview.includes(query)
-      );
-    });
-  }, [deferredThreadSearch, threads]);
-
-  const activeMessages = activePeerId
-    ? messages.filter((message) => {
-        const peerId =
-          message.direction === "outgoing"
-            ? message.recipientId
-            : message.senderId;
-        return peerId === activePeerId;
-      })
-    : EMPTY_MESSAGES;
-
-  function handleOpenThread(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setSendError(null);
-
-    const nextPeerId = recipientDraft.trim();
-
-    if (!/^\d+$/.test(nextPeerId)) {
-      setSendError("Recipient ids need to be numeric Snowflake ids.");
+  useEffect(() => {
+    if (!session || !activeConversationId) {
       return;
     }
 
+    const historyState =
+      historyByConversationRef.current[activeConversationId] ?? createHistoryState();
+
+    if (historyState.loaded || historyState.loading || historyState.error) {
+      return;
+    }
+
+    void loadConversationHistory(activeConversationId, "replace");
+  }, [activeConversationId, loadConversationHistory, session]);
+
+  function handleSelectConversation(convId: string) {
     startTransition(() => {
-      setActivePeerId(nextPeerId);
-      setRecipientDraft("");
+      setActiveConversationId(convId);
     });
+
+    const historyState =
+      historyByConversationRef.current[convId] ?? createHistoryState();
+
+    if (!historyState.loaded && !historyState.loading && historyState.error) {
+      void loadConversationHistory(convId, "replace");
+    }
+  }
+
+  async function handleCreateConversation(user: UserSearchResult) {
+    if (!session) {
+      return;
+    }
+
+    setConversationActionError(null);
+
+    const existingConversation = conversations.find(
+      (conversation) => conversation.userId === user.id,
+    );
+
+    if (existingConversation) {
+      startTransition(() => {
+        setActiveConversationId(existingConversation.convId);
+        setUserSearchQuery("");
+        setUserSearchResults([]);
+      });
+      return;
+    }
+
+    setCreatingConversationId(user.id);
+
+    try {
+      const response = await fetch("/api/conversations", {
+        method: "POST",
+        headers: {
+          ...buildAuthHeaders(session.access_token),
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          member_ids: [user.id],
+        }),
+      });
+
+      const payload = (await response.json().catch(() => null)) as
+        | CreateConversationResponse
+        | { error?: string }
+        | null;
+
+      if (!response.ok) {
+        throw new Error(
+          (payload as { error?: string } | null)?.error ??
+            "Unable to create the conversation.",
+        );
+      }
+
+      const convId = (payload as CreateConversationResponse).conv_id;
+
+      startTransition(() => {
+        setConversations((previous) =>
+          ensureConversationSummary(previous, {
+            convId,
+            userId: user.id,
+            username: user.username,
+          }),
+        );
+        setActiveConversationId(convId);
+        setUserSearchQuery("");
+        setUserSearchResults([]);
+      });
+
+      void loadConversationHistory(convId, "replace");
+    } catch (error) {
+      setConversationActionError(
+        error instanceof Error
+          ? error.message
+          : "Unable to create the conversation.",
+      );
+    } finally {
+      setCreatingConversationId(null);
+    }
+  }
+
+  async function handleLoadOlderMessages() {
+    if (!activeConversationId) {
+      return;
+    }
+
+    await loadConversationHistory(activeConversationId, "prepend");
   }
 
   async function handleSend(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSendError(null);
 
-    if (!session || !activePeerId) {
-      setSendError("Pick or create a thread before sending.");
+    if (!session || !activeConversationId || !activeConversation) {
+      setSendError("Choose a conversation before sending.");
+      return;
+    }
+
+    const socket = socketRef.current;
+
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      setSendError("The live conversation channel is offline right now.");
       return;
     }
 
@@ -369,30 +1068,46 @@ export default function ChatPlaceholder() {
       return;
     }
 
+    const optimisticMessage = buildOptimisticMessage(
+      activeConversationId,
+      selfUserId ?? "0",
+      content,
+    );
+
     setPendingSend(true);
 
     try {
-      const response = await fetch("/api/chat/send", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          access_token: session.access_token,
-          client_session_id: session.client_session_id,
-          recipient_id: activePeerId,
+      socket.send(
+        JSON.stringify({
+          type: "chat",
+          conv_id: activeConversationId,
           content,
         }),
-      });
+      );
 
-      const payload = (await response.json().catch(() => null)) as
-        | { error?: string }
-        | null;
+      setMessagesByConversation((previous) => ({
+        ...previous,
+        [activeConversationId]: mergeConversationMessages(
+          previous[activeConversationId] ?? EMPTY_MESSAGES,
+          [optimisticMessage],
+        ),
+      }));
 
-      if (!response.ok) {
-        throw new Error(payload?.error ?? "Unable to send the Loomic message.");
-      }
+      window.setTimeout(() => {
+        setMessagesByConversation((previous) =>
+          dismissPendingIndicator(
+            previous,
+            activeConversationId,
+            optimisticMessage.id,
+          ),
+        );
+      }, 1200);
 
+      setConnection((previous) => ({
+        ...previous,
+        lastMessageAt: optimisticMessage.timestampMs,
+        detail: `Delivered toward ${activeConversation.username}.`,
+      }));
       setComposerValue("");
     } catch (error) {
       setSendError(
@@ -405,283 +1120,100 @@ export default function ChatPlaceholder() {
     }
   }
 
+  async function handleSignOut() {
+    preventReconnectRef.current = true;
+    reconnectAttemptsRef.current = 0;
+
+    if (reconnectTimerRef.current !== null) {
+      window.clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
+
+    if (heartbeatTimerRef.current !== null) {
+      window.clearInterval(heartbeatTimerRef.current);
+      heartbeatTimerRef.current = null;
+    }
+
+    socketRef.current?.close();
+    socketRef.current = null;
+
+    if (session) {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: {
+          ...buildAuthHeaders(session.access_token),
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          refresh_token: session.refresh_token,
+        }),
+      }).catch(() => undefined);
+    }
+
+    clearStoredSession();
+    setSession(null);
+    router.replace("/");
+  }
+
   if (!session) {
     return (
-      <section className="mx-auto w-full max-w-3xl section-fade">
-        <div className="surface-panel rounded-[1.5rem] px-6 py-10 text-center sm:px-7">
-          <p className="eyebrow text-[10px] text-[var(--accent)]">Loomic Chat</p>
-          <p className="mt-4 text-sm text-[var(--muted)]">Loading your workspace...</p>
+      <section className="section-fade flex h-full min-h-[100dvh] items-center justify-center px-4 py-6">
+        <div className="surface-panel w-full max-w-md rounded-[28px] px-6 py-8 text-center">
+          <p className="text-sm text-[var(--muted)]">Loading...</p>
         </div>
       </section>
     );
   }
 
   return (
-    <section className="mx-auto w-full max-w-6xl section-fade">
-      <div className="surface-panel overflow-hidden rounded-[2rem]">
-        <header className="border-b border-[rgba(255,255,255,0.08)] px-5 py-5 sm:px-6">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-            <div className="space-y-3">
-              <p className="eyebrow text-[10px] text-[var(--accent)]">
-                Loomic Relay
-              </p>
-              <div>
-                <h1 className="font-display text-4xl leading-none tracking-[-0.05em] text-[var(--foreground)] sm:text-5xl">
-                  Live TLS chat
-                </h1>
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">
-                  The browser now rides through a secure Next.js bridge into the
-                  backend TCP server. Messages stream live, reconnect
-                  automatically, and queued deliveries appear as soon as the
-                  backend flushes them.
-                </p>
-              </div>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-[1.25rem] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-4 py-3">
-                <p className="eyebrow text-[10px] text-[var(--muted)]">Signed in</p>
-                <p className="mt-2 text-sm text-[var(--foreground)]">
-                  {session.username}
-                </p>
-                <p className="mt-1 font-mono text-xs text-[rgba(245,236,220,0.58)]">
-                  Your id: {status?.selfUserId ?? session.user_id ?? "waiting..."}
-                </p>
-              </div>
-              <div className="rounded-[1.25rem] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-4 py-3">
-                <p className="eyebrow text-[10px] text-[var(--muted)]">Bridge status</p>
-                <div className="mt-2 flex items-center gap-3">
-                  <span
-                    className={`status-dot ${formatStatusTone(status?.state ?? "idle")}`}
-                  />
-                  <div>
-                    <p className="text-sm text-[var(--foreground)]">
-                      {formatStatusLabel(status?.state ?? "idle")}
-                    </p>
-                    <p className="text-xs text-[rgba(245,236,220,0.58)]">
-                      {status?.detail ?? "Preparing the secure messaging session."}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        <div className="grid gap-0 lg:grid-cols-[320px_minmax(0,1fr)]">
-          <aside className="border-b border-[rgba(255,255,255,0.08)] p-5 lg:border-b-0 lg:border-r lg:p-6">
-            <div className="rounded-[1.4rem] border border-[rgba(241,205,146,0.22)] bg-[rgba(241,205,146,0.05)] p-4">
-              <p className="eyebrow text-[10px] text-[var(--accent)]">
-                New Thread
-              </p>
-              <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-                The backend does not expose a user directory yet, so start
-                conversations with a recipient Snowflake id.
-              </p>
-              <form className="mt-4 space-y-3" onSubmit={handleOpenThread}>
-                <input
-                  className="w-full rounded-[1rem] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm text-[var(--foreground)]"
-                  inputMode="numeric"
-                  onChange={(event) => setRecipientDraft(event.target.value)}
-                  placeholder="Recipient id"
-                  value={recipientDraft}
-                />
-                <button
-                  className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-[rgba(241,205,146,0.14)] px-5 text-sm text-[var(--foreground)] hover:bg-[rgba(241,205,146,0.22)]"
-                  type="submit"
-                >
-                  Open Conversation
-                </button>
-              </form>
-            </div>
-
-            <div className="mt-6">
-              <div className="flex items-center justify-between gap-3">
-                <p className="eyebrow text-[10px] text-[var(--muted)]">Active threads</p>
-                <span className="font-mono text-xs text-[rgba(245,236,220,0.52)]">
-                  {threads.length}
-                </span>
-              </div>
-              <input
-                className="mt-3 w-full rounded-[1rem] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm text-[var(--foreground)]"
-                onChange={(event) => setThreadSearch(event.target.value)}
-                placeholder="Search ids or message text"
-                value={threadSearch}
-              />
-              <div className="token-log mt-4 max-h-[28rem] space-y-3 overflow-y-auto pr-1">
-                {visibleThreads.length > 0 ? (
-                  visibleThreads.map((thread) => {
-                    const isActive = thread.peerId === activePeerId;
-
-                    return (
-                      <button
-                        key={thread.peerId}
-                        className={`w-full rounded-[1.3rem] border px-4 py-4 text-left ${
-                          isActive
-                            ? "border-[rgba(241,205,146,0.28)] bg-[rgba(241,205,146,0.08)]"
-                            : "border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] hover:border-[rgba(114,214,201,0.2)] hover:bg-[rgba(114,214,201,0.05)]"
-                        }`}
-                        onClick={() => setActivePeerId(thread.peerId)}
-                        type="button"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p className="eyebrow text-[10px] text-[var(--muted)]">
-                              Recipient
-                            </p>
-                            <p className="mt-2 font-mono text-sm text-[var(--foreground)]">
-                              {thread.peerId}
-                            </p>
-                          </div>
-                          <span className="text-xs text-[rgba(245,236,220,0.5)]">
-                            {thread.lastMessage
-                              ? formatRelativeTime(thread.lastMessage.timestampMs)
-                              : "new"}
-                          </span>
-                        </div>
-                        <p className="mt-3 line-clamp-2 text-sm leading-6 text-[var(--muted)]">
-                          {thread.lastMessage?.content ??
-                            "No messages yet. The tunnel is ready when you are."}
-                        </p>
-                      </button>
-                    );
-                  })
-                ) : (
-                  <div className="rounded-[1.3rem] border border-dashed border-[rgba(255,255,255,0.08)] px-4 py-6 text-sm leading-6 text-[var(--muted)]">
-                    Open a thread with a recipient id to start live messaging.
-                  </div>
-                )}
-              </div>
-            </div>
-          </aside>
-
-          <div className="flex min-h-[42rem] flex-col">
-            <div className="border-b border-[rgba(255,255,255,0.08)] px-5 py-5 sm:px-6">
-              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <p className="eyebrow text-[10px] text-[var(--accent)]">
-                    Conversation
-                  </p>
-                  <h2 className="mt-2 font-mono text-lg text-[var(--foreground)]">
-                    {activePeerId || "No recipient selected"}
-                  </h2>
-                  <p className="mt-1 text-sm text-[var(--muted)]">
-                    Session memory keeps recent messages visible here until a
-                    dedicated history endpoint lands on the backend.
-                  </p>
-                </div>
-                <button
-                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-[rgba(241,205,146,0.3)] px-5 text-sm text-[var(--foreground)] hover:bg-[rgba(241,205,146,0.08)]"
-                  onClick={handleSignOut}
-                  type="button"
-                >
-                  Sign Out
-                </button>
-              </div>
-            </div>
-
-            <div className="token-log flex-1 space-y-4 overflow-y-auto px-5 py-5 sm:px-6">
-              {transportNotice ? (
-                <div className="rounded-[1.2rem] border border-[rgba(245,143,124,0.28)] bg-[rgba(245,143,124,0.08)] px-4 py-3 text-sm text-[var(--foreground)]">
-                  {transportNotice}
-                </div>
-              ) : null}
-
-              {activeMessages.length > 0 ? (
-                activeMessages.map((message) => {
-                  const isOutgoing = message.direction === "outgoing";
-
-                  return (
-                    <article
-                      key={message.id}
-                      className={`max-w-2xl rounded-[1.35rem] border px-4 py-4 text-sm leading-6 ${
-                        isOutgoing
-                          ? "ml-auto border-[rgba(241,205,146,0.22)] bg-[rgba(241,205,146,0.08)]"
-                          : "border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)]"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-4">
-                        <p className="eyebrow text-[10px] text-[var(--muted)]">
-                          {isOutgoing ? "You" : `User ${message.senderId}`}
-                        </p>
-                        <span className="text-xs text-[rgba(245,236,220,0.52)]">
-                          {formatClock(message.timestampMs)}
-                        </span>
-                      </div>
-                      <p className="mt-3 whitespace-pre-wrap text-[var(--foreground)]">
-                        {message.content}
-                      </p>
-                    </article>
-                  );
-                })
-              ) : (
-                <div className="flex h-full min-h-[18rem] items-center justify-center rounded-[1.5rem] border border-dashed border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] px-6 text-center text-sm leading-6 text-[var(--muted)]">
-                  {activePeerId
-                    ? "The bridge is ready. Send the first message to bring this thread online."
-                    : "Choose a thread on the left or enter a recipient id to begin."}
-                </div>
-              )}
-            </div>
-
-            <footer className="border-t border-[rgba(255,255,255,0.08)] px-5 py-5 sm:px-6">
-              {sendError ? (
-                <div className="mb-4 rounded-[1rem] border border-[rgba(245,143,124,0.28)] bg-[rgba(245,143,124,0.08)] px-4 py-3 text-sm text-[var(--foreground)]">
-                  {sendError}
-                </div>
-              ) : null}
-
-              <form onSubmit={handleSend}>
-                <div className="rounded-[1.5rem] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] p-4">
-                  <textarea
-                    className="min-h-28 w-full resize-none bg-transparent text-sm leading-6 text-[var(--foreground)] outline-none"
-                    onChange={(event) => setComposerValue(event.target.value)}
-                    placeholder={
-                      activePeerId
-                        ? `Message user ${activePeerId}`
-                        : "Pick a recipient before composing."
-                    }
-                    value={composerValue}
-                  />
-                  <div className="mt-4 flex flex-col gap-3 border-t border-[rgba(255,255,255,0.08)] pt-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="text-sm text-[var(--muted)]">
-                      {status?.connectedAt
-                        ? `Secure tunnel live since ${formatClock(status.connectedAt)}`
-                        : "Waiting for the secure tunnel to finish connecting."}
-                    </div>
-                    <button
-                      className="inline-flex min-h-11 items-center justify-center rounded-full bg-[rgba(114,214,201,0.12)] px-5 text-sm text-[var(--foreground)] hover:bg-[rgba(114,214,201,0.2)] disabled:cursor-not-allowed disabled:opacity-50"
-                      disabled={
-                        pendingSend ||
-                        !activePeerId ||
-                        composerValue.trim().length === 0
-                      }
-                      type="submit"
-                    >
-                      {pendingSend ? "Sending..." : "Send over TLS"}
-                    </button>
-                  </div>
-                </div>
-              </form>
-            </footer>
-          </div>
-        </div>
-
-        <footer className="border-t border-[rgba(255,255,255,0.08)] px-5 py-4 sm:px-6">
-          <div className="flex flex-col gap-2 text-xs leading-6 text-[rgba(245,236,220,0.56)] sm:flex-row sm:items-center sm:justify-between">
-            <p>
-              Live messages ride through the Next.js bridge into Loomic&apos;s
-              binary TCP protocol on port 9000.
-            </p>
-            <button
-              className="rounded-full border border-[rgba(255,255,255,0.08)] px-4 py-2 text-xs text-[var(--foreground)] hover:bg-[rgba(255,255,255,0.03)]"
-              onClick={() => setTransportNotice(null)}
-              type="button"
-            >
-              Clear Notice
-            </button>
-          </div>
-        </footer>
-      </div>
-    </section>
+    <SimpleChatLayout
+      activeConversationId={activeConversationId}
+      activeConversationName={activeConversation?.username ?? null}
+      activeHistoryHasMore={activeHistoryState.hasMore}
+      activeHistoryLoading={activeHistoryState.loading}
+      activeHistoryLoadingMore={activeHistoryState.loadingMore}
+      activeMessages={activeMessages}
+      composerValue={composerValue}
+      conversationActionError={conversationActionError}
+      conversations={visibleConversations}
+      conversationsError={conversationsError}
+      conversationsLoading={conversationsLoading}
+      creatingConversationId={creatingConversationId}
+      formatClock={formatClock}
+      formatRelativeTime={formatRelativeTime}
+      historyError={activeHistoryState.error}
+      onComposerChange={setComposerValue}
+      onCreateConversation={(user) => {
+        void handleCreateConversation(user);
+      }}
+      onLoadOlderMessages={() => {
+        void handleLoadOlderMessages();
+      }}
+      onRefreshConversations={() => {
+        void loadConversations();
+      }}
+      onSelectConversation={handleSelectConversation}
+      onSend={handleSend}
+      onSignOut={() => {
+        void handleSignOut();
+      }}
+      onThreadSearchChange={setThreadSearch}
+      onUserSearchChange={setUserSearchQuery}
+      pendingSend={pendingSend}
+      sendError={sendError}
+      sessionUsername={session.username}
+      showUserSearchResults={
+        userSearchPending ||
+        Boolean(userSearchError) ||
+        Boolean(conversationActionError) ||
+        deferredUserSearchQuery.trim().length >= 2
+      }
+      threadSearch={threadSearch}
+      transportNotice={transportNotice}
+      userSearchError={userSearchError}
+      userSearchPending={userSearchPending}
+      userSearchQuery={userSearchQuery}
+      userSearchResults={userSearchResults}
+    />
   );
 }
