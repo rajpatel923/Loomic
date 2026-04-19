@@ -76,9 +76,9 @@ void register_auth_routes(HttpServer& server,
             if (username.empty() || email.empty() || password.empty()) {
                 co_return make_error(http::status::bad_request, "missing required fields");
             }
-            if (password.size() < 8) {
+            if (password.size() < 6) {
                 co_return make_error(http::status::bad_request,
-                    "password must be at least 8 characters");
+                    "password must be at least 6 characters");
             }
 
             // Check uniqueness

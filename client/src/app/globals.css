@@ -1,26 +1,119 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0a0e12;
+  --foreground: #f5ecdc;
+  --muted: #d9c9b2;
+  --panel: rgba(10, 18, 25, 0.72);
+  --panel-subtle: rgba(255, 255, 255, 0.03);
+  --line: rgba(241, 205, 146, 0.22);
+  --accent: #f1cd92;
+  --accent-soft: rgba(241, 205, 146, 0.14);
+  --signal: #72d6c9;
+  --danger: #f58f7c;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-sans-ui);
+  --font-mono: var(--font-plex-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
+  margin: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans-ui), sans-serif;
+  background-image:
+    radial-gradient(circle at top left, rgba(245, 165, 109, 0.18), transparent 32%),
+    radial-gradient(circle at 85% 12%, rgba(114, 214, 201, 0.16), transparent 26%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.03), transparent 24%),
+    linear-gradient(180deg, #05090d 0%, #081118 48%, #0b1117 100%);
+  overflow-x: hidden;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(217, 201, 178, 0.44);
+}
+
+::selection {
+  background: rgba(241, 205, 146, 0.34);
+  color: #fff7e7;
+}
+
+:focus-visible {
+  outline: 2px solid rgba(114, 214, 201, 0.9);
+  outline-offset: 2px;
+}
+
+.surface-panel {
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 28%),
+    var(--panel);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(18px);
+}
+
+.section-fade {
+  animation: rise-in 260ms ease-out both;
+}
+
+.token-log {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(241, 205, 146, 0.32) transparent;
+}
+
+.token-log::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.token-log::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: rgba(241, 205, 146, 0.32);
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

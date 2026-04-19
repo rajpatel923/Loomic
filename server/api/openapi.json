@@ -106,8 +106,8 @@
           "password": {
             "type": "string",
             "format": "password",
-            "minLength": 8,
-            "description": "Minimum 8 characters. Stored as PBKDF2-SHA256 (100k iterations).",
+            "minLength": 6,
+            "description": "Minimum 6 characters. Stored as PBKDF2-SHA256 (100k iterations).",
             "example": "supersecret123"
           }
         }
