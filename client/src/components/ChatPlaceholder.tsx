@@ -322,9 +322,8 @@ function dismissPendingIndicator(
 
 export default function ChatPlaceholder() {
   const router = useRouter();
-  const [session, setSession] = useState<StoredSession | null>(() =>
-    readStoredSession(),
-  );
+  const [session, setSession] = useState<StoredSession | null>(null);
+  const [sessionResolved, setSessionResolved] = useState(false);
   const [socketUrl, setSocketUrl] = useState<string | null>(null);
   const [, setConnection] = useState<ConnectionSnapshot>(
     createInitialConnection(),
@@ -378,6 +377,11 @@ export default function ChatPlaceholder() {
   const activeMessages = activeConversationId
     ? messagesByConversation[activeConversationId] ?? EMPTY_MESSAGES
     : EMPTY_MESSAGES;
+
+  useEffect(() => {
+    setSession(readStoredSession());
+    setSessionResolved(true);
+  }, []);
 
   useEffect(() => {
     historyByConversationRef.current = historyByConversation;
@@ -682,13 +686,17 @@ export default function ChatPlaceholder() {
   });
 
   useEffect(() => {
+    if (!sessionResolved) {
+      return;
+    }
+
     if (!session) {
       router.replace("/");
     }
-  }, [router, session]);
+  }, [router, session, sessionResolved]);
 
   useEffect(() => {
-    if (!session) {
+    if (!sessionResolved || !session) {
       return;
     }
 
@@ -725,18 +733,18 @@ export default function ChatPlaceholder() {
     return () => {
       disposed = true;
     };
-  }, [session]);
+  }, [session, sessionResolved]);
 
   useEffect(() => {
-    if (!session) {
+    if (!sessionResolved || !session) {
       return;
     }
 
     void loadConversations();
-  }, [session, loadConversations]);
+  }, [session, loadConversations, sessionResolved]);
 
   useEffect(() => {
-    if (!session) {
+    if (!sessionResolved || !session) {
       return;
     }
 
@@ -798,10 +806,10 @@ export default function ChatPlaceholder() {
     return () => {
       controller.abort();
     };
-  }, [deferredUserSearchQuery, selfUserId, session]);
+  }, [deferredUserSearchQuery, selfUserId, session, sessionResolved]);
 
   useEffect(() => {
-    if (!session || !socketUrl) {
+    if (!sessionResolved || !session || !socketUrl) {
       return;
     }
 
@@ -934,10 +942,10 @@ export default function ChatPlaceholder() {
       socketRef.current?.close();
       socketRef.current = null;
     };
-  }, [session, socketUrl]);
+  }, [session, socketUrl, sessionResolved]);
 
   useEffect(() => {
-    if (!session || !activeConversationId) {
+    if (!sessionResolved || !session || !activeConversationId) {
       return;
     }
 
@@ -949,7 +957,7 @@ export default function ChatPlaceholder() {
     }
 
     void loadConversationHistory(activeConversationId, "replace");
-  }, [activeConversationId, loadConversationHistory, session]);
+  }, [activeConversationId, loadConversationHistory, session, sessionResolved]);
 
   function handleSelectConversation(convId: string) {
     startTransition(() => {
@@ -1155,7 +1163,7 @@ export default function ChatPlaceholder() {
     router.replace("/");
   }
 
-  if (!session) {
+  if (!sessionResolved || !session) {
     return (
       <section className="section-fade flex h-full min-h-[100dvh] items-center justify-center px-4 py-6">
         <div className="surface-panel w-full max-w-md rounded-[28px] px-6 py-8 text-center">

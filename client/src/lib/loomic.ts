@@ -22,9 +22,18 @@ export function getApiBaseUrl() {
   );
 }
 
-export function getWebSocketUrl() {
-  const url = new URL(getApiBaseUrl());
-  url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+function normalizeWebSocketProtocol(protocol: string) {
+  if (protocol === "https:" || protocol === "wss:") {
+    return "wss:";
+  }
+
+  return "ws:";
+}
+
+export function getWebSocketUrl(protocolHint?: string) {
+  const explicitWebSocketUrl = process.env.LOOMIC_WS_URL;
+  const url = new URL(explicitWebSocketUrl ?? getApiBaseUrl());
+  url.protocol = normalizeWebSocketProtocol(protocolHint ?? url.protocol);
   url.pathname = "/ws";
   url.search = "";
   url.hash = "";

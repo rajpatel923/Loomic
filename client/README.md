@@ -34,6 +34,17 @@ Then restart `npm run dev`. The Next.js route handlers under
 `src/app/api/auth/*` will proxy requests to that backend even during local
 development.
 
+For deployed HTTPS environments, the browser WebSocket URL must also be secure.
+If your backend supports TLS for the `/ws` endpoint, set:
+
+```bash
+LOOMIC_WS_URL=wss://your-backend-host:8080/ws
+```
+
+If `LOOMIC_WS_URL` is not set, the client derives the socket endpoint from
+`LOOMIC_API_BASE_URL` and will prefer `wss://` when the app itself is served
+over HTTPS.
+
 ## Live Chat Bridge
 
 The `/chat` page now uses a browser-safe bridge:
@@ -46,6 +57,7 @@ Optional `.env.local` overrides:
 
 ```bash
 LOOMIC_API_BASE_URL=http://35.232.85.186:8080
+LOOMIC_WS_URL=wss://your-backend-host:8080/ws
 LOOMIC_TCP_HOST=35.232.85.186
 LOOMIC_TCP_PORT=9000
 LOOMIC_TCP_SERVERNAME=35.232.85.186
