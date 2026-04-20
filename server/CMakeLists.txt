@@ -71,6 +71,9 @@ add_library(LoomicServer_lib STATIC
     src/http/GroupsHandler.cpp
     src/http/MessagesHandler.cpp
     src/http/UsersHandler.cpp
+    src/http/ReceiptsHandler.cpp
+    src/push/PushService.cpp
+    src/push/PushHandler.cpp
     src/tcp/TcpServer.cpp
     src/ws/WebSocketSession.cpp
     src/tcp/Session.cpp

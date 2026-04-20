@@ -8,7 +8,9 @@
 #include "LoomicServer/util/Logger.hpp"
 
 #include <chrono>
+#include <cstring>
 #include <string>
+#include <string_view>
 
 #include <boost/asio/co_spawn.hpp>
 #include <boost/asio/detached.hpp>
@@ -23,6 +25,35 @@
 namespace Loomic {
 
 namespace net = boost::asio;
+
+// ── File-local helpers ─────────────────────────────────────────────────────────
+
+static net::awaitable<void> update_conv_activity(std::shared_ptr<PgPool> pg,
+                                                  uint64_t conv_id,
+                                                  bool is_group,
+                                                  std::string preview)
+{
+    try {
+        co_await pg->execute(
+            [conv_id, is_group, p = std::move(preview)](pqxx::connection& conn) {
+                pqxx::work txn(conn);
+                if (is_group) {
+                    txn.exec_params(
+                        "UPDATE groups SET last_activity_at=NOW(), last_msg_preview=$2 WHERE id=$1",
+                        static_cast<int64_t>(conv_id), p);
+                } else {
+                    txn.exec_params(
+                        "UPDATE conversations SET last_activity_at=NOW(), last_msg_preview=$2 WHERE id=$1",
+                        static_cast<int64_t>(conv_id), p);
+                }
+                txn.commit();
+                return pqxx::result{};
+            },
+            PgPool::RetryClass::NonRetryableWrite);
+    } catch (const std::exception& e) {
+        LOG_WARN("update_conv_activity conv_id={}: {}", conv_id, e.what());
+    }
+}
 
 // ── TokenBucket ───────────────────────────────────────────────────────────────
 
@@ -129,6 +160,49 @@ net::awaitable<void> Session::run()
                     co_await write_frame(socket_, err, {});
                 }
 
+            } else if (type == MsgType::TYPING) {
+                // Relay ephemeral typing indicator — no persistence, no offline queue
+                uint64_t target_id = hdr.recipient_id;
+                bool is_group = (hdr.flags & kFlagIsGroup) != 0;
+                if (!is_group) {
+                    auto target_sess = registry_->lookup(target_id);
+                    if (target_sess) {
+                        OutboundMessage typing_msg;
+                        typing_msg.msg_type     = MsgType::TYPING;
+                        typing_msg.conv_id      = target_id;
+                        typing_msg.sender_id    = user_id_;
+                        typing_msg.recipient_id = target_id;
+                        typing_msg.flags        = 0;
+                        auto typing_bytes = serialize_delivery(typing_msg);
+                        net::post(target_sess->strand(),
+                                  [target_sess, tb = std::move(typing_bytes)]() mutable {
+                                      target_sess->enqueue(std::move(tb));
+                                  });
+                    }
+                } else {
+                    // Fan-out typing to group members
+                    auto members = co_await redis_->smembers_group(target_id);
+                    if (members.empty()) {
+                        members = co_await load_group_members_from_pg(target_id);
+                    }
+                    OutboundMessage typing_msg;
+                    typing_msg.msg_type     = MsgType::TYPING;
+                    typing_msg.conv_id      = target_id;
+                    typing_msg.sender_id    = user_id_;
+                    typing_msg.recipient_id = target_id;
+                    typing_msg.flags        = kFlagIsGroup;
+                    auto typing_bytes = serialize_delivery(typing_msg);
+                    for (auto member_id : members) {
+                        if (member_id == user_id_) continue;
+                        auto ms = registry_->lookup(member_id);
+                        if (ms) {
+                            net::post(ms->strand(),
+                                      [ms, tb = typing_bytes]() mutable {
+                                          ms->enqueue(std::move(tb));
+                                      });
+                        }
+                    }
+                }
             } else {
                 if (hdr.payload_len > 0 && hdr.payload_len <= (1u << 20)) {
                     co_await read_frame_payload(socket_, hdr.payload_len);
@@ -149,6 +223,22 @@ net::awaitable<void> Session::run()
     if (user_id_ != 0) {
         registry_->remove(user_id_, this);
         co_await redis_->del_presence(user_id_);
+
+        // Record last_seen in Redis (fast) and Postgres (durable)
+        auto ts_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count();
+        co_await redis_->set_last_seen(user_id_, ts_ms);
+        net::co_spawn(
+            co_await net::this_coro::executor,
+            pg_->execute([uid = user_id_, ts_ms](pqxx::connection& conn) {
+                pqxx::work txn(conn);
+                txn.exec_params(
+                    "UPDATE users SET last_seen_at=to_timestamp($2::BIGINT/1000.0) WHERE id=$1",
+                    static_cast<int64_t>(uid), ts_ms);
+                txn.commit();
+                return pqxx::result{};
+            }, PgPool::RetryClass::NonRetryableWrite),
+            net::detached);
     }
 }
 
@@ -216,6 +306,10 @@ net::awaitable<void> Session::route_message(const FrameHeader& hdr,
             members = co_await load_group_members_from_pg(group_id);
         }
 
+        std::string preview_str(message.content.begin(),
+                                message.content.size() > 128 ? message.content.begin() + 128
+                                                               : message.content.end());
+
         for (auto member_id : members) {
             if (member_id == user_id_) continue;  // skip sender
             auto session = registry_->lookup(member_id);
@@ -224,9 +318,31 @@ net::awaitable<void> Session::route_message(const FrameHeader& hdr,
                           [session, delivery = delivery_bytes]() mutable {
                               session->enqueue(std::move(delivery));
                           });
+                // Send DELIVERED receipt back to original sender
+                {
+                    OutboundMessage receipt;
+                    receipt.msg_type     = MsgType::DELIVERED;
+                    receipt.msg_id       = msg_id;
+                    receipt.sender_id    = member_id;
+                    receipt.recipient_id = user_id_;
+                    receipt.conv_id      = group_id;
+                    receipt.flags        = kFlagIsGroup;
+                    auto receipt_bytes   = serialize_delivery(receipt);
+                    auto sender_sess     = registry_->lookup(user_id_);
+                    if (sender_sess) {
+                        net::post(sender_sess->strand(),
+                                  [sender_sess, rf = std::move(receipt_bytes)]() mutable {
+                                      sender_sess->enqueue(std::move(rf));
+                                  });
+                    }
+                }
             } else {
                 co_await redis_->lpush("offline:" + std::to_string(member_id),
                                        std::span<const uint8_t>(delivery_bytes));
+                // Increment unread count for offline recipient
+                net::co_spawn(co_await net::this_coro::executor,
+                              redis_->hincrby_unread(member_id, group_id),
+                              net::detached);
             }
         }
 
@@ -238,6 +354,11 @@ net::awaitable<void> Session::route_message(const FrameHeader& hdr,
                 std::vector<uint8_t>(message.content.begin(), message.content.end()),
                 ts_ms, static_cast<uint8_t>(MsgType::CHAT)),
             net::detached);
+
+        // Update last_activity_at and preview on groups table
+        net::co_spawn(co_await net::this_coro::executor,
+                      update_conv_activity(pg_, group_id, true, preview_str),
+                      net::detached);
 
     } else {
         // ── Direct message (existing logic) ──────────────────────────────────
@@ -258,15 +379,42 @@ net::awaitable<void> Session::route_message(const FrameHeader& hdr,
 
         auto delivery_bytes = serialize_delivery(message);
 
+        std::string preview_str_dm(message.content.begin(),
+                                   message.content.size() > 128
+                                       ? message.content.begin() + 128
+                                       : message.content.end());
+
         auto recipient = registry_->lookup(hdr.recipient_id);
         if (recipient) {
             net::post(recipient->strand(),
                       [recipient, delivery = delivery_bytes]() mutable {
                           recipient->enqueue(std::move(delivery));
                       });
+            // Send DELIVERED receipt back to sender
+            {
+                OutboundMessage receipt;
+                receipt.msg_type     = MsgType::DELIVERED;
+                receipt.msg_id       = msg_id;
+                receipt.sender_id    = hdr.recipient_id;
+                receipt.recipient_id = user_id_;
+                receipt.conv_id      = conv_id;
+                receipt.flags        = 0;
+                auto receipt_bytes   = serialize_delivery(receipt);
+                auto sender_sess     = registry_->lookup(user_id_);
+                if (sender_sess) {
+                    net::post(sender_sess->strand(),
+                              [sender_sess, rf = std::move(receipt_bytes)]() mutable {
+                                  sender_sess->enqueue(std::move(rf));
+                              });
+                }
+            }
         } else {
             co_await redis_->lpush("offline:" + std::to_string(hdr.recipient_id),
                                    std::span<const uint8_t>(delivery_bytes));
+            // Increment unread count for offline recipient
+            net::co_spawn(co_await net::this_coro::executor,
+                          redis_->hincrby_unread(hdr.recipient_id, conv_id),
+                          net::detached);
         }
 
         net::co_spawn(
@@ -281,6 +429,11 @@ net::awaitable<void> Session::route_message(const FrameHeader& hdr,
             co_await net::this_coro::executor,
             upsert_conv_members(conv_id, user_id_, hdr.recipient_id),
             net::detached);
+
+        // Update last_activity_at and preview on conversations table
+        net::co_spawn(co_await net::this_coro::executor,
+                      update_conv_activity(pg_, conv_id, false, preview_str_dm),
+                      net::detached);
     }
 }
 
@@ -344,7 +497,25 @@ void Session::enqueue(std::vector<uint8_t> frame)
         return;
     }
 
-    write_queue_.push_back(build_chat_frame(*message));
+    std::vector<uint8_t> wire_frame;
+    if (message->msg_type == MsgType::DELIVERED ||
+        message->msg_type == MsgType::READ      ||
+        message->msg_type == MsgType::TYPING) {
+        // These are header-only frames with no proto payload
+        FrameHeader hdr{};
+        hdr.payload_len  = 0;
+        hdr.msg_type     = static_cast<uint8_t>(message->msg_type);
+        hdr.flags        = message->flags;
+        hdr.msg_id       = message->msg_id;
+        hdr.sender_id    = message->sender_id;
+        hdr.recipient_id = message->recipient_id;
+        wire_frame.resize(sizeof(FrameHeader));
+        std::memcpy(wire_frame.data(), &hdr, sizeof(FrameHeader));
+    } else {
+        wire_frame = build_chat_frame(*message);
+    }
+
+    write_queue_.push_back(std::move(wire_frame));
     if (!writing_) {
         writing_ = true;
         net::co_spawn(strand_, do_write(), net::detached);

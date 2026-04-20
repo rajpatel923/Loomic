@@ -27,6 +27,9 @@ class ConversationsHandler;
 class GroupsHandler;
 class MessagesHandler;
 class UsersHandler;
+class ReceiptsHandler;
+class PushService;
+class PushHandler;
 
 class Server {
 public:
@@ -61,6 +64,9 @@ private:
     std::shared_ptr<GroupsHandler>          groups_handler_;
     std::shared_ptr<MessagesHandler>        messages_handler_;
     std::shared_ptr<UsersHandler>           users_handler_;
+    std::shared_ptr<ReceiptsHandler>        receipts_handler_;
+    std::shared_ptr<PushService>            push_service_;
+    std::shared_ptr<PushHandler>            push_handler_;
     HttpServer                              http_;
     TcpServer                               tcp_;
     std::vector<std::thread>                threads_;

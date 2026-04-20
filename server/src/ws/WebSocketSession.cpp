@@ -116,6 +116,22 @@ net::awaitable<void> WebSocketSession::run(beast::flat_buffer buffer,
     if (user_id_ != 0) {
         registry_->remove(user_id_, this);
         co_await redis_->del_presence(user_id_);
+
+        // Record last_seen in Redis (fast) and Postgres (durable)
+        auto ts_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count();
+        co_await redis_->set_last_seen(user_id_, ts_ms);
+        net::co_spawn(
+            co_await net::this_coro::executor,
+            pg_->execute([uid = user_id_, ts_ms](pqxx::connection& conn) {
+                pqxx::work txn(conn);
+                txn.exec_params(
+                    "UPDATE users SET last_seen_at=to_timestamp($2::BIGINT/1000.0) WHERE id=$1",
+                    static_cast<int64_t>(uid), ts_ms);
+                txn.commit();
+                return pqxx::result{};
+            }, PgPool::RetryClass::NonRetryableWrite),
+            net::detached);
     }
 }
 
@@ -157,6 +173,10 @@ net::awaitable<void> WebSocketSession::read_loop()
             co_await route_message(text);
         } else if (type == "group_chat") {
             co_await route_group_message(text);
+        } else if (type == "typing") {
+            co_await route_typing(j);
+        } else if (type == "read") {
+            co_await route_read_receipt(j);
         }
     }
 }
@@ -229,6 +249,11 @@ net::awaitable<void> WebSocketSession::route_message(std::string_view json_sv)
             ts_ms, static_cast<uint8_t>(MsgType::CHAT)),
         net::detached);
 
+    std::string preview_str(message.content.begin(),
+                            message.content.size() > 128
+                                ? message.content.begin() + 128
+                                : message.content.end());
+
     // Route to recipient
     auto recipient_session = registry_->lookup(recipient_id);
     if (recipient_session) {
@@ -236,10 +261,52 @@ net::awaitable<void> WebSocketSession::route_message(std::string_view json_sv)
                   [recipient_session, delivery = delivery_bytes]() mutable {
                       recipient_session->enqueue(std::move(delivery));
                   });
+        // Send DELIVERED receipt back to sender
+        {
+            OutboundMessage receipt;
+            receipt.msg_type     = MsgType::DELIVERED;
+            receipt.msg_id       = msg_id;
+            receipt.sender_id    = recipient_id;
+            receipt.recipient_id = user_id_;
+            receipt.conv_id      = conv_id;
+            auto receipt_bytes   = serialize_delivery(receipt);
+            write_queue_.push_back(
+                [&]() -> std::string {
+                    auto msg_opt = deserialize_delivery(receipt_bytes);
+                    if (!msg_opt) return "";
+                    nlohmann::json rj;
+                    rj["type"]    = "delivered";
+                    rj["msg_id"]  = std::to_string(msg_opt->msg_id);
+                    rj["conv_id"] = std::to_string(msg_opt->conv_id);
+                    rj["user_id"] = std::to_string(msg_opt->sender_id);
+                    return rj.dump();
+                }());
+            if (!writing_) {
+                writing_ = true;
+                net::co_spawn(strand_, do_write(), net::detached);
+            }
+        }
     } else {
         co_await redis_->lpush("offline:" + std::to_string(recipient_id),
                                std::span<const uint8_t>(delivery_bytes));
+        // Increment unread count for offline recipient
+        net::co_spawn(co_await net::this_coro::executor,
+                      redis_->hincrby_unread(recipient_id, conv_id),
+                      net::detached);
     }
+
+    // Update last_activity_at and preview
+    net::co_spawn(
+        co_await net::this_coro::executor,
+        pg_->execute([conv_id, p = preview_str](pqxx::connection& conn) {
+            pqxx::work txn(conn);
+            txn.exec_params(
+                "UPDATE conversations SET last_activity_at=NOW(), last_msg_preview=$2 WHERE id=$1",
+                static_cast<int64_t>(conv_id), p);
+            txn.commit();
+            return pqxx::result{};
+        }, PgPool::RetryClass::NonRetryableWrite),
+        net::detached);
 }
 
 // ── flush_offline_queue ───────────────────────────────────────────────────────
@@ -290,6 +357,20 @@ void WebSocketSession::enqueue(std::vector<uint8_t> frame)
         j["type"]    = "delete_notify";
         j["msg_id"]  = std::to_string(message->msg_id);
         j["conv_id"] = std::to_string(message->conv_id);
+    } else if (message->msg_type == MsgType::DELIVERED) {
+        j["type"]    = "delivered";
+        j["msg_id"]  = std::to_string(message->msg_id);
+        j["conv_id"] = std::to_string(message->conv_id);
+        j["user_id"] = std::to_string(message->sender_id);
+    } else if (message->msg_type == MsgType::READ) {
+        j["type"]    = "read";
+        j["conv_id"] = std::to_string(message->conv_id);
+        j["user_id"] = std::to_string(message->sender_id);
+    } else if (message->msg_type == MsgType::TYPING) {
+        j["type"]     = "typing";
+        j["conv_id"]  = std::to_string(message->conv_id);
+        j["user_id"]  = std::to_string(message->sender_id);
+        j["is_group"] = static_cast<bool>(message->flags & kFlagIsGroup);
     } else {
         j["type"]      = "chat";
         j["msg_id"]    = std::to_string(message->msg_id);
@@ -381,6 +462,11 @@ net::awaitable<void> WebSocketSession::route_group_message(std::string_view json
         members = co_await load_group_members_from_pg(group_id);
     }
 
+    std::string group_preview(message.content.begin(),
+                              message.content.size() > 128
+                                  ? message.content.begin() + 128
+                                  : message.content.end());
+
     for (auto member_id : members) {
         if (member_id == user_id_) continue;
         auto session = registry_->lookup(member_id);
@@ -392,8 +478,25 @@ net::awaitable<void> WebSocketSession::route_group_message(std::string_view json
         } else {
             co_await redis_->lpush("offline:" + std::to_string(member_id),
                                    std::span<const uint8_t>(delivery_bytes));
+            // Increment unread for offline group member
+            net::co_spawn(co_await net::this_coro::executor,
+                          redis_->hincrby_unread(member_id, group_id),
+                          net::detached);
         }
     }
+
+    // Update last_activity_at and preview on groups table
+    net::co_spawn(
+        co_await net::this_coro::executor,
+        pg_->execute([group_id, p = group_preview](pqxx::connection& conn) {
+            pqxx::work txn(conn);
+            txn.exec_params(
+                "UPDATE groups SET last_activity_at=NOW(), last_msg_preview=$2 WHERE id=$1",
+                static_cast<int64_t>(group_id), p);
+            txn.commit();
+            return pqxx::result{};
+        }, PgPool::RetryClass::NonRetryableWrite),
+        net::detached);
 }
 
 // ── load_group_members_from_pg ────────────────────────────────────────────────
@@ -420,6 +523,166 @@ WebSocketSession::load_group_members_from_pg(uint64_t group_id)
     } catch (const std::exception& e) {
         LOG_WARN("ws load_group_members_from_pg group_id={}: {}", group_id, e.what());
         co_return std::vector<uint64_t>{};
+    }
+}
+
+// ── route_typing ──────────────────────────────────────────────────────────────
+
+net::awaitable<void> WebSocketSession::route_typing(const nlohmann::json& j)
+{
+    auto self = shared_from_this();
+
+    auto conv_id_str = j.value("conv_id", std::string{});
+    bool is_group    = j.value("is_group", false);
+    if (conv_id_str.empty()) co_return;
+
+    uint64_t conv_id = 0;
+    {
+        auto [p, ec] = std::from_chars(conv_id_str.data(),
+                                        conv_id_str.data() + conv_id_str.size(),
+                                        conv_id);
+        if (ec != std::errc{}) co_return;
+    }
+
+    OutboundMessage typing_msg;
+    typing_msg.msg_type     = MsgType::TYPING;
+    typing_msg.conv_id      = conv_id;
+    typing_msg.sender_id    = user_id_;
+    typing_msg.recipient_id = conv_id;
+    typing_msg.flags        = is_group ? kFlagIsGroup : 0;
+    auto typing_bytes = serialize_delivery(typing_msg);
+
+    if (!is_group) {
+        // DM: look up the other member and relay if online
+        try {
+            auto rows = co_await pg_->execute(
+                [conv_id, sender = user_id_](pqxx::connection& conn) {
+                    pqxx::nontransaction ntxn(conn);
+                    return ntxn.exec_params(
+                        "SELECT user_id FROM conv_members "
+                        "WHERE conv_id=$1 AND user_id != $2 LIMIT 1",
+                        static_cast<int64_t>(conv_id),
+                        static_cast<int64_t>(sender));
+                },
+                PgPool::RetryClass::ReadOnly);
+            if (!rows.empty()) {
+                auto peer_id = static_cast<uint64_t>(rows[0][0].as<int64_t>());
+                auto sess    = registry_->lookup(peer_id);
+                if (sess) {
+                    net::post(sess->strand(),
+                              [sess, tb = typing_bytes]() mutable {
+                                  sess->enqueue(std::move(tb));
+                              });
+                }
+            }
+        } catch (const std::exception& e) {
+            LOG_WARN("ws route_typing DM conv_id={}: {}", conv_id, e.what());
+        }
+    } else {
+        // Group: fan-out to all online members except sender
+        auto members = co_await redis_->smembers_group(conv_id);
+        if (members.empty()) {
+            members = co_await load_group_members_from_pg(conv_id);
+        }
+        for (auto member_id : members) {
+            if (member_id == user_id_) continue;
+            auto sess = registry_->lookup(member_id);
+            if (sess) {
+                net::post(sess->strand(),
+                          [sess, tb = typing_bytes]() mutable {
+                              sess->enqueue(std::move(tb));
+                          });
+            }
+            // No offline queue for typing indicators
+        }
+    }
+}
+
+// ── route_read_receipt ────────────────────────────────────────────────────────
+
+net::awaitable<void> WebSocketSession::route_read_receipt(const nlohmann::json& j)
+{
+    auto self = shared_from_this();
+
+    auto conv_id_str = j.value("conv_id", std::string{});
+    bool is_group    = j.value("is_group", false);
+    if (conv_id_str.empty()) co_return;
+
+    uint64_t conv_id = 0;
+    {
+        auto [p, ec] = std::from_chars(conv_id_str.data(),
+                                        conv_id_str.data() + conv_id_str.size(),
+                                        conv_id);
+        if (ec != std::errc{}) co_return;
+    }
+
+    // Clear unread counter in Redis
+    co_await redis_->hdel_unread(user_id_, conv_id);
+
+    // Mark as read in Postgres (async, detached)
+    net::co_spawn(
+        co_await net::this_coro::executor,
+        pg_->execute([conv_id, uid = user_id_](pqxx::connection& conn) {
+            pqxx::work txn(conn);
+            txn.exec_params(
+                "UPDATE message_receipts SET status=2, updated_at=NOW() "
+                "WHERE conv_id=$1 AND user_id=$2 AND status<2",
+                static_cast<int64_t>(conv_id),
+                static_cast<int64_t>(uid));
+            txn.commit();
+            return pqxx::result{};
+        }, PgPool::RetryClass::NonRetryableWrite),
+        net::detached);
+
+    // Build READ OutboundMessage and relay to other online members
+    OutboundMessage read_msg;
+    read_msg.msg_type     = MsgType::READ;
+    read_msg.conv_id      = conv_id;
+    read_msg.sender_id    = user_id_;
+    read_msg.recipient_id = conv_id;
+    read_msg.flags        = is_group ? kFlagIsGroup : 0;
+    auto read_bytes = serialize_delivery(read_msg);
+
+    if (!is_group) {
+        try {
+            auto rows = co_await pg_->execute(
+                [conv_id, sender = user_id_](pqxx::connection& conn) {
+                    pqxx::nontransaction ntxn(conn);
+                    return ntxn.exec_params(
+                        "SELECT user_id FROM conv_members "
+                        "WHERE conv_id=$1 AND user_id != $2 LIMIT 1",
+                        static_cast<int64_t>(conv_id),
+                        static_cast<int64_t>(sender));
+                },
+                PgPool::RetryClass::ReadOnly);
+            if (!rows.empty()) {
+                auto peer_id = static_cast<uint64_t>(rows[0][0].as<int64_t>());
+                auto sess    = registry_->lookup(peer_id);
+                if (sess) {
+                    net::post(sess->strand(),
+                              [sess, rb = read_bytes]() mutable {
+                                  sess->enqueue(std::move(rb));
+                              });
+                }
+            }
+        } catch (const std::exception& e) {
+            LOG_WARN("ws route_read_receipt DM conv_id={}: {}", conv_id, e.what());
+        }
+    } else {
+        auto members = co_await redis_->smembers_group(conv_id);
+        if (members.empty()) {
+            members = co_await load_group_members_from_pg(conv_id);
+        }
+        for (auto member_id : members) {
+            if (member_id == user_id_) continue;
+            auto sess = registry_->lookup(member_id);
+            if (sess) {
+                net::post(sess->strand(),
+                          [sess, rb = read_bytes]() mutable {
+                              sess->enqueue(std::move(rb));
+                          });
+            }
+        }
     }
 }
 
