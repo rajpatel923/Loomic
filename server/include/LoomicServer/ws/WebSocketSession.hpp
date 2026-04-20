@@ -17,6 +17,8 @@
 #include "LoomicServer/tcp/ISession.hpp"
 #include "LoomicServer/http/HttpServer.hpp"  // Request, PathParams typedefs
 
+#include <nlohmann/json.hpp>
+
 namespace Loomic {
 
 class SessionRegistry;
@@ -62,6 +64,8 @@ private:
     void                         reset_heartbeat();
     boost::asio::awaitable<void> route_message(std::string_view json);
     boost::asio::awaitable<void> route_group_message(std::string_view json);
+    boost::asio::awaitable<void> route_typing(const nlohmann::json& j);
+    boost::asio::awaitable<void> route_read_receipt(const nlohmann::json& j);
     boost::asio::awaitable<std::vector<uint64_t>> load_group_members_from_pg(uint64_t group_id);
 
     WsStream                         ws_;

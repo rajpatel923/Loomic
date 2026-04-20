@@ -15,7 +15,7 @@
     "authentication": "First frame must be AUTH (0x02) carrying the Bearer JWT from /auth/login",
     "header": {
       "payload_len":   "uint32 LE, bytes 0-3",
-      "msg_type":      "uint8, byte 4  — 0x01=CHAT 0x02=AUTH 0x03=PING 0x04=PONG 0x05=ERROR 0x06=DELETE_NOTIFY",
+      "msg_type":      "uint8, byte 4  — 0x01=CHAT 0x02=AUTH 0x03=PING 0x04=PONG 0x05=ERROR 0x06=DELETE_NOTIFY 0x07=DELIVERED 0x08=READ 0x09=TYPING",
       "flags":         "uint8, byte 5  — bit 0 (0x01) = IS_GROUP: recipient_id is a group_id; server fans-out to all group members",
       "msg_id":        "uint64 LE, bytes 6-13  — Snowflake ID assigned by server",
       "sender_id":     "uint64 LE, bytes 14-21 — Snowflake user ID of sender",
@@ -241,22 +241,52 @@
       },
       "ConversationEntry": {
         "type": "object",
-        "required": ["conv_id", "user_id", "username"],
+        "required": ["kind", "id", "last_activity_at", "unread_count"],
         "properties": {
-          "conv_id": {
+          "kind": {
             "type": "string",
-            "description": "Snowflake conversation ID.",
-            "example": "7816523049238900"
+            "enum": ["dm", "group"],
+            "description": "Whether this is a direct message (dm) or group conversation."
           },
-          "user_id": {
+          "id": {
             "type": "string",
-            "description": "Snowflake user ID of the other member.",
-            "example": "7816523049238200"
+            "description": "Snowflake conversation or group ID."
           },
-          "username": {
+          "last_activity_at": {
             "type": "string",
-            "description": "Username of the other member.",
-            "example": "bob"
+            "description": "ISO 8601 timestamp of last message activity."
+          },
+          "last_msg_preview": {
+            "type": "string",
+            "description": "First 128 bytes of the most recent message."
+          },
+          "unread_count": {
+            "type": "integer",
+            "description": "Number of unread messages for the authenticated user."
+          },
+          "peer_id": {
+            "type": "string",
+            "description": "DM only: Snowflake ID of the other user."
+          },
+          "peer_name": {
+            "type": "string",
+            "description": "DM only: username of the other user."
+          },
+          "peer_bio": {
+            "type": "string",
+            "description": "DM only: bio of the other user."
+          },
+          "peer_avatar": {
+            "type": "string",
+            "description": "DM only: avatar URL of the other user."
+          },
+          "group_name": {
+            "type": "string",
+            "description": "Group only: group name."
+          },
+          "group_avatar": {
+            "type": "string",
+            "description": "Group only: group avatar URL."
           }
         }
       },
@@ -702,7 +732,7 @@
         "tags": ["Users"],
         "operationId": "getUserPresence",
         "summary": "Get user online presence",
-        "description": "Returns whether the user is currently connected and which server they are on.",
+        "description": "Returns whether the user is currently connected. If offline, returns `last_seen_at` (ms epoch) from Redis (fast) or Postgres (durable fallback).",
         "security": [{ "BearerAuth": [] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
@@ -713,12 +743,75 @@
             "content": { "application/json": { "schema": {
               "type": "object",
               "properties": {
-                "user_id":   { "type": "string" },
-                "online":    { "type": "boolean" },
-                "server_id": { "type": "string", "nullable": true }
+                "user_id":      { "type": "string" },
+                "online":       { "type": "boolean" },
+                "server_id":    { "type": "string", "nullable": true },
+                "last_seen_at": { "type": "integer", "format": "int64", "nullable": true, "description": "Unix epoch in milliseconds of last disconnect. null if never seen." }
               }
             }}}
           },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/conversations/{id}/read": {
+      "post": {
+        "tags": ["Conversations"],
+        "operationId": "markConversationRead",
+        "summary": "Mark conversation as read",
+        "description": "Clears the caller's unread count for this conversation and updates message receipts to READ status. Relays a READ frame to other online members.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Conversation or group ID." }
+        ],
+        "responses": {
+          "200": { "description": "Marked as read.", "content": { "application/json": { "schema": { "type": "object", "properties": { "ok": { "type": "boolean" } } } } } },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "description": "Conversation not found." }
+        }
+      }
+    },
+    "/push/register": {
+      "post": {
+        "tags": ["Messaging"],
+        "operationId": "registerDeviceToken",
+        "summary": "Register device push token",
+        "description": "Associates a device push token with the authenticated user for future push notifications.",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": {
+            "type": "object",
+            "required": ["token", "platform"],
+            "properties": {
+              "token":    { "type": "string", "description": "Device push token." },
+              "platform": { "type": "string", "enum": ["ios", "android", "web"] }
+            }
+          }}}
+        },
+        "responses": {
+          "200": { "description": "Token registered.", "content": { "application/json": { "schema": { "type": "object", "properties": { "ok": { "type": "boolean" } } } } } },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      },
+      "delete": {
+        "tags": ["Messaging"],
+        "operationId": "unregisterDeviceToken",
+        "summary": "Unregister device push token",
+        "description": "Removes the push token association.",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": {
+            "type": "object",
+            "required": ["token"],
+            "properties": {
+              "token": { "type": "string" }
+            }
+          }}}
+        },
+        "responses": {
+          "204": { "description": "Token unregistered." },
           "403": { "$ref": "#/components/responses/Forbidden" }
         }
       }
@@ -928,7 +1021,7 @@
         "tags": ["Messaging"],
         "operationId": "websocketConnect",
         "summary": "WebSocket real-time chat endpoint",
-        "description": "Upgrade to a WebSocket connection for real-time chat. After the HTTP upgrade, all communication uses JSON text frames.\n\n**Authentication** — send as first frame:\n```json\n{\"type\":\"auth\",\"token\":\"<jwt>\"}\n```\n\n**Send a DM:**\n```json\n{\"type\":\"chat\",\"conv_id\":\"<str>\",\"content\":\"hello\"}\n```\n\n**Send a group message:**\n```json\n{\"type\":\"group_chat\",\"group_id\":\"<str>\",\"content\":\"hello\"}\n```\n\n**Heartbeat:**\n```json\n{\"type\":\"ping\"}\n```\nServer responds with `{\"type\":\"pong\"}`.\n\n**Receive a message:**\n```json\n{\"type\":\"chat\",\"msg_id\":\"<str>\",\"conv_id\":\"<str>\",\"sender_id\":\"<str>\",\"content\":\"...\",\"ts_ms\":1234}\n```\n\nAll IDs are decimal strings to preserve Snowflake precision in JavaScript.",
+        "description": "Upgrade to a WebSocket connection for real-time chat. After the HTTP upgrade, all communication uses JSON text frames.\n\n**Authentication** — send as first frame:\n```json\n{\"type\":\"auth\",\"token\":\"<jwt>\"}\n```\n\n**Send a DM:**\n```json\n{\"type\":\"chat\",\"conv_id\":\"<str>\",\"content\":\"hello\"}\n```\n\n**Send a group message:**\n```json\n{\"type\":\"group_chat\",\"group_id\":\"<str>\",\"content\":\"hello\"}\n```\n\n**Typing indicator:**\n```json\n{\"type\":\"typing\",\"conv_id\":\"<str>\",\"is_group\":false}\n```\nServer fans out to other members: `{\"type\":\"typing\",\"conv_id\":\"<str>\",\"user_id\":\"<str>\",\"is_group\":false}`.\n\n**Mark conversation read:**\n```json\n{\"type\":\"read\",\"conv_id\":\"<str>\",\"is_group\":false}\n```\nServer clears unread count and relays: `{\"type\":\"read\",\"conv_id\":\"<str>\",\"user_id\":\"<str>\"}`.\n\n**Heartbeat:**\n```json\n{\"type\":\"ping\"}\n```\nServer responds with `{\"type\":\"pong\"}`.\n\n**Receive a message:**\n```json\n{\"type\":\"chat\",\"msg_id\":\"<str>\",\"conv_id\":\"<str>\",\"sender_id\":\"<str>\",\"content\":\"...\",\"ts_ms\":1234}\n```\n\n**Delivery receipt:**\n```json\n{\"type\":\"delivered\",\"msg_id\":\"<str>\",\"conv_id\":\"<str>\",\"user_id\":\"<str>\"}\n```\n\n**Read receipt:**\n```json\n{\"type\":\"read\",\"conv_id\":\"<str>\",\"user_id\":\"<str>\"}\n```\n\nAll IDs are decimal strings to preserve Snowflake precision in JavaScript.",
         "responses": {
           "101": {
             "description": "Switching Protocols — WebSocket connection established."
