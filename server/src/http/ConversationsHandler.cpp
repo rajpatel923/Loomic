@@ -1,6 +1,7 @@
 #include "LoomicServer/http/ConversationsHandler.hpp"
 #include "LoomicServer/db/CassandraClient.hpp"
 #include "LoomicServer/db/PgPool.hpp"
+#include "LoomicServer/db/RedisClient.hpp"
 #include "LoomicServer/auth/JwtService.hpp"
 #include "LoomicServer/auth/SnowflakeGen.hpp"
 #include "LoomicServer/http/AuthHandler.hpp"
@@ -70,11 +71,13 @@ std::unordered_map<std::string, std::string> parse_query(std::string_view target
 ConversationsHandler::ConversationsHandler(std::shared_ptr<CassandraClient> cass,
                                            std::shared_ptr<PgPool>          pg,
                                            std::shared_ptr<JwtService>      jwt,
-                                           std::shared_ptr<SnowflakeGen>    snowflake)
+                                           std::shared_ptr<SnowflakeGen>    snowflake,
+                                           std::shared_ptr<RedisClient>     redis)
     : cass_(std::move(cass))
     , pg_(std::move(pg))
     , jwt_(std::move(jwt))
     , snowflake_(std::move(snowflake))
+    , redis_(std::move(redis))
 {}
 
 void ConversationsHandler::register_routes(HttpServer& http)
@@ -193,29 +196,58 @@ ConversationsHandler::list_conversations(const Request& req, const PathParams&)
 
     auto user_id = static_cast<uint64_t>(user->uid);
 
-    // 2. Query: all convos this user is in, with the other member's info
     try {
+        // 2. UNION ALL: DMs + groups, sorted by last_activity_at DESC
         auto rows = co_await pg_->execute(
             [user_id](pqxx::connection& conn) {
                 pqxx::nontransaction ntxn(conn);
-                return ntxn.exec_params(
-                    "SELECT cm.conv_id, u.id, u.username "
-                    "FROM conv_members cm "
-                    "JOIN conv_members other_cm "
-                    "  ON cm.conv_id = other_cm.conv_id AND other_cm.user_id != $1 "
-                    "JOIN users u ON u.id = other_cm.user_id "
-                    "WHERE cm.user_id = $1 "
-                    "ORDER BY cm.conv_id DESC",
-                    static_cast<int64_t>(user_id));
+                return ntxn.exec_params(R"(
+                    SELECT 'dm'::TEXT, c.id, c.last_activity_at::TEXT, c.last_msg_preview,
+                           u.id, u.username, u.bio, u.avatar_url,
+                           NULL::TEXT, NULL::TEXT
+                    FROM conv_members cm
+                    JOIN conversations c   ON c.id = cm.conv_id
+                    JOIN conv_members  ocm ON ocm.conv_id = cm.conv_id AND ocm.user_id != $1
+                    JOIN users u           ON u.id = ocm.user_id
+                    WHERE cm.user_id = $1
+
+                    UNION ALL
+
+                    SELECT 'group'::TEXT, g.id, g.last_activity_at::TEXT, g.last_msg_preview,
+                           NULL::BIGINT, NULL::TEXT, NULL::TEXT, NULL::TEXT,
+                           g.name, g.avatar_url
+                    FROM group_members gm
+                    JOIN groups g ON g.id = gm.group_id
+                    WHERE gm.user_id = $1
+
+                    ORDER BY 3 DESC NULLS LAST
+                )", static_cast<int64_t>(user_id));
             },
             PgPool::RetryClass::ReadOnly);
 
+        // 3. Batch fetch unread counts from Redis (one HGETALL)
+        auto unread_map = co_await redis_->hgetall_unread(user_id);
+
+        // 4. Build JSON array
         nlohmann::json arr = nlohmann::json::array();
         for (const auto& row : rows) {
             nlohmann::json item;
-            item["conv_id"]  = std::to_string(row[0].as<int64_t>());
-            item["user_id"]  = std::to_string(row[1].as<int64_t>());
-            item["username"] = row[2].as<std::string>();
+            auto kind   = row[0].as<std::string>();
+            auto id     = static_cast<uint64_t>(row[1].as<int64_t>());
+            item["kind"]             = kind;
+            item["id"]               = std::to_string(id);
+            item["last_activity_at"] = row[2].is_null() ? "" : row[2].as<std::string>();
+            item["last_msg_preview"] = row[3].is_null() ? "" : row[3].as<std::string>();
+            item["unread_count"]     = unread_map.count(id) ? unread_map.at(id) : 0;
+            if (kind == "dm") {
+                item["peer_id"]     = std::to_string(static_cast<uint64_t>(row[4].as<int64_t>()));
+                item["peer_name"]   = row[5].as<std::string>();
+                item["peer_bio"]    = row[6].is_null() ? "" : row[6].as<std::string>();
+                item["peer_avatar"] = row[7].is_null() ? "" : row[7].as<std::string>();
+            } else {
+                item["group_name"]   = row[8].as<std::string>();
+                item["group_avatar"] = row[9].is_null() ? "" : row[9].as<std::string>();
+            }
             arr.push_back(std::move(item));
         }
 
@@ -269,10 +301,13 @@ ConversationsHandler::get_messages(const Request& req, const PathParams& params)
         }
     }
 
-    // 4. Membership check
+    // 4. Membership check (DM conv_members OR group_members)
     auto user_id = static_cast<uint64_t>(user->uid);
     try {
-        auto row = co_await pg_->execute(
+        bool is_member = false;
+
+        // 4a. Check DM membership
+        auto dm_row = co_await pg_->execute(
             [conv_id, user_id](pqxx::connection& conn) {
                 pqxx::nontransaction ntxn(conn);
                 return ntxn.exec_params(
@@ -281,7 +316,23 @@ ConversationsHandler::get_messages(const Request& req, const PathParams& params)
                     static_cast<int64_t>(user_id));
             },
             PgPool::RetryClass::ReadOnly);
-        if (row.empty()) {
+        if (!dm_row.empty()) is_member = true;
+
+        // 4b. Fallback: group membership (group_id stored as conv_id)
+        if (!is_member) {
+            auto grp_row = co_await pg_->execute(
+                [conv_id, user_id](pqxx::connection& conn) {
+                    pqxx::nontransaction ntxn(conn);
+                    return ntxn.exec_params(
+                        "SELECT 1 FROM group_members WHERE group_id=$1 AND user_id=$2",
+                        static_cast<int64_t>(conv_id),
+                        static_cast<int64_t>(user_id));
+                },
+                PgPool::RetryClass::ReadOnly);
+            if (!grp_row.empty()) is_member = true;
+        }
+
+        if (!is_member) {
             co_return make_error(http::status::forbidden,
                                  "not a member of this conversation");
         }

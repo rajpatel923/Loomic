@@ -64,3 +64,16 @@ target_link_libraries(test_groups
 )
 
 add_test(NAME test_groups COMMAND test_groups)
+
+# ── test_phase6 ────────────────────────────────────────────────────────────────
+add_executable(test_phase6
+    test_phase6.cpp
+)
+
+target_link_libraries(test_phase6
+    PRIVATE
+        LoomicServer_lib
+        GTest::gtest_main
+)
+
+add_test(NAME test_phase6 COMMAND test_phase6)

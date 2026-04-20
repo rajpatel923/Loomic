@@ -6,6 +6,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <vector>
 
 #include <boost/asio/awaitable.hpp>
@@ -51,6 +52,20 @@ public:
 
     /// SMEMBERS group:{group_id}:members — returns member user IDs (empty on miss).
     net::awaitable<std::vector<uint64_t>> smembers_group(uint64_t group_id);
+
+    // ── Unread counters ───────────────────────────────────────────────────────
+    /// HINCRBY unread:{user_id} {conv_id} delta
+    net::awaitable<void> hincrby_unread(uint64_t user_id, uint64_t conv_id, int64_t delta = 1);
+    /// HGETALL unread:{user_id} → map of conv_id → unread count
+    net::awaitable<std::unordered_map<uint64_t,int64_t>> hgetall_unread(uint64_t user_id);
+    /// HDEL unread:{user_id} {conv_id}
+    net::awaitable<void> hdel_unread(uint64_t user_id, uint64_t conv_id);
+
+    // ── Last-seen ─────────────────────────────────────────────────────────────
+    /// SETEX last_seen:{user_id} 604800 {timestamp_ms}
+    net::awaitable<void>                  set_last_seen(uint64_t user_id, int64_t timestamp_ms);
+    /// GET last_seen:{user_id} → ms epoch, or nullopt
+    net::awaitable<std::optional<int64_t>> get_last_seen(uint64_t user_id);
 
 private:
     redisContext*    ctx_;

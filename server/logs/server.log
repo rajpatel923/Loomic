@@ -758,3 +758,25 @@
 [2026-04-19 14:43:06.150][1][warning] PgPool: recreating PostgreSQL connection (idle_validation_failed)
 [2026-04-19 15:08:35.822][1][info] Shutdown signal received, stopping...
 [2026-04-19 15:08:35.823][1][info] Server stopped
+[2026-04-20 18:09:47.418][1][info] PgPool: 12 connections established
+[2026-04-20 18:09:47.613][1][info] RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274
+[2026-04-20 18:09:50.636][1][info] CassandraClient connected to loomic-cosmos.cassandra.cosmos.azure.com
+[2026-04-20 18:09:50.667][1][info] OpenAPI spec loaded (35153 bytes)
+[2026-04-20 18:09:50.667][1][info] Docs routes registered: GET /openapi.json  GET /docs
+[2026-04-20 18:09:50.667][1][info] Loomic Server starting
+[2026-04-20 18:09:50.667][1][info] Thread pool: 12 threads
+[2026-04-20 18:09:50.667][1][info] HTTP server: http://0.0.0.0:8080
+[2026-04-20 18:09:50.667][1][info] TLS TCP server: port 7777
+[2026-04-20 18:17:05.491][1][info] Shutdown signal received, stopping...
+[2026-04-20 18:17:05.493][1][info] Server stopped
+[2026-04-20 18:17:12.031][1][info] PgPool: 12 connections established
+[2026-04-20 18:17:12.255][1][info] RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274
+[2026-04-20 18:17:15.353][1][info] CassandraClient connected to loomic-cosmos.cassandra.cosmos.azure.com
+[2026-04-20 18:17:15.355][1][info] OpenAPI spec loaded (39839 bytes)
+[2026-04-20 18:17:15.355][1][info] Docs routes registered: GET /openapi.json  GET /docs
+[2026-04-20 18:17:15.355][1][info] Loomic Server starting
+[2026-04-20 18:17:15.355][1][info] Thread pool: 12 threads
+[2026-04-20 18:17:15.355][1][info] HTTP server: http://0.0.0.0:8080
+[2026-04-20 18:17:15.355][1][info] TLS TCP server: port 7777
+[2026-04-20 18:31:15.184][1][info] Shutdown signal received, stopping...
+[2026-04-20 18:31:15.185][1][info] Server stopped

@@ -22,6 +22,9 @@ enum class MsgType : uint8_t {
     PONG          = 0x04,
     ERROR         = 0x05,
     DELETE_NOTIFY = 0x06,
+    DELIVERED     = 0x07,  // receipt: message reached recipient device
+    READ          = 0x08,  // receipt: recipient marked conversation read
+    TYPING        = 0x09,  // ephemeral typing indicator
 };
 
 static constexpr uint8_t kFlagIsGroup = 0x01;  // flags bit 0 — recipient_id is a group_id

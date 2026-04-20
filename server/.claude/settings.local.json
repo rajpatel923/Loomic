@@ -69,7 +69,23 @@
       "Bash(cmake --build build/debug --target LoomicServer 2>&1 | tail -60)",
       "Bash(cmake --build build/debug --target test_groups 2>&1 | tail -10 && ctest --test-dir build/debug -R test_groups -V 2>&1 | tail -30)",
       "Bash(ctest --test-dir build/debug -V 2>&1 | grep -E \"\\(PASSED|FAILED|OK|RUN|test suite\\)\" | tail -30)",
-      "Bash(ctest --test-dir build/debug 2>&1 | tail -10)"
+      "Bash(ctest --test-dir build/debug 2>&1 | tail -10)",
+      "Bash(find /Users/rajpatel/Documents/GitHub/Loomic/server -path \"*/tests/test_*.cpp\" 2>/dev/null | head -20)",
+      "Bash(find /Users/rajpatel/Documents/GitHub/Loomic/server -path \"*/tests*\" -type f -name \"*.cpp\" -o -path \"*/test*\" -type f -name \"*.cpp\" 2>/dev/null | grep -E \"test|Test\" | head -20)",
+      "Bash(find /Users/rajpatel/Documents/GitHub/Loomic -name \"*.cql\" -o -name \"*schema*\" 2>/dev/null | grep -v vcpkg | grep -v cmake)",
+      "Bash(cmake --build build/debug --target LoomicServer_lib 2>&1 | head -80)",
+      "Bash(cmake --build cmake-build-debug --target LoomicServer_lib 2>&1 | tail -40)",
+      "Bash(cmake --build cmake-build-debug --target LoomicServer_lib 2>&1 | grep -E \"error:|FAILED|warning: .*\\(error|undeclared|undefined\\)\" | head -60)",
+      "Bash(cmake --build cmake-build-debug --target LoomicServer_lib 2>&1 | grep -E \"error:\" | head -40)",
+      "Bash(cmake --build cmake-build-debug --target LoomicServer_lib 2>&1 | grep -E \"error:|FAILED\" 2>&1 | head -40)",
+      "Bash(cmake --build cmake-build-debug --target LoomicServer_lib 2>&1; echo \"BUILD_EXIT_CODE=$?\")",
+      "Bash(touch /Users/rajpatel/Documents/GitHub/Loomic/server/src/http/ConversationsHandler.cpp /Users/rajpatel/Documents/GitHub/Loomic/server/src/http/ReceiptsHandler.cpp /Users/rajpatel/Documents/GitHub/Loomic/server/src/push/PushService.cpp /Users/rajpatel/Documents/GitHub/Loomic/server/src/push/PushHandler.cpp && cmake --build cmake-build-debug --target LoomicServer_lib 2>&1; echo \"EXIT=$?\")",
+      "Bash(cmake --build cmake-build-debug --target LoomicServer_lib 2>&1 | grep -c \"error:\" && cmake --build cmake-build-debug --target LoomicServer_lib 2>&1 | tail -5)",
+      "Bash(touch /Users/rajpatel/Documents/GitHub/Loomic/server/src/http/ReceiptsHandler.cpp && cmake --build cmake-build-debug --target LoomicServer_lib 2>&1 | tail -10)",
+      "Bash(cmake --build cmake-build-debug --target test_phase6 2>&1 | tail -10)",
+      "Bash(cmake --build build/debug --target test_phase6 2>&1 | tail -10)",
+      "Bash(build/debug/bin/test_phase6 --gtest_color=yes 2>&1)",
+      "Bash(cmake --build build/debug 2>&1 | tail -5 && ctest --test-dir build/debug --output-on-failure 2>&1 | tail -20)"
     ]
   }
 }

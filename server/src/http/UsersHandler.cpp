@@ -143,7 +143,7 @@ void UsersHandler::register_routes(HttpServer& http)
 
     // ── GET /users/{id}/presence ──────────────────────────────────────────────
     http.add_route(http::verb::get, "/users/{id}/presence",
-        [jwt, redis](const Request& req, const PathParams& params) -> net::awaitable<Response> {
+        [pg, jwt, redis](const Request& req, const PathParams& params) -> net::awaitable<Response> {
             auto user = require_auth(std::string(req[http::field::authorization]), *jwt);
             if (!user) co_return make_error(http::status::forbidden, "missing or invalid token");
 
@@ -159,11 +159,39 @@ void UsersHandler::register_routes(HttpServer& http)
             nlohmann::json resp;
             resp["user_id"] = std::to_string(uid);
             if (presence) {
-                resp["online"]    = true;
-                resp["server_id"] = *presence;
+                resp["online"]       = true;
+                resp["server_id"]    = *presence;
+                resp["last_seen_at"] = nullptr;
             } else {
                 resp["online"]    = false;
                 resp["server_id"] = nullptr;
+
+                // Fast path: Redis
+                auto ts_opt = co_await redis->get_last_seen(uid);
+                if (ts_opt) {
+                    resp["last_seen_at"] = *ts_opt;
+                } else {
+                    // Durable fallback: Postgres
+                    try {
+                        auto rows = co_await pg->execute(
+                            [uid](pqxx::connection& conn) {
+                                pqxx::nontransaction ntxn(conn);
+                                return ntxn.exec_params(
+                                    "SELECT EXTRACT(EPOCH FROM last_seen_at)*1000 "
+                                    "FROM users WHERE id=$1",
+                                    static_cast<int64_t>(uid));
+                            },
+                            PgPool::RetryClass::ReadOnly);
+                        if (!rows.empty() && !rows[0][0].is_null()) {
+                            resp["last_seen_at"] = static_cast<int64_t>(rows[0][0].as<double>());
+                        } else {
+                            resp["last_seen_at"] = nullptr;
+                        }
+                    } catch (const std::exception& e) {
+                        LOG_ERROR("GET /users/{}/presence last_seen fallback: {}", uid, e.what());
+                        resp["last_seen_at"] = nullptr;
+                    }
+                }
             }
             co_return make_json(http::status::ok, resp.dump());
         });
