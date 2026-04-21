@@ -68,9 +68,11 @@ type UserSearchResult = {
 };
 
 type ConversationApiResponse = {
-  conv_id: string;
-  user_id: string;
-  username: string;
+  kind: "dm" | "group";
+  id: string;
+  peer_id: string;
+  peer_name: string;
+  last_msg_preview: string;
 };
 
 type CreateConversationResponse = {
@@ -455,13 +457,13 @@ export default function ChatPlaceholder() {
           );
         }
 
-        const nextConversations = ((payload as ConversationApiResponse[]) ?? []).map(
-          (conversation) => ({
-            convId: conversation.conv_id,
-            userId: conversation.user_id,
-            username: conversation.username,
-          }),
-        );
+        const nextConversations = ((payload as ConversationApiResponse[]) ?? [])
+          .filter((conversation) => conversation.kind === "dm")
+          .map((conversation) => ({
+            convId: conversation.id,
+            userId: conversation.peer_id,
+            username: conversation.peer_name,
+          }));
 
         startTransition(() => {
           setConversations(nextConversations);

@@ -60,8 +60,18 @@ type SimpleChatLayoutProps = {
   formatRelativeTime: (timestampMs: number) => string;
 };
 
-function getInitials(value: string) {
-  const parts = value.trim().split(/\s+/).filter(Boolean);
+function getDisplayName(value: string | null | undefined, fallback = "Loomic Member") {
+  const normalized = value?.trim();
+
+  if (!normalized) {
+    return fallback;
+  }
+
+  return normalized;
+}
+
+function getInitials(value: string | null | undefined) {
+  const parts = getDisplayName(value, "LM").split(/\s+/).filter(Boolean);
 
   if (parts.length === 0) {
     return "LM";
@@ -155,11 +165,16 @@ export default function SimpleChatLayout({
                 {!userSearchPending && !userSearchError && userSearchResults.length === 0 ? <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-3 py-3 text-sm text-[var(--muted)]">No matches</div> : null}
                 {userSearchResults.map((user) => (
                   <div key={user.id} className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-3 py-3">
+                    {(() => {
+                      const displayName = getDisplayName(user.username);
+
+                      return (
+                        <>
                     <div className="flex min-w-0 items-center gap-3">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--accent-soft)] text-xs font-semibold text-[var(--accent)]">
-                        {getInitials(user.username)}
+                        {getInitials(displayName)}
                       </div>
-                      <p className="truncate text-sm text-[var(--foreground)]">{user.username}</p>
+                      <p className="truncate text-sm text-[var(--foreground)]">{displayName}</p>
                     </div>
                       <button
                         className="rounded-xl border border-[var(--line)] bg-[var(--panel-subtle)] px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[rgba(255,255,255,0.06)] disabled:cursor-not-allowed disabled:opacity-60"
@@ -169,6 +184,9 @@ export default function SimpleChatLayout({
                     >
                       {creatingConversationId === user.id ? "..." : "Open"}
                     </button>
+                        </>
+                      );
+                    })()}
                   </div>
                 ))}
                 {conversationActionError ? <div className="rounded-2xl border border-[rgba(245,143,124,0.28)] bg-[rgba(245,143,124,0.08)] px-3 py-3 text-sm text-[var(--foreground)]">{conversationActionError}</div> : null}
@@ -196,29 +214,33 @@ export default function SimpleChatLayout({
             <div className="token-log h-full overflow-y-auto pr-1">
               {conversationsLoading && conversations.length === 0 ? <div className="rounded-2xl px-3 py-3 text-sm text-[var(--muted)]">Loading...</div> : null}
               {!conversationsLoading && conversations.length === 0 ? <div className="rounded-2xl px-3 py-3 text-sm text-[var(--muted)]">No conversations</div> : null}
-              {conversations.map((conversation) => (
-                <button
-                  key={conversation.convId}
+              {conversations.map((conversation) => {
+                const displayName = getDisplayName(conversation.username);
+
+                return (
+                  <button
+                    key={conversation.convId}
                     className={`mb-1.5 flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left ${conversation.convId === activeConversationId ? "bg-[var(--panel)] shadow-sm ring-1 ring-[var(--line)]" : "hover:bg-[rgba(255,255,255,0.04)]"}`}
-                  onClick={() => onSelectConversation(conversation.convId)}
-                  type="button"
-                >
+                    onClick={() => onSelectConversation(conversation.convId)}
+                    type="button"
+                  >
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[rgba(255,255,255,0.08)] text-xs font-semibold text-[var(--foreground)]">
-                    {getInitials(conversation.username)}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="truncate text-sm font-medium text-[var(--foreground)]">{conversation.username}</p>
-                      <span className="shrink-0 text-xs text-[var(--muted)]">
-                        {conversation.lastMessage ? formatRelativeTime(conversation.lastMessage.timestampMs) : "New"}
-                      </span>
+                      {getInitials(displayName)}
                     </div>
-                    <p className="mt-1 truncate text-sm text-[var(--muted)]">
-                      {conversation.lastMessage?.content ?? "No messages yet"}
-                    </p>
-                  </div>
-                </button>
-              ))}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="truncate text-sm font-medium text-[var(--foreground)]">{displayName}</p>
+                        <span className="shrink-0 text-xs text-[var(--muted)]">
+                          {conversation.lastMessage ? formatRelativeTime(conversation.lastMessage.timestampMs) : "New"}
+                        </span>
+                      </div>
+                      <p className="mt-1 truncate text-sm text-[var(--muted)]">
+                        {conversation.lastMessage?.content ?? "No messages yet"}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </aside>
@@ -249,9 +271,13 @@ export default function SimpleChatLayout({
           <div className="min-h-0 flex-1 overflow-hidden">
             <div className="token-log h-full overflow-y-auto px-4 py-4 sm:px-6">
               <div className="mx-auto flex min-h-full w-full max-w-4xl flex-col gap-3">
-                {activeConversationName && activeHistoryLoading && activeMessages.length === 0 ? <div className="flex h-full min-h-[240px] items-center justify-center text-sm text-[var(--muted)]">Loading...</div> : null}
-                {!activeConversationName ? <div className="flex h-full min-h-[240px] items-center justify-center rounded-[28px] border border-dashed border-[var(--line)] bg-[var(--panel-subtle)] px-6 text-center text-sm text-[var(--muted)]">Select a conversation</div> : null}
-                {activeConversationName && activeMessages.length === 0 && !activeHistoryLoading ? <div className="flex h-full min-h-[240px] items-center justify-center rounded-[28px] border border-dashed border-[var(--line)] bg-[var(--panel-subtle)] px-6 text-center text-sm text-[var(--muted)]">No messages yet</div> : null}
+                {activeMessages.length === 0 && (
+                  activeConversationName && activeHistoryLoading
+                    ? <div key="loading" className="flex h-full min-h-[240px] items-center justify-center text-sm text-[var(--muted)]">Loading...</div>
+                    : !activeConversationName
+                    ? <div key="empty-state" className="flex h-full min-h-[240px] items-center justify-center rounded-[28px] border border-dashed border-[var(--line)] bg-[var(--panel-subtle)] px-6 text-center text-sm text-[var(--muted)]">Select a conversation</div>
+                    : <div key="no-messages" className="flex h-full min-h-[240px] items-center justify-center rounded-[28px] border border-dashed border-[var(--line)] bg-[var(--panel-subtle)] px-6 text-center text-sm text-[var(--muted)]">No messages yet</div>
+                )}
                 {activeMessages.map((message) => {
                   const isOutgoing = message.direction === "outgoing";
                   return (

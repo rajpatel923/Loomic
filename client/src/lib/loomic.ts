@@ -94,7 +94,9 @@ export async function buildProxyResponse(
     }
   }
 
-  return new Response(bodyText, {
+  const noBodyStatus = response.status === 204 || response.status === 205 || response.status === 304;
+
+  return new Response(noBodyStatus ? null : bodyText, {
     status: response.status,
     headers: {
       "content-type": contentType,
