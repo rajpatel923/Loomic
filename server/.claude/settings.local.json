@@ -85,7 +85,21 @@
       "Bash(cmake --build cmake-build-debug --target test_phase6 2>&1 | tail -10)",
       "Bash(cmake --build build/debug --target test_phase6 2>&1 | tail -10)",
       "Bash(build/debug/bin/test_phase6 --gtest_color=yes 2>&1)",
-      "Bash(cmake --build build/debug 2>&1 | tail -5 && ctest --test-dir build/debug --output-on-failure 2>&1 | tail -20)"
+      "Bash(cmake --build build/debug 2>&1 | tail -5 && ctest --test-dir build/debug --output-on-failure 2>&1 | tail -20)",
+      "Bash(find /Users/rajpatel/Documents/GitHub/Loomic -name \"*prometheus*\" -o -name \"*metrics*\" -o -name \"nginx.conf\" -o -name \"docker-compose*\" -o -name \".github\" -type f -o -type d 2>/dev/null | head -30)",
+      "Bash(find /Users/rajpatel/Documents/GitHub/Loomic -maxdepth 2 -type f \\\\\\( -name \"*.yml\" -o -name \"*.yaml\" \\\\\\) | grep -E \"\\\\.\\(yml|yaml\\)$\" | head -20)",
+      "Bash(grep -r \"prometheus\" /Users/rajpatel/Documents/GitHub/Loomic/server/include /Users/rajpatel/Documents/GitHub/Loomic/server/src --include=\"*.hpp\" --include=\"*.cpp\" 2>/dev/null | head -20)",
+      "Bash(tree -L 3 -I 'cmake-build-*|.idea|vcpkg' /Users/rajpatel/Documents/GitHub/Loomic/server/ 2>/dev/null || find /Users/rajpatel/Documents/GitHub/Loomic/server -maxdepth 3 -type d ! -path '*/cmake-build-*' ! -path '*/.idea*' ! -path '*/vcpkg*' | sort)",
+      "Bash(grep -r \"prometheus\" /Users/rajpatel/Documents/GitHub/Loomic/server/include --include=\"*.hpp\" 2>/dev/null | head -20)",
+      "Bash(grep -r \"prometheus\" /Users/rajpatel/Documents/GitHub/Loomic/server/src --include=\"*.cpp\" 2>/dev/null | head -20)",
+      "Bash(ctest --preset debug --output-on-failure 2>&1)",
+      "Bash(lsof -i :7777 2>/dev/null | head -5)",
+      "Bash(ls /Users/rajpatel/Documents/GitHub/Loomic/server/*.json /Users/rajpatel/Documents/GitHub/Loomic/server/*.conf /Users/rajpatel/Documents/GitHub/Loomic/server/config* 2>/dev/null | head -10)",
+      "Bash(ls /Users/rajpatel/Documents/GitHub/Loomic/server/*.json 2>/dev/null && ls /Users/rajpatel/Documents/GitHub/Loomic/server/config* 2>/dev/null)",
+      "Bash(printenv | grep -E \"LOOMIC|PG|REDIS|JWT|DATABASE\" 2>/dev/null)",
+      "Bash(ls /Users/rajpatel/Documents/GitHub/Loomic/server/certs/ && openssl x509 -in /Users/rajpatel/Documents/GitHub/Loomic/server/certs/server.crt -noout -subject -issuer 2>/dev/null)",
+      "Bash(ls /Users/rajpatel/Documents/GitHub/Loomic/server/.env* 2>/dev/null; ls /Users/rajpatel/Documents/GitHub/Loomic/.env* 2>/dev/null)",
+      "Bash(openssl rand -hex 32)"
     ]
   }
 }
