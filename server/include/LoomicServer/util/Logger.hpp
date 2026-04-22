@@ -23,6 +23,7 @@ private:
 } // namespace Loomic
 
 // Convenience macros — forward to the singleton logger.
+#define LOG_DEBUG(...) ::Loomic::Logger::get()->debug(__VA_ARGS__)
 #define LOG_INFO(...)  ::Loomic::Logger::get()->info(__VA_ARGS__)
 #define LOG_WARN(...)  ::Loomic::Logger::get()->warn(__VA_ARGS__)
 #define LOG_ERROR(...) ::Loomic::Logger::get()->error(__VA_ARGS__)

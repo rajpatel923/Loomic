@@ -56,6 +56,25 @@ else()
     message(FATAL_ERROR "libuv target not found after find_package(libuv)")
 endif()
 
+# ── Sanitizer presets ─────────────────────────────────────────────────────────
+# Declared BEFORE add_library/add_executable so flags apply to ALL targets.
+option(LOOMIC_ASAN "Build with AddressSanitizer + LeakSanitizer" OFF)
+option(LOOMIC_TSAN "Build with ThreadSanitizer"                   OFF)
+
+if(LOOMIC_ASAN AND LOOMIC_TSAN)
+    message(FATAL_ERROR "LOOMIC_ASAN and LOOMIC_TSAN are mutually exclusive")
+endif()
+
+if(LOOMIC_ASAN)
+    add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer -g)
+    add_link_options   (-fsanitize=address,undefined)
+endif()
+
+if(LOOMIC_TSAN)
+    add_compile_options(-fsanitize=thread -fno-omit-frame-pointer -g)
+    add_link_options   (-fsanitize=thread)
+endif()
+
 # ── Protobuf code generation ──────────────────────────────────────────────────
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS proto/chat.proto)
 
@@ -63,6 +82,8 @@ protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS proto/chat.proto)
 add_library(LoomicServer_lib STATIC
     src/util/Config.cpp
     src/util/Logger.cpp
+    src/util/Uuid.cpp
+    src/metrics/MetricsRegistry.cpp
     src/core/Server.cpp
     src/http/HttpServer.cpp
     src/http/AuthHandler.cpp
@@ -128,6 +149,8 @@ target_link_libraries(LoomicServer_lib
         hiredis::hiredis_ssl
         protobuf::libprotobuf
         absl::flat_hash_map
+        prometheus-cpp::core
+        prometheus-cpp::pull
 )
 
 if(LOOMIC_HAS_CASSANDRA)
@@ -155,4 +178,11 @@ option(BUILD_TESTS "Build test suite" OFF)
 if(BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
+endif()
+
+# ── Load test tool ─────────────────────────────────────────────────────────────
+option(BUILD_TOOLS "Build load-test client and other dev tools" OFF)
+if(BUILD_TOOLS)
+    add_executable(load_client tools/load_client.cpp)
+    target_link_libraries(load_client PRIVATE LoomicServer_lib)
 endif()

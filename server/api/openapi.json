@@ -2,10 +2,13 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Loomic API",
-    "description": "Loomic backend REST API. All authenticated endpoints require a Bearer JWT obtained from `POST /auth/login`.\n\nReal-time messaging is available over **WebSocket at `ws://host:8080/ws`** (browser-friendly, JSON text frames) or over a separate **TLS TCP connection on port 9000** using a binary wire protocol.",
-    "version": "0.2.0",
+    "description": "Loomic backend REST API. All authenticated endpoints require a Bearer JWT obtained from `POST /auth/login`.\n\nReal-time messaging is available over **WebSocket at `ws://host:8080/ws`** (browser-friendly, JSON text frames) or over a separate **TLS TCP connection on port 9000** using a binary wire protocol.\n\n## Request Tracing\n\nEvery HTTP response (including errors) includes a `X-Request-ID` header with a UUID v4 value that uniquely identifies the request. Use this ID to correlate log entries in the structured JSON log file (`logs/server.log`) or in Grafana.\n\n## Observability\n\nPrometheus metrics are exposed at `http://host:9090/metrics`. A Grafana dashboard (admin/admin at `http://host:3000`) provides live panels for message rate, p99 latency, active sessions, and HTTP error rate.",
+    "version": "0.3.0",
     "contact": {
       "name": "Loomic"
+    },
+    "license": {
+      "name": "Proprietary"
     }
   },
   "x-tcp-protocol": {
@@ -24,11 +27,12 @@
     "messageSerialization": "Payload of CHAT frames is a serialized loomic.ChatMessage protobuf (see proto/chat.proto)",
     "rateLimiting":   "5 messages/second, burst of 20; excess returns ERROR frame",
     "heartbeat":      "Send PING (0x03) at least once every 30 seconds; server responds with PONG (0x04) and resets the timeout",
-    "offlineDelivery": "Messages sent to offline recipients are queued in Redis and delivered on next connect"
+    "offlineDelivery": "Messages sent to offline recipients are queued in Redis and delivered on next connect",
+    "metricsPort": "Prometheus metrics are exposed at http://host:9090/metrics (pull endpoint, CivetWeb). Scraped every 15s by the bundled prometheus service. Grafana dashboard at http://host:3000 (admin/admin)."
   },
   "servers": [
     {
-      "url": "http://localhost:8080",
+      "url": "http://127.0.0.1:8080",
       "description": "Local development"
     },
     {
@@ -66,7 +70,22 @@
       "description": "Message deletion and file upload/download."
     }
   ],
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
   "components": {
+    "headers": {
+      "X-Request-ID": {
+        "description": "Unique UUID v4 identifying this request, useful for distributed tracing and log correlation.",
+        "schema": {
+          "type": "string",
+          "format": "uuid",
+          "example": "550e8400-e29b-41d4-a716-446655440000"
+        }
+      }
+    },
     "securitySchemes": {
       "BearerAuth": {
         "type": "http",
@@ -330,6 +349,9 @@
     "responses": {
       "BadRequest": {
         "description": "Bad Request — malformed JSON or missing/invalid fields.",
+        "headers": {
+          "X-Request-ID": { "$ref": "#/components/headers/X-Request-ID" }
+        },
         "content": {
           "application/json": {
             "schema": { "$ref": "#/components/schemas/ErrorResponse" },
@@ -339,6 +361,9 @@
       },
       "Unauthorized": {
         "description": "Unauthorized — invalid credentials or expired/unknown token.",
+        "headers": {
+          "X-Request-ID": { "$ref": "#/components/headers/X-Request-ID" }
+        },
         "content": {
           "application/json": {
             "schema": { "$ref": "#/components/schemas/ErrorResponse" },
@@ -348,6 +373,9 @@
       },
       "Conflict": {
         "description": "Conflict — username or email already registered.",
+        "headers": {
+          "X-Request-ID": { "$ref": "#/components/headers/X-Request-ID" }
+        },
         "content": {
           "application/json": {
             "schema": { "$ref": "#/components/schemas/ErrorResponse" },
@@ -357,6 +385,9 @@
       },
       "Forbidden": {
         "description": "Forbidden — missing or invalid Bearer token, or caller is not a member of this conversation.",
+        "headers": {
+          "X-Request-ID": { "$ref": "#/components/headers/X-Request-ID" }
+        },
         "content": {
           "application/json": {
             "schema": { "$ref": "#/components/schemas/ErrorResponse" },
@@ -366,6 +397,9 @@
       },
       "InternalServerError": {
         "description": "Internal Server Error — database or unexpected failure.",
+        "headers": {
+          "X-Request-ID": { "$ref": "#/components/headers/X-Request-ID" }
+        },
         "content": {
           "application/json": {
             "schema": { "$ref": "#/components/schemas/ErrorResponse" },
@@ -382,12 +416,28 @@
         "operationId": "getHealth",
         "summary": "Health check",
         "description": "Returns `200 OK` with `{\"status\":\"ok\"}` when the server is alive. Safe to poll from load balancers.",
+        "security": [],
         "responses": {
           "200": {
             "description": "Server is healthy.",
+            "headers": {
+              "X-Request-ID": { "$ref": "#/components/headers/X-Request-ID" }
+            },
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/HealthResponse" }
+              }
+            }
+          },
+          "503": {
+            "description": "Server is unavailable or failing health checks.",
+            "headers": {
+              "X-Request-ID": { "$ref": "#/components/headers/X-Request-ID" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": { "error": "service unavailable" }
               }
             }
           }
@@ -400,6 +450,7 @@
         "operationId": "registerUser",
         "summary": "Register a new user",
         "description": "Creates a new user account. The password is hashed with PBKDF2-SHA256 (100 000 iterations, 128-bit salt). The returned `id` is a Snowflake ID serialised as a decimal string.",
+        "security": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -429,6 +480,7 @@
         "operationId": "loginUser",
         "summary": "Authenticate and obtain tokens",
         "description": "Validates credentials and returns a short-lived JWT access token and a 30-day opaque refresh token. Store the refresh token securely — it grants the ability to mint new access tokens.",
+        "security": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -559,9 +611,9 @@
                 },
                 "example": [
                   {
-                    "msg_id": 7816523049238528,
-                    "sender_id": 7816523049238100,
-                    "recipient_id": 7816523049238200,
+                    "msg_id": "7816523049238528",
+                    "sender_id": "7816523049238100",
+                    "recipient_id": "7816523049238200",
                     "content_b64": "SGVsbG8hIEhvdyBhcmUgeW91Pw==",
                     "msg_type": 0,
                     "ts_ms": 1704153600000
@@ -607,6 +659,7 @@
         "operationId": "refreshTokens",
         "summary": "Rotate tokens using a refresh token",
         "description": "Exchanges a valid refresh token for a new access token and a new refresh token (token rotation). The old refresh token is invalidated immediately — use the new one for subsequent refreshes.",
+        "security": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -683,6 +736,7 @@
         "operationId": "getUserById",
         "summary": "Get user profile",
         "description": "Returns public profile for the given user ID.",
+        "security": [{ "BearerAuth": [] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
         ],
@@ -1022,7 +1076,11 @@
         "operationId": "websocketConnect",
         "summary": "WebSocket real-time chat endpoint",
         "description": "Upgrade to a WebSocket connection for real-time chat. After the HTTP upgrade, all communication uses JSON text frames.\n\n**Authentication** — send as first frame:\n```json\n{\"type\":\"auth\",\"token\":\"<jwt>\"}\n```\n\n**Send a DM:**\n```json\n{\"type\":\"chat\",\"conv_id\":\"<str>\",\"content\":\"hello\"}\n```\n\n**Send a group message:**\n```json\n{\"type\":\"group_chat\",\"group_id\":\"<str>\",\"content\":\"hello\"}\n```\n\n**Typing indicator:**\n```json\n{\"type\":\"typing\",\"conv_id\":\"<str>\",\"is_group\":false}\n```\nServer fans out to other members: `{\"type\":\"typing\",\"conv_id\":\"<str>\",\"user_id\":\"<str>\",\"is_group\":false}`.\n\n**Mark conversation read:**\n```json\n{\"type\":\"read\",\"conv_id\":\"<str>\",\"is_group\":false}\n```\nServer clears unread count and relays: `{\"type\":\"read\",\"conv_id\":\"<str>\",\"user_id\":\"<str>\"}`.\n\n**Heartbeat:**\n```json\n{\"type\":\"ping\"}\n```\nServer responds with `{\"type\":\"pong\"}`.\n\n**Receive a message:**\n```json\n{\"type\":\"chat\",\"msg_id\":\"<str>\",\"conv_id\":\"<str>\",\"sender_id\":\"<str>\",\"content\":\"...\",\"ts_ms\":1234}\n```\n\n**Delivery receipt:**\n```json\n{\"type\":\"delivered\",\"msg_id\":\"<str>\",\"conv_id\":\"<str>\",\"user_id\":\"<str>\"}\n```\n\n**Read receipt:**\n```json\n{\"type\":\"read\",\"conv_id\":\"<str>\",\"user_id\":\"<str>\"}\n```\n\nAll IDs are decimal strings to preserve Snowflake precision in JavaScript.",
+        "security": [{ "BearerAuth": [] }],
         "responses": {
+          "200": {
+            "description": "WebSocket endpoint is reachable; clients must request an HTTP upgrade to establish the real-time connection."
+          },
           "101": {
             "description": "Switching Protocols — WebSocket connection established."
           },

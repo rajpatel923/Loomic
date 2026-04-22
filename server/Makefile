@@ -15,7 +15,7 @@ test: build-debug
 	ctest --preset debug
 
 run-debug: build-debug
-	./build/debug/bin/LoomicServer --config config/server.json
+	set -a && . ./.env && set +a && ./build/debug/bin/LoomicServer --config config/server.json
 
 clean:
 	rm -rf build/

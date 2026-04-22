@@ -1,0 +1,22 @@
+# TSan suppressions for known false positives in third-party libraries.
+# All Loomic code paths must be clean — only suppress external library races.
+
+# libuv internal thread pool (used by cassandra-cpp-driver)
+race:uv__work_submit
+race:uv__queue_work
+race:uv_thread_create
+race:uv__run_pending
+race:uv__io_poll
+
+# cassandra-cpp-driver async I/O internals
+race:cass_session_connect
+race:cass_future_wait
+race:CassandraDriver
+
+# spdlog async logger background thread (benign: ring-buffer hand-off)
+race:spdlog::details::thread_pool::post_log
+race:spdlog::details::thread_pool::worker_loop_
+
+# CivetWeb / prometheus-cpp Exposer thread
+race:mg_start
+race:CivetServer

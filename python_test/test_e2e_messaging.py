@@ -164,6 +164,7 @@ def find_local_dev_cert(hostname: str) -> Path | None:
         candidates.append(Path(env_path).expanduser())
     candidates.extend(
         [
+            SERVER_DIR / "certs" / "server.crt",
             SCRIPT_DIR / "certs" / "server.crt",
             SCRIPT_DIR.parent / "certs" / "server.crt",
         ]
@@ -719,12 +720,15 @@ def run_rest_checks(
 
     alice_conversations = api.list_conversations(alice.access_token)
     bob_conversations = api.list_conversations(bob.access_token)
+    def _conv_id(item: dict) -> int:
+        return int(item.get("conv_id") or item["id"])
+
     ensure(
-        any(int(item["conv_id"]) == conv_id for item in alice_conversations),
+        any(_conv_id(item) == conv_id for item in alice_conversations),
         "Alice is missing the created conversation",
     )
     ensure(
-        any(int(item["conv_id"]) == conv_id for item in bob_conversations),
+        any(_conv_id(item) == conv_id for item in bob_conversations),
         "Bob is missing the created conversation",
     )
     log("rest", "/conversations list ok for both users")
@@ -814,7 +818,7 @@ def verify_tcp_history(
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Loomic end-to-end REST/WebSocket/TCP script")
-    parser.add_argument("--host", default="35.232.85.186")
+    parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--http-port", type=int, default=8080)
     parser.add_argument("--tcp-port", type=int, default=7777)
     parser.add_argument(

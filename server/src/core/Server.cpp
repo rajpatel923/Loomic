@@ -1,4 +1,5 @@
 #include "LoomicServer/core/Server.hpp"
+#include "LoomicServer/metrics/MetricsRegistry.hpp"
 #include "LoomicServer/util/Config.hpp"
 #include "LoomicServer/util/Logger.hpp"
 #include "LoomicServer/auth/SnowflakeGen.hpp"
@@ -53,6 +54,7 @@ Server::Server(const Config& cfg)
            pg_,
            net::ip::host_name() + ":" + std::to_string(cfg.port))
 {
+    MetricsRegistry::init(cfg.metrics_port);
     setup_tls(cfg);
     register_routes();
 }

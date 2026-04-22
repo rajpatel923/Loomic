@@ -780,3 +780,340 @@
 [2026-04-20 18:17:15.355][1][info] TLS TCP server: port 7777
 [2026-04-20 18:31:15.184][1][info] Shutdown signal received, stopping...
 [2026-04-20 18:31:15.185][1][info] Server stopped
+{"ts":"2026-04-21T05:03:22.454","tid":1,"lvl":"info","rid":"","msg":"PgPool: 12 connections established"}
+{"ts":"2026-04-21T05:03:22.610","tid":1,"lvl":"info","rid":"","msg":"RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274"}
+{"ts":"2026-04-21T05:03:25.304","tid":1,"lvl":"info","rid":"","msg":"CassandraClient connected to loomic-cosmos.cassandra.cosmos.azure.com"}
+{"ts":"2026-04-21T05:03:25.305","tid":1,"lvl":"info","rid":"","msg":"OpenAPI spec loaded (41513 bytes)"}
+{"ts":"2026-04-21T05:03:25.305","tid":1,"lvl":"info","rid":"","msg":"Docs routes registered: GET /openapi.json  GET /docs"}
+{"ts":"2026-04-21T05:03:25.305","tid":1,"lvl":"info","rid":"","msg":"Loomic Server starting"}
+{"ts":"2026-04-21T05:03:25.305","tid":1,"lvl":"info","rid":"","msg":"Thread pool: 12 threads"}
+{"ts":"2026-04-21T05:03:25.305","tid":1,"lvl":"info","rid":"","msg":"HTTP server: http://0.0.0.0:8080"}
+{"ts":"2026-04-21T05:03:25.305","tid":1,"lvl":"info","rid":"","msg":"TLS TCP server: port 7777"}
+{"ts":"2026-04-21T05:08:04.204","tid":1,"lvl":"info","rid":"","msg":"Shutdown signal received, stopping..."}
+{"ts":"2026-04-21T05:08:04.204","tid":1,"lvl":"info","rid":"","msg":"Server stopped"}
+{"ts":"2026-04-21T05:08:17.656","tid":1,"lvl":"info","rid":"","msg":"PgPool: 12 connections established"}
+{"ts":"2026-04-21T05:08:17.810","tid":1,"lvl":"info","rid":"","msg":"RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274"}
+{"ts":"2026-04-21T05:08:20.348","tid":1,"lvl":"info","rid":"","msg":"CassandraClient connected to loomic-cosmos.cassandra.cosmos.azure.com"}
+{"ts":"2026-04-21T05:08:20.352","tid":1,"lvl":"info","rid":"","msg":"OpenAPI spec loaded (41513 bytes)"}
+{"ts":"2026-04-21T05:08:20.352","tid":1,"lvl":"info","rid":"","msg":"Docs routes registered: GET /openapi.json  GET /docs"}
+{"ts":"2026-04-21T05:08:20.352","tid":1,"lvl":"info","rid":"","msg":"Loomic Server starting"}
+{"ts":"2026-04-21T05:08:20.352","tid":1,"lvl":"info","rid":"","msg":"Thread pool: 12 threads"}
+{"ts":"2026-04-21T05:08:20.352","tid":1,"lvl":"info","rid":"","msg":"HTTP server: http://0.0.0.0:8080"}
+{"ts":"2026-04-21T05:08:20.352","tid":1,"lvl":"info","rid":"","msg":"TLS TCP server: port 7777"}
+{"ts":"2026-04-21T05:35:02.580","tid":1,"lvl":"warning","rid":"","msg":"PgPool: recreating PostgreSQL connection (idle_validation_failed)"}
+{"ts":"2026-04-21T05:35:04.524","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T05:35:04.766","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T05:35:05.365","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T05:35:06.272","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T05:35:31.551","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T05:35:31.611","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T05:35:31.926","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T05:35:33.599","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T05:35:34.660","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T05:35:35.355","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T05:35:35.698","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T05:35:36.759","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T05:36:02.892","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T05:36:02.956","tid{"ts":"2026-04-21T19:20:42.374","tid":1,"lvl":"info","rid":"","msg":"PgPool: 12 connections established"}
+{"ts":"2026-04-21T19:20:42.511","tid":1,"lvl":"info","rid":"","msg":"RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274"}
+{"ts":"2026-04-21T19:20:45.105","tid":1,"lvl":"info","rid":"","msg":"CassandraClient connected to loomic-cosmos.cassandra.cosmos.azure.com"}
+{"ts":"2026-04-21T19:20:45.110","tid":1,"lvl":"info","rid":"","msg":"OpenAPI spec loaded (41513 bytes)"}
+{"ts":"2026-04-21T19:20:45.111","tid":1,"lvl":"info","rid":"","msg":"Docs routes registered: GET /openapi.json  GET /docs"}
+{"ts":"2026-04-21T19:20:45.111","tid":1,"lvl":"info","rid":"","msg":"Loomic Server starting"}
+{"ts":"2026-04-21T19:20:45.111","tid":1,"lvl":"info","rid":"","msg":"Thread pool: 12 threads"}
+{"ts":"2026-04-21T19:20:45.111","tid":1,"lvl":"info","rid":"","msg":"HTTP server: http://0.0.0.0:8080"}
+{"ts":"2026-04-21T19:20:45.111","tid":1,"lvl":"info","rid":"","msg":"TLS TCP server: port 7777"}
+{"ts":"2026-04-21T19:29:04.999","tid":1,"lvl":"info","rid":"","msg":"Shutdown signal received, stopping..."}
+{"ts":"2026-04-21T19:29:04.999","tid":1,"lvl":"info","rid":"","msg":"Server stopped"}
+{"ts":"2026-04-21T19:29:15.252","tid":1,"lvl":"info","rid":"","msg":"PgPool: 12 connections established"}
+{"ts":"2026-04-21T19:29:15.416","tid":1,"lvl":"info","rid":"","msg":"RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274"}
+{"ts":"2026-04-21T19:29:18.220","tid":1,"lvl":"info","rid":"","msg":"CassandraClient connected to loomic-cosmos.cassandra.cosmos.azure.com"}
+{"ts":"2026-04-21T19:29:18.225","tid":1,"lvl":"info","rid":"","msg":"OpenAPI spec loaded (41513 bytes)"}
+{"ts":"2026-04-21T19:29:18.226","tid":1,"lvl":"info","rid":"","msg":"Docs routes registered: GET /openapi.json  GET /docs"}
+{"ts":"2026-04-21T19:29:18.226","tid":1,"lvl":"info","rid":"","msg":"Loomic Server starting"}
+{"ts":"2026-04-21T19:29:18.226","tid":1,"lvl":"info","rid":"","msg":"Thread pool: 12 threads"}
+{"ts":"2026-04-21T19:29:18.226","tid":1,"lvl":"info","rid":"","msg":"HTTP server: http://0.0.0.0:8080"}
+{"ts":"2026-04-21T19:29:18.226","tid":1,"lvl":"info","rid":"","msg":"TLS TCP server: port 7777"}
+{"ts":"2026-04-21T19:34:04.692","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:34:05.364","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:34:05.824","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:34:06.578","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:34:33.580","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:34:33.679","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:34:33.907","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:34:35.998","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:34:36.353","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:34:36.783","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:34:36.784","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:34:37.717","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:35:04.662","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:35:04.777","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:35:04.778","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:35:06.874","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:35:07.695","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:35:07.695","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:35:08.254","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:35:09.496","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:35:35.887","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:35:35.940","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:35:37.330","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:35:37.858","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:35:38.000","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:35:38.905","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:35:39.048","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:35:39.955","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:36:06.630","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:36:06.881","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:36:07.828","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:36:08.529","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:36:08.739","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:36:09.606","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:36:09.839","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:36:10.666","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:36:37.287","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:36:38.324","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:36:38.324","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:36:39.214","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:36:39.357","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:36:40.262","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:36:40.401","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:36:41.310","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:37:07.684","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:37:08.716","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:37:08.740","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:37:09.628","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:37:09.777","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:37:10.703","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:37:10.934","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:37:11.777","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:37:38.092","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:37:39.135","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:37:39.141","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:37:40.041","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:37:40.197","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:37:41.186","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:37:41.479","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:37:42.608","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:38:08.502","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:38:09.743","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:38:09.744","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:38:10.759","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:38:10.921","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:38:11.856","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:38:12.001","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:38:13.098","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:38:31.344","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: disconnected: stream truncated [asio.ssl.stream:1]"}
+{"ts":"2026-04-21T19:38:31.344","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: disconnected: stream truncated [asio.ssl.stream:1]"}
+{"ts":"2026-04-21T19:38:31.344","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: disconnected: stream truncated [asio.ssl.stream:1]"}
+{"ts":"2026-04-21T19:38:31.344","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: disconnected: stream truncated [asio.ssl.stream:1]"}
+{"ts":"2026-04-21T19:39:01.673","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:39:01.673","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:39:01.673","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:39:01.673","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:40:20.887","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:40:21.560","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:40:22.075","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:40:23.059","tid":1,"lvl":"warning","rid":"","msg":"upsert_conv_members conv_id=1: ERROR:  insert or update on table "conv_members" violates foreign key constraint "conv_members_user_id_fkey"
+DETAIL:  Key (user_id)=(1) is not present in table "users".
+"}
+{"ts":"2026-04-21T19:40:45.772","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: disconnected: stream truncated [asio.ssl.stream:1]"}
+{"ts":"2026-04-21T19:40:45.772","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: disconnected: stream truncated [asio.ssl.stream:1]"}
+{"ts":"2026-04-21T19:40:45.772","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: disconnected: stream truncated [asio.ssl.stream:1]"}
+{"ts":"2026-04-21T19:40:45.772","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: disconnected: stream truncated [asio.ssl.stream:1]"}
+{"ts":"2026-04-21T19:41:16.083","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:41:16.083","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:41:16.083","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:41:16.083","tid":1,"lvl":"warning","rid":"","msg":"Session 302552786912940032: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T19:43:30.493","tid":1,"lvl":"info","rid":"","msg":"Shutdown signal received, stopping..."}
+{"ts":"2026-04-21T19:43:30.493","tid":1,"lvl":"info","rid":"","msg":"Server stopped"}
+{"ts":"2026-04-21T14:53:25.290","tid":2089352,"lvl":"info","rid":"","msg":"PgPool: 14 connections established"}
+{"ts":"2026-04-21T14:53:25.600","tid":2089352,"lvl":"info","rid":"","msg":"RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274"}
+{"ts":"2026-04-21T14:53:28.283","tid":2089352,"lvl":"info","rid":"","msg":"CassandraClient connected to loomic-cosmos.cassandra.cosmos.azure.com"}
+{"ts":"2026-04-21T14:53:28.289","tid":2089352,"lvl":"info","rid":"","msg":"OpenAPI spec loaded (42438 bytes)"}
+{"ts":"2026-04-21T14:53:28.289","tid":2089352,"lvl":"info","rid":"","msg":"Docs routes registered: GET /openapi.json  GET /docs"}
+{"ts":"2026-04-21T14:53:28.289","tid":2089352,"lvl":"info","rid":"","msg":"Loomic Server starting"}
+{"ts":"2026-04-21T14:53:28.289","tid":2089352,"lvl":"info","rid":"","msg":"Thread pool: 14 threads"}
+{"ts":"2026-04-21T14:53:28.289","tid":2089352,"lvl":"info","rid":"","msg":"HTTP server: http://0.0.0.0:8080"}
+{"ts":"2026-04-21T14:53:28.289","tid":2089352,"lvl":"info","rid":"","msg":"TLS TCP server: port 7777"}
+{"ts":"2026-04-21T14:55:39.031","tid":2089352,"lvl":"warning","rid":"","msg":"WebSocketSession 305069078358265856: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /Users/rajpatel/Documents/GitHub/Loomic/server/build/debug/vcpkg_installed/arm64-osx/include/boost/beast/websocket/impl/read.hpp:708:50 in function 'void boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp>>::read_some_op<boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp>>::read_op<boost::asio::detail::awaitable_handler<boost::asio::any_io_executor, boost::system::error_code, unsigned long>, boost::beast::basic_flat_buffer<std::allocator<char>>>, boost::asio::mutable_buffer>::operator()(error_code, std::size_t, bool) [NextLayer = boost::beast::basic_stream<boost::asio::ip::tcp>, deflateSupported = true]']"}
+{"ts":"2026-04-21T14:55:40.214","tid":2089352,"lvl":"warning","rid":"","msg":"WebSocketSession 305069077125140480: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /Users/rajpatel/Documents/GitHub/Loomic/server/build/debug/vcpkg_installed/arm64-osx/include/boost/beast/websocket/impl/read.hpp:708:50 in function 'void boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp>>::read_some_op<boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp>>::read_op<boost::asio::detail::awaitable_handler<boost::asio::any_io_executor, boost::system::error_code, unsigned long>, boost::beast::basic_flat_buffer<std::allocator<char>>>, boost::asio::mutable_buffer>::operator()(error_code, std::size_t, bool) [NextLayer = boost::beast::basic_stream<boost::asio::ip::tcp>, deflateSupported = true]']"}
+{"ts":"2026-04-21T14:55:40.584","tid":2089352,"lvl":"warning","rid":"","msg":"WebSocketSession 305069078358265856: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /Users/rajpatel/Documents/GitHub/Loomic/server/build/debug/vcpkg_installed/arm64-osx/include/boost/beast/websocket/impl/read.hpp:708:50 in function 'void boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp>>::read_some_op<boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp>>::read_op<boost::asio::detail::awaitable_handler<boost::asio::any_io_executor, boost::system::error_code, unsigned long>, boost::beast::basic_flat_buffer<std::allocator<char>>>, boost::asio::mutable_buffer>::operator()(error_code, std::size_t, bool) [NextLayer = boost::beast::basic_stream<boost::asio::ip::tcp>, deflateSupported = true]']"}
+{"ts":"2026-04-21T14:55:42.537","tid":2089352,"lvl":"warning","rid":"","msg":"Session 305069078358265856: disconnected: stream truncated [asio.ssl.stream:1]"}
+{"ts":"2026-04-21T14:55:42.537","tid":2089352,"lvl":"warning","rid":"","msg":"Session 305069077125140480: disconnected: stream truncated [asio.ssl.stream:1]"}
+{"ts":"2026-04-21T14:56:09.032"{"ts":"2026-04-21T19:58:27.493","tid":1,"lvl":"info","rid":"","msg":"PgPool: 12 connections established"}
+{"ts":"2026-04-21T19:58:27.783","tid":1,"lvl":"info","rid":"","msg":"RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274"}
+{"ts":"2026-04-21T19:58:30.810","tid":1,"lvl":"info","rid":"","msg":"CassandraClient connected to loomic-cosmos.cassandra.cosmos.azure.com"}
+{"ts":"2026-04-21T19:58:30.815","tid":1,"lvl":"info","rid":"","msg":"OpenAPI spec loaded (41513 bytes)"}
+{"ts":"2026-04-21T19:58:30.816","tid":1,"lvl":"info","rid":"","msg":"Docs routes registered: GET /openapi.json  GET /docs"}
+{"ts":"2026-04-21T19:58:30.816","tid":1,"lvl":"info","rid":"","msg":"Loomic Server starting"}
+{"ts":"2026-04-21T19:58:30.816","tid":1,"lvl":"info","rid":"","msg":"Thread pool: 12 threads"}
+{"ts":"2026-04-21T19:58:30.816","tid":1,"lvl":"info","rid":"","msg":"HTTP server: http://0.0.0.0:8080"}
+{"ts":"2026-04-21T19:58:30.816","tid":1,"lvl":"info","rid":"","msg":"TLS TCP server: port 7777"}
+{"ts":"2026-04-21T19:59:26.933","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305070035502632960: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']"}
+{"ts":"2026-04-21T19:59:27.889","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305070034194010112: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']"}
+{"ts":"2026-04-21T19:59:28.125","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305070035502632960: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']"}
+{"ts":"2026-04-21T19:59:29.839","tid":1,"lvl":"warning","rid":"","msg":"Session 305070035502632960: disconnected: stream truncated [asio.ssl.stream:1]"}
+{"ts":"2026-04-21T19:59:29.839","tid":1,"lvl":"warning","rid":"","msg":"Session 305070034194010112: disconnected: stream truncated [asio.ssl.stream:1]"}
+{"ts":"2026-04-21T19:59:56.938","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305070035502632960: heartbeat timeout, closing"}
+{"ts":"2026-04-21T19:59:57.891","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305070034194010112: heartbeat timeout, closing"}
+{"ts":"2026-04-21T19:59:58.128","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305070035502632960: heartbeat timeout, closing"}
+{"ts":"2026-04-21T19:59:59.840","tid":1,"lvl":"warning","rid":"","msg":"Session 305070035502632960: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T20:00:00.097","tid":1,"lvl":"warning","rid":"","msg":"Session 305070034194010112: heartbeat timeout, closing connection"}
+{"ts":"2026-04-21T20:03:19.043","tid":1,"lvl":"info","rid":"","msg":"Shutdown signal received, stopping..."}
+{"ts":"2026-04-21T20:03:19.043","tid":1,"lvl":"info","rid":"","msg":"Server stopped"}
+"2026-04-21T14:59:10.762","tid":2089352,"lvl":"info","rid":"","msg":"Server stopped"}
+{"ts":"2026-04-21T21:16:08.273","tid":1,"lvl":"info","rid":"","msg":"PgPool: 12 connections established"}
+{"ts":"2026-04-21T21:16:08.407","tid":1,"lvl":"info","rid":"","msg":"RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274"}
+{"ts":"2026-04-21T21:16:11.181","tid":1,"lvl":"info","rid":"","msg":"CassandraClient connected to loomic-cosmos.cassandra.cosmos.azure.com"}
+{"ts":"2026-04-21T21:16:11.192","tid":1,"lvl":"info","rid":"","msg":"OpenAPI spec loaded (42438 bytes)"}
+{"ts":"2026-04-21T21:16:11.192","tid":1,"lvl":"info","rid":"","msg":"Docs routes registered: GET /openapi.json  GET /docs"}
+{"ts":"2026-04-21T21:16:11.192","tid":1,"lvl":"info","rid":"","msg":"Loomic Server starting"}
+{"ts":"2026-04-21T21:16:11.192","tid":1,"lvl":"info","rid":"","msg":"Thread pool: 12 threads"}
+{"ts":"2026-04-21T21:16:11.192","tid":1,"lvl":"info","rid":"","msg":"HTTP server: http://0.0.0.0:8080"}
+{"ts":"2026-04-21T21:16:11.193","tid":1,"lvl":"info","rid":"","msg":"TLS TCP server: port 7777"}
+{"ts":"2026-04-21T21:17:21.975","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305089553276866560: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']"}
+{"ts":"2026-04-21T21:17:51.976","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305089553276866560: heartbeat timeout, closing"}
+{"ts":"2026-04-21T21:18:58.841","tid":1,"lvl":"info","rid":"","msg":"Shutdown signal received, stopping..."}
+{"ts":"2026-04-21T21:18:58.841","tid":1,"lvl":"info","rid":"","msg":"Server stopped"}
+{"ts":"2026-04-21T21:20:07.478","tid":1,"lvl":"info","rid":"","msg":"PgPool: 12 connections established"}
+{"ts":"2026-04-21T21:20:07.697","tid":1,"lvl":"info","rid":"","msg":"RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274"}
+{"ts":"2026-04-21T21:20:10.346","tid":1,"lvl":"info","rid":"","msg":"CassandraClient connected to loomic-cosmos.cassandra.cosmos.azure.com"}
+{"ts":"2026-04-21T21:20:10.349","tid":1,"lvl":"info","rid":"","msg":"OpenAPI spec loaded (42438 bytes)"}
+{"ts":"2026-04-21T21:20:10.349","tid":1,"lvl":"info","rid":"","msg":"Docs routes registered: GET /openapi.json  GET /docs"}
+{"ts":"2026-04-21T21:20:10.349","tid":1,"lvl":"info","rid":"","msg":"Loomic Server starting"}
+{"ts":"2026-04-21T21:20:10.349","tid":1,"lvl":"info","rid":"","msg":"Thread pool: 12 threads"}
+{"ts":"2026-04-21T21:20:10.349","tid":1,"lvl":"info","rid":"","msg":"HTTP server: http://0.0.0.0:8080"}
+{"ts":"2026-04-21T21:20:10.349","tid":1,"lvl":"info","rid":"","msg":"TLS TCP server: port 7777"}
+{"ts":"2026-04-21T21:22:53.228","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305089553276866560: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']"}
+{"ts":"2026-04-21T21:22:53.329","tid":1,"lvl":"warning","rid":"","msg":"PgPool: PostgreSQL connection dropped: Lost connection to the database server."}
+{"ts":"2026-04-21T21:22:53.683","tid":1,"lvl":"warning","rid":"","msg":"PgPool: recreating PostgreSQL connection (checkout_not_open)"}
+{"ts":"2026-04-21T21:23:23.229","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305089553276866560: heartbeat timeout, closing"}
+{"ts":"2026-04-21T21:24:14.998","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305089553276866560: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']"}
+{"ts":"2026-04-21T21:24:45.001","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305089553276866560: heartbeat timeout, closing"}
+{"ts":"2026-04-21T21:25:52.621","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305089553276866560: heartbeat timeout, closing"}
+{"ts":"2026-04-21T21:26:14.521","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305089553276866560: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']"}
+{"ts":"2026-04-21T21:26:44.496","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305089553276866560: heartbeat timeout, closing"}
+{"ts":"2026-04-21T21:28:45.579","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305089553276866560: heartbeat timeout, closing"}
+{"ts":"2026-04-21T21:29:12.409","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305089553276866560: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']"}
+{"ts":"2026-04-21T21:29:36.894","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']"}
+{"ts":"2026-04-21T21:29:42.410","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305089553276866560: heartbeat timeout, closing"}
+{"ts":"2026-04-21T21:30:02.883","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092789815742464: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']"}
+{"ts":"2026-04-21T21:30:06.897","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-21T21:30:32.885","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092789815742464: heartbeat timeout, closing"}
+{"ts":"2026-04-21T21:31:51.387","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092789815742464: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']"}
+{"ts":"2026-04-21T21:31:55.502","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092789815742464: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']"}
+{"ts":"2026-04-21T21:32:21.391","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092789815742464: heartbeat timeout, closing"}
+{"ts":"2026-04-21T21:32:25.508","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092789815742464: heartbeat timeout, closing"}
+{"ts":"2026-04-21T21:33:11.893","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']"}
+{"ts":"2026-04-21T21:33:41.899","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-21T21:36:59.040","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']"}
+{"ts":"2026-04-21T21:37:27.162","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: disconnected: The WebSocket stream was gracefully closed at both endpoints [boost.beast.websocket:1 at /app/build/release/vcpkg_installed/arm64-linux/include/boost/beast/websocket/impl/read.hpp:708:17 in function 'void boost::beast::websocket::stream< <template-parameter-1-1>, <anonymous> >::read_some_op< <template-parameter-2-1>, <template-parameter-2-2> >::operator()(boost::beast::error_code, std::size_t, bool)']"}
+{"ts":"2026-04-21T21:37:29.040","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-21T21:37:57.167","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-22T18:56:50.824","tid":1,"lvl":"info","rid":"","msg":"Shutdown signal received, stopping..."}
+{"ts":"2026-04-22T18:56:50.824","tid":1,"lvl":"info","rid":"","msg":"Server stopped"}
+{"ts":"2026-04-22T18:57:23.595","tid":1,"lvl":"info","rid":"","msg":"PgPool: 12 connections established"}
+{"ts":"2026-04-22T18:57:23.737","tid":1,"lvl":"info","rid":"","msg":"RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274"}
+{"ts":"2026-04-22T18:57:26.314","tid":1,"lvl":"info","rid":"","msg":"CassandraClient connected to loomic-cosmos.cassandra.cosmos.azure.com"}
+{"ts":"2026-04-22T18:57:26.319","tid":1,"lvl":"info","rid":"","msg":"OpenAPI spec loaded (42438 bytes)"}
+{"ts":"2026-04-22T18:57:26.319","tid":1,"lvl":"info","rid":"","msg":"Docs routes registered: GET /openapi.json  GET /docs"}
+{"ts":"2026-04-22T18:57:26.319","tid":1,"lvl":"info","rid":"","msg":"Loomic Server starting"}
+{"ts":"2026-04-22T18:57:26.319","tid":1,"lvl":"info","rid":"","msg":"Thread pool: 12 threads"}
+{"ts":"2026-04-22T18:57:26.319","tid":1,"lvl":"info","rid":"","msg":"HTTP server: http://0.0.0.0:8080"}
+{"ts":"2026-04-22T18:57:26.319","tid":1,"lvl":"info","rid":"","msg":"TLS TCP server: port 7777"}
+{"ts":"2026-04-22T18:58:38.083","tid":1,"lvl":"info","rid":"","msg":"Shutdown signal received, stopping..."}
+{"ts":"2026-04-22T18:58:38.083","tid":1,"lvl":"info","rid":"","msg":"Server stopped"}
