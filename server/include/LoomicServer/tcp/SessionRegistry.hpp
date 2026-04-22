@@ -3,8 +3,7 @@
 #include <cstdint>
 #include <memory>
 #include <shared_mutex>
-
-#include <absl/container/flat_hash_map.h>
+#include <unordered_map>
 
 namespace Loomic {
 
@@ -20,8 +19,8 @@ public:
     void remove(uint64_t user_id, const ISession* expected = nullptr);
 
 private:
-    absl::flat_hash_map<uint64_t, std::weak_ptr<ISession>> map_;
-    mutable std::shared_mutex                              mutex_;
+    std::unordered_map<uint64_t, std::weak_ptr<ISession>> map_;
+    mutable std::shared_mutex                             mutex_;
 };
 
 } // namespace Loomic

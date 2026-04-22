@@ -1,5 +1,6 @@
 #include "LoomicServer/tcp/TcpServer.hpp"
 #include "LoomicServer/tcp/Session.hpp"
+#include "LoomicServer/metrics/MetricsRegistry.hpp"
 #include "LoomicServer/util/Logger.hpp"
 
 #include <boost/asio/co_spawn.hpp>
@@ -59,12 +60,15 @@ net::awaitable<void> TcpServer::listen()
             net::co_spawn(executor,
                 [this, raw = std::move(raw)]() mutable -> net::awaitable<void>
                 {
+                    try { MetricsRegistry::get().active_connections().Increment(); } catch (...) {}
                     ssl::stream<net::ip::tcp::socket> tls(std::move(raw), ssl_ctx_);
                     try {
                         co_await tls.async_handshake(ssl::stream_base::server,
                                                       net::use_awaitable);
                     } catch (...) {
-                        co_return; // Drop connection silently on handshake failure.
+                        // Handshake failed — decrement here since Session cleanup won't run
+                        try { MetricsRegistry::get().active_connections().Decrement(); } catch (...) {}
+                        co_return;
                     }
                     auto session = std::make_shared<Session>(
                         std::move(tls),

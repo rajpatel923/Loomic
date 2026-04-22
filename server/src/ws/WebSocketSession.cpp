@@ -6,6 +6,7 @@
 #include "LoomicServer/db/RedisClient.hpp"
 #include "LoomicServer/db/CassandraClient.hpp"
 #include "LoomicServer/db/PgPool.hpp"
+#include "LoomicServer/metrics/MetricsRegistry.hpp"
 #include "LoomicServer/util/Logger.hpp"
 
 #include <boost/asio/co_spawn.hpp>
@@ -90,6 +91,8 @@ net::awaitable<void> WebSocketSession::run(beast::flat_buffer buffer,
 
             user_id_ = static_cast<uint64_t>(user->uid);
             registry_->insert(user_id_, self);
+            try { MetricsRegistry::get().active_sessions().Increment(); } catch (...) {}
+            try { MetricsRegistry::get().active_connections().Increment(); } catch (...) {}
             co_await redis_->set_presence(user_id_, server_id_);
         }
 
@@ -114,6 +117,8 @@ net::awaitable<void> WebSocketSession::run(beast::flat_buffer buffer,
     // Cleanup
     heartbeat_.cancel();
     if (user_id_ != 0) {
+        try { MetricsRegistry::get().active_sessions().Decrement(); } catch (...) {}
+        try { MetricsRegistry::get().active_connections().Decrement(); } catch (...) {}
         registry_->remove(user_id_, this);
         co_await redis_->del_presence(user_id_);
 
@@ -186,6 +191,7 @@ net::awaitable<void> WebSocketSession::read_loop()
 net::awaitable<void> WebSocketSession::route_message(std::string_view json_sv)
 {
     auto self = shared_from_this();
+    auto t0   = std::chrono::steady_clock::now();
 
     nlohmann::json j;
     try {
@@ -307,6 +313,16 @@ net::awaitable<void> WebSocketSession::route_message(std::string_view json_sv)
             return pqxx::result{};
         }, PgPool::RetryClass::NonRetryableWrite),
         net::detached);
+
+    {
+        double ms = std::chrono::duration<double, std::milli>(
+            std::chrono::steady_clock::now() - t0).count();
+        try {
+            auto& mr = MetricsRegistry::get();
+            mr.messages_total().Increment();
+            mr.message_latency_ms().Observe(ms);
+        } catch (...) {}
+    }
 }
 
 // ── flush_offline_queue ───────────────────────────────────────────────────────
@@ -413,6 +429,7 @@ net::awaitable<void> WebSocketSession::do_write()
 net::awaitable<void> WebSocketSession::route_group_message(std::string_view json_sv)
 {
     auto self = shared_from_this();
+    auto t0   = std::chrono::steady_clock::now();
 
     nlohmann::json j;
     try {
@@ -497,6 +514,16 @@ net::awaitable<void> WebSocketSession::route_group_message(std::string_view json
             return pqxx::result{};
         }, PgPool::RetryClass::NonRetryableWrite),
         net::detached);
+
+    {
+        double ms = std::chrono::duration<double, std::milli>(
+            std::chrono::steady_clock::now() - t0).count();
+        try {
+            auto& mr = MetricsRegistry::get();
+            mr.messages_total().Increment();
+            mr.message_latency_ms().Observe(ms);
+        } catch (...) {}
+    }
 }
 
 // ── load_group_members_from_pg ────────────────────────────────────────────────

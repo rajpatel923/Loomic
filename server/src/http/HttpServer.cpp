@@ -1,5 +1,8 @@
 #include "LoomicServer/http/HttpServer.hpp"
+#include "LoomicServer/metrics/MetricsRegistry.hpp"
 #include "LoomicServer/util/Logger.hpp"
+#include "LoomicServer/util/RequestContext.hpp"
+#include "LoomicServer/util/Uuid.hpp"
 
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
@@ -11,6 +14,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include <chrono>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -127,6 +132,10 @@ net::awaitable<void> HttpServer::listen()
 net::awaitable<void> HttpServer::handle_connection(net::ip::tcp::socket socket)
 {
     try {
+        // ── Per-request tracing & timing ─────────────────────────────────────
+        g_request_ctx.request_id = generate_uuid_v4();
+        auto t0 = std::chrono::steady_clock::now();
+
         beast::flat_buffer buffer;
         Request req;
         co_await http::async_read(socket, buffer, req, net::use_awaitable);
@@ -137,6 +146,7 @@ net::awaitable<void> HttpServer::handle_connection(net::ip::tcp::socket socket)
         {
             co_await ws_upgrade_handler_(
                 std::move(socket), std::move(buffer), std::move(req));
+            g_request_ctx.request_id.clear();
             co_return;
         }
 
@@ -147,9 +157,11 @@ net::awaitable<void> HttpServer::handle_connection(net::ip::tcp::socket socket)
             res.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
             res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
             res.set("Access-Control-Max-Age", "86400");
+            res.set("X-Request-ID", g_request_ctx.request_id);
             res.keep_alive(false);
             res.prepare_payload();
             co_await http::async_write(socket, res, net::use_awaitable);
+            g_request_ctx.request_id.clear();
             co_return;
         }
 
@@ -170,10 +182,25 @@ net::awaitable<void> HttpServer::handle_connection(net::ip::tcp::socket socket)
             res = make_error(http::status::not_found, "not found");
         }
 
-        // ── Inject CORS headers on every response ────────────────────────────
+        // ── Record HTTP metrics ───────────────────────────────────────────────
+        {
+            auto elapsed_ms = std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - t0).count();
+            std::string method_str(req.method_string());
+            std::string status_str = std::to_string(
+                static_cast<unsigned>(res.result_int()));
+            try {
+                auto& mr = MetricsRegistry::get();
+                mr.http_requests_total(method_str, status_str).Increment();
+                mr.http_latency_ms().Observe(elapsed_ms);
+            } catch (...) {}
+        }
+
+        // ── Inject CORS + tracing headers on every response ──────────────────
         res.set("Access-Control-Allow-Origin", "*");
         res.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+        res.set("X-Request-ID", g_request_ctx.request_id);
 
         res.version(req.version());
         res.keep_alive(false);
@@ -185,6 +212,8 @@ net::awaitable<void> HttpServer::handle_connection(net::ip::tcp::socket socket)
         socket.shutdown(net::ip::tcp::socket::shutdown_send, ec);
     } catch (...) {
     }
+
+    g_request_ctx.request_id.clear();
 }
 
 } // namespace Loomic

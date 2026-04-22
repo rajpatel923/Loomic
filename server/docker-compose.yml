@@ -2,13 +2,54 @@ services:
   server:
     build: .
     ports:
-      - "7777:7777"
-      - "8080:8080"
-      - "9090:9090"
+      - "7777:7777"   # TLS TCP binary protocol
+      - "8080:8080"   # HTTP / WebSocket
+      - "9090:9090"   # Prometheus metrics (scraped by prometheus service)
     volumes:
-      - ./config:/app/config   # mount local config so it's easy to edit
-      - ./logs:/app/logs        # persist logs on host
-      - ./certs:/app/certs      # dev TLS certificates
+      - ./config:/app/config
+      - ./logs:/app/logs
+      - ./certs:/app/certs
     env_file:
-      - .env                   # all secrets come from .env (NeonDB connection + JWT secret)
+      - .env
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+    depends_on:
+      - server
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "19090:9090"   # host:19090 to avoid collision with server's 9090
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+    depends_on:
+      - server
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/loomic.json
+    depends_on:
+      - prometheus
     restart: unless-stopped

@@ -1,6 +1,24 @@
 # LoomicServer
 
-Backend server for the Loomic platform. The project is built with C++20, CMake presets, Ninja, and vcpkg manifest mode.
+Backend server for the Loomic platform. Built with C++20, CMake presets, Ninja, and vcpkg manifest mode.
+
+## Architecture Overview
+
+| Layer | Technology | Port |
+|-------|-----------|------|
+| TLS TCP binary protocol | Boost.ASIO coroutines | 7777 |
+| HTTP REST + WebSocket | Boost.Beast | 8080 |
+| Prometheus metrics | prometheus-cpp (CivetWeb) | 9090 |
+| Reverse proxy (TLS termination) | nginx | 80 / 443 |
+| PostgreSQL | NeonDB (cloud) or local Docker | 5432 |
+| Redis | Presence, offline queue, unread counts | 6379 |
+| Cassandra | Message history | 10350 |
+
+Real-time messaging supports two protocols:
+- **WebSocket** (`ws://host:8080/ws`) — JSON text frames, browser-friendly
+- **TLS TCP** (port 7777) — binary wire protocol (LMS2), 30-byte fixed header + protobuf payload
+
+---
 
 ## Team Workflow
 
@@ -14,20 +32,20 @@ ctest --preset debug
 
 The canonical build directory is `build/<preset>`. Do not use ad-hoc IDE build trees such as `cmake-build-debug`.
 
-## Prerequisites
+---
 
-Required on Windows, Linux, and macOS:
+## Prerequisites
 
 | Tool | Version | Notes |
 |------|---------|-------|
-| Git | any | Clone with submodules |
-| CMake | 3.25+ | Presets are checked in |
+| Git | any | Clone with `--recurse-submodules` |
+| CMake | 3.25+ | Presets checked in |
 | Ninja | any | Canonical generator |
-| C++ compiler | C++20 support | GCC 12+, Clang 15+, or MSVC 2022 |
+| C++ compiler | C++20 | GCC 12+, Clang 15+, MSVC 2022 |
 | OpenSSL CLI | any | Dev certificate generation |
-| Docker Desktop / Docker Engine | optional | Local PostgreSQL |
+| Docker | optional | Local databases / nginx stack |
 
-`vcpkg` is included as a git submodule and installs C++ dependencies automatically during configure.
+`vcpkg` is included as a git submodule and installs all C++ dependencies automatically during configure.
 
 ### Install prerequisites
 
@@ -44,12 +62,7 @@ sudo apt install -y git cmake ninja-build build-essential \
 
 ```bash
 brew install git cmake ninja openssl
-```
-
-If you want local PostgreSQL in Docker:
-
-```bash
-brew install --cask docker
+brew install --cask docker   # optional
 ```
 
 #### Windows (PowerShell)
@@ -64,6 +77,8 @@ winget install Docker.DockerDesktop
 ```
 
 Restart the shell after installing tools so they are available on `PATH`.
+
+---
 
 ## Setup
 
@@ -96,23 +111,13 @@ Windows:
 
 ### 3. Create the environment file
 
-Linux / macOS:
-
 ```bash
 cp .env.example .env
 ```
 
-Windows:
-
-```powershell
-Copy-Item .env.example .env
-```
-
-Edit `.env` and set the values for your environment.
+Edit `.env` and fill in values for your environment (see [Environment Variables](#environment-variables) below).
 
 ### 4. Generate dev TLS certificates
-
-Linux / macOS:
 
 ```bash
 bash certs/gen_cert.sh
@@ -127,171 +132,191 @@ openssl req -x509 -newkey rsa:4096 -keyout certs\server.key -out certs\server.cr
     -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
 ```
 
-### 5. Start PostgreSQL
-
-Example local Docker database:
+### 5. Start databases
 
 ```bash
-docker run -d \
-  --name loomic-pg \
-  -e POSTGRES_DB=loomic \
-  -e POSTGRES_USER=loomic \
-  -e POSTGRES_PASSWORD=secret \
-  -p 5432:5432 \
-  postgres:16
-```
-
-Set `LOOMIC_PG_CONN_STRING` in `.env`, for example:
-
-```dotenv
-LOOMIC_PG_CONN_STRING=host=127.0.0.1 port=5432 dbname=loomic user=loomic password=secret sslmode=disable
-```
-
-For Neon production usage, prefer the pooled endpoint (`-pooler`) and include
-libpq keepalive settings so stale sockets are detected and replaced promptly:
-
-```dotenv
-LOOMIC_PG_CONN_STRING=host=<project>-pooler.<region>.aws.neon.tech port=5432 dbname=<dbname> user=<user> password=<password> sslmode=require connect_timeout=5 keepalives=1 keepalives_idle=30 keepalives_interval=10 keepalives_count=3
+docker run -d --name loomic-pg \
+  -e POSTGRES_DB=loomic -e POSTGRES_USER=loomic -e POSTGRES_PASSWORD=secret \
+  -p 5432:5432 postgres:16
 ```
 
 ### 6. Apply migrations
-
-Linux / macOS:
 
 ```bash
 psql "$LOOMIC_PG_CONN_STRING" -f db/migrations/V1__create_auth_tables.sql
 ```
 
-Windows:
-
-```powershell
-$env:PGPASSWORD = "secret"
-psql -h 127.0.0.1 -U loomic -d loomic -f db\migrations\V1__create_auth_tables.sql
-```
+---
 
 ## Build, Test, and Run
 
-### Configure
+### Standard build
 
 ```bash
 cmake --preset debug
+cmake --build --preset debug
+ctest --preset debug --output-on-failure
 ```
 
-### Build
+### Sanitizer builds (Phase 7)
 
 ```bash
+# AddressSanitizer + UBSan (Clang required)
+cmake --preset debug-asan
+cmake --build --preset debug-asan
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 ctest --preset debug-asan --output-on-failure
+
+# ThreadSanitizer (Clang required)
+cmake --preset debug-tsan
+cmake --build --preset debug-tsan
+TSAN_OPTIONS=halt_on_error=1:suppressions=tsan_suppressions.txt ctest --preset debug-tsan --output-on-failure
+```
+
+### Load test tool
+
+Build with `BUILD_TOOLS=ON`:
+
+```bash
+cmake --preset debug -DBUILD_TOOLS=ON
 cmake --build --preset debug
 ```
 
-### Test
+Run against the server:
 
 ```bash
-ctest --preset debug
+./build/debug/bin/load_client \
+  --host 127.0.0.1 --port 7777 \
+  --threads 4 --sessions-per-thread 250 \
+  --rate 10 --duration 30 \
+  --jwt <bearer-token>
 ```
 
-### Development shortcut (Windows / PowerShell)
-
-If you just want to start the backend for local development:
-
-```powershell
-.\dev.cmd
-.\dev.ps1
-```
-
-The script bootstraps `vcpkg` if needed, configures the `debug` preset, builds it,
-and runs the server with `config/server.json`.
-
-Useful flags:
-
-```powershell
-.\dev.ps1 -SkipBuild
-.\dev.ps1 -Preset release
-.\dev.ps1 -BootstrapVcpkg
-```
+Prints p50 / p99 / p999 latency, throughput, and dropped-message count.
+**Target:** p99 < 10 ms, 10 000 concurrent connections.
 
 ### Run
 
-Linux / macOS:
-
 ```bash
 ./build/debug/bin/LoomicServer --config config/server.json
-```
-
-Windows:
-
-```powershell
-.\build\debug\bin\LoomicServer.exe --config config\server.json
 ```
 
 ### Verify
 
-Linux / macOS:
-
 ```bash
+# REST health
 curl http://localhost:8080/health
+
+# Check X-Request-ID tracing header (Phase 7)
+curl -v http://localhost:8080/health 2>&1 | grep X-Request-ID
+
+# Prometheus metrics (Phase 7)
+curl http://localhost:9090/metrics
+
+# Verify structured JSON log output (Phase 7)
+tail -1 logs/server.log | python3 -m json.tool
 ```
 
-Windows:
-
-```powershell
-Invoke-RestMethod http://localhost:8080/health
-```
-
-## Fast Local Dev Loop
-
-Docker is useful for dependency parity, but it is the wrong inner-loop for this repo because every code change forces an image rebuild. The faster workflow is:
-
-```bash
-cmake --preset debug
-cmake --build --preset debug
-./build/debug/bin/LoomicServer --config config/server.json
-```
-
-Notes:
-
-- The binary already calls `Config::load_dotenv()` on startup, so running it directly from the repo root loads `.env` automatically. You do not need `docker compose` just to get env vars.
-- `config/server.json` now uses relative `certs/` and `logs/` paths, so the same file works both locally and in Docker because the working directory is the repo root locally and `/app` in the container.
-- If you want databases to stay containerized while the app runs natively, run only the backing services in Docker and keep the server process local.
-- After the first configure, incremental rebuilds should only recompile changed files, which is usually seconds instead of a full image rebuild.
-
-Convenience target:
-
-```bash
-make run-debug
-```
+---
 
 ## Makefile Shortcuts
-
-The Makefile is a convenience wrapper for POSIX shells only:
 
 ```bash
 make cert
 make build-debug
 make build-release
 make test
+make run-debug
 ```
 
-These targets call the same preset-based workflow documented above.
+---
 
 ## Docker
 
-To run with Docker Compose:
+### Full observability stack (Phase 7)
 
 ```bash
 docker compose up --build
 ```
 
-The compose setup uses `.env`, mounts `config/`, `logs/`, and `certs/`, and exposes the server ports.
+This starts:
+
+| Service | Host URL | Purpose |
+|---------|----------|---------|
+| `server` | http://localhost:8080 | REST API + WebSocket |
+| `nginx` | https://localhost:443 | TLS termination + rate limiting |
+| `prometheus` | http://localhost:19090 | Metrics storage (scrapes server:9090) |
+| `grafana` | http://localhost:3000 | Live dashboard (admin / admin) |
+
+> **TCP binary protocol** (port 7777) connects directly to the server container — nginx does not proxy binary TLS TCP.
+
+### nginx rate limiting
+
+nginx applies `60 requests/minute` per IP (burst 20) on all REST and WebSocket routes. The underlying server has its own per-session TCP rate limit (5 msg/sec, burst 20 frames).
+
+---
+
+## Structured Logging (Phase 7)
+
+All log lines are valid JSON:
+
+```json
+{"ts":"2026-04-20T14:32:01.123","tid":12345,"lvl":"info","rid":"550e8400-e29b-41d4-a716-446655440000","msg":"HTTP server: http://0.0.0.0:8080"}
+```
+
+| Field | Description |
+|-------|-------------|
+| `ts` | ISO-8601 timestamp with milliseconds |
+| `tid` | OS thread ID |
+| `lvl` | `trace` / `debug` / `info` / `warning` / `error` / `critical` |
+| `rid` | UUID v4 **X-Request-ID** (empty for background tasks) |
+| `msg` | Log message |
+
+To correlate a client request with its log lines, copy the `X-Request-ID` value from any HTTP response header and `grep` for it in `logs/server.log`.
+
+---
+
+## Prometheus Metrics (Phase 7)
+
+The metrics endpoint is at `http://host:9090/metrics`.
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `loomic_messages_total` | Counter | Chat messages routed |
+| `loomic_http_requests_total{method, status}` | Counter | HTTP requests by method + status |
+| `loomic_active_sessions` | Gauge | Authenticated TCP/WS sessions |
+| `loomic_active_connections` | Gauge | All open connections (including unauthenticated) |
+| `loomic_message_latency_ms` | Histogram | End-to-end message routing latency (buckets: 0.1, 1, 5, 10, 50, 100 ms) |
+| `loomic_http_latency_ms` | Histogram | HTTP request latency (buckets: 1, 5, 10, 25, 50, 100, 250 ms) |
+
+The Grafana dashboard (`monitoring/grafana/dashboards/loomic.json`) ships with 4 panels:
+- **Message Rate** — `rate(loomic_messages_total[1m])`
+- **p99 Message Latency** — `histogram_quantile(0.99, rate(loomic_message_latency_ms_bucket[1m]))`
+- **Active Sessions** — `loomic_active_sessions`
+- **HTTP Error Rate** — `rate(loomic_http_requests_total{status=~"4..|5.."}[1m])`
+
+---
+
+## CI Pipeline (Phase 7)
+
+Three GitHub Actions jobs run on every push and pull request:
+
+| Job | Runner | Compiler | Flags |
+|-----|--------|----------|-------|
+| `build-and-test` | ubuntu-24.04 | GCC 14 | standard debug |
+| `asan` | ubuntu-24.04 | Clang 17 | `-fsanitize=address,undefined` |
+| `tsan` | ubuntu-24.04 | Clang 17 | `-fsanitize=thread` |
+
+vcpkg packages are cached by `vcpkg.json` hash to keep CI fast. The TSan job uses `tsan_suppressions.txt` to silence known false positives in libuv and CivetWeb.
+
+---
 
 ## Deployment (GCP)
 
-Pushes to `main` that touch `server/` automatically build a Docker image and deploy it to the GCP VM via GitHub Actions. The following one-time setup is required before the pipeline works.
+Pushes to `main` that touch `server/` automatically build a Docker image and deploy it to the GCP VM via GitHub Actions.
 
 ### One-time setup
 
 #### 1. Store secrets in GCP Secret Manager
-
-Run these from the `server/` directory with `gcloud` pointed at your project:
 
 ```bash
 gcloud secrets create loomic-env-file \
@@ -304,15 +329,31 @@ gcloud secrets create loomic-tls-key \
   --data-file=certs/server.key --replication-policy=automatic
 ```
 
-To update a secret later (e.g. cert renewal):
+#### 2. Open ports on the GCP VM firewall (Phase 7)
+
+Phase 7 adds nginx (443/80) and Grafana (3000). Open them:
 
 ```bash
-gcloud secrets versions add loomic-tls-cert --data-file=certs/server.crt
-gcloud secrets versions add loomic-tls-key  --data-file=certs/server.key
-gcloud secrets versions add loomic-env-file --data-file=.env
+# HTTPS for nginx (required for production)
+gcloud compute firewall-rules create allow-https \
+  --allow tcp:443 --target-tags loomic-server
+
+# HTTP redirect (nginx redirects to HTTPS)
+gcloud compute firewall-rules create allow-http \
+  --allow tcp:80 --target-tags loomic-server
+
+# Grafana — internal access only; consider restricting to your IP
+gcloud compute firewall-rules create allow-grafana \
+  --allow tcp:3000 --target-tags loomic-server \
+  --source-ranges <your-office-ip>/32
+
+# Prometheus — keep private (scraped internally by Grafana)
+# Do NOT open port 19090 or 9090 to the public internet
 ```
 
-#### 2. Grant the VM service account access
+> **Important:** Port 9090 (metrics) should **never** be public. It exposes internal server stats. If you need external Prometheus, use a VPN or Cloud Armor.
+
+#### 3. Grant the VM service account access
 
 ```bash
 PROJECT_NUMBER=$(gcloud projects describe YOUR_PROJECT_ID --format="value(projectNumber)")
@@ -325,9 +366,7 @@ for secret in loomic-env-file loomic-tls-cert loomic-tls-key; do
 done
 ```
 
-#### 3. Verify the VM has the `cloud-platform` OAuth scope
-
-The VM must have the `cloud-platform` scope to call Secret Manager. Check via:
+#### 4. Verify cloud-platform scope on the VM
 
 ```bash
 gcloud compute instances describe YOUR_VM_NAME \
@@ -336,9 +375,7 @@ gcloud compute instances describe YOUR_VM_NAME \
 
 If `https://www.googleapis.com/auth/cloud-platform` is not listed, stop the VM, edit its access scopes to **Allow full access to all Cloud APIs**, then restart it.
 
-#### 4. Ensure the deploy directory exists on the VM
-
-SSH into the VM and create the working directory if it does not exist:
+#### 5. Ensure the deploy directory exists on the VM
 
 ```bash
 mkdir -p /home/g12g23raj_nes/Loomic/server
@@ -346,41 +383,41 @@ mkdir -p /home/g12g23raj_nes/Loomic/server
 
 ### GitHub Secrets required
 
-Add these under **Settings → Secrets and variables → Actions** in the repository:
-
 | Secret | Description |
 |--------|-------------|
-| `GCP_PROJECT_ID` | GCP project ID (e.g. `my-project-123`) |
-| `GCP_REGION` | Artifact Registry region (e.g. `us-central1`) |
+| `GCP_PROJECT_ID` | GCP project ID |
+| `GCP_REGION` | Artifact Registry region |
 | `GAR_REPO` | Artifact Registry repository name |
-| `GCP_SA_KEY` | JSON key for the GitHub Actions service account (used to push Docker images) |
+| `GCP_SA_KEY` | JSON key for the GitHub Actions service account |
 | `VM_HOST` | Public IP or hostname of the GCP VM |
-| `VM_USER` | SSH username on the VM |
-| `VM_SSH_KEY` | Private SSH key for the VM user |
+| `VM_USER` | SSH username |
+| `VM_SSH_KEY` | Private SSH key |
 
-> `ENV_FILE`, `TLS_CERT`, and `TLS_KEY` are **no longer needed** as GitHub Secrets — the VM fetches them directly from GCP Secret Manager at deploy time.
+---
 
 ## Environment Variables
 
 Copy `.env.example` to `.env` and set the following:
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `LOOMIC_PG_CONN_STRING` | Yes | libpqxx connection string for PostgreSQL |
-| `LOOMIC_JWT_SECRET` | Yes | Secret used to sign and verify JWT tokens |
-| `LOOMIC_BIND_ADDRESS` | No | Interface to bind to |
-| `LOOMIC_PORT` | No | TLS TCP listener port |
-| `LOOMIC_HTTP_HEALTH_PORT` | No | HTTP health endpoint port |
-| `LOOMIC_THREAD_COUNT` | No | Worker threads, `0` uses hardware concurrency |
-| `LOOMIC_TLS_CERT_PATH` | Yes | Path to TLS certificate |
-| `LOOMIC_TLS_KEY_PATH` | Yes | Path to TLS private key |
-| `LOOMIC_REDIS_HOST` | No | Redis hostname |
-| `LOOMIC_REDIS_PORT` | No | Redis port |
-| `LOOMIC_SCYLLA_HOSTS` | No | Comma-separated ScyllaDB hosts |
-| `LOOMIC_LOG_LEVEL` | No | `trace`, `debug`, `info`, `warn`, `error` |
-| `LOOMIC_LOG_FILE` | No | Log file path |
-| `LOOMIC_METRICS_PORT` | No | Prometheus metrics port |
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `LOOMIC_PG_CONN_STRING` | Yes | — | libpqxx connection string for PostgreSQL |
+| `LOOMIC_JWT_SECRET` | Yes | — | Secret used to sign and verify JWT tokens |
+| `LOOMIC_BIND_ADDRESS` | No | `0.0.0.0` | Interface to bind to |
+| `LOOMIC_PORT` | No | `7777` | TLS TCP listener port |
+| `LOOMIC_HTTP_HEALTH_PORT` | No | `8080` | HTTP / WebSocket port |
+| `LOOMIC_METRICS_PORT` | No | `9090` | Prometheus metrics pull port |
+| `LOOMIC_THREAD_COUNT` | No | hardware_concurrency | Worker threads (`0` = auto) |
+| `LOOMIC_TLS_CERT_PATH` | Yes | — | Path to TLS certificate |
+| `LOOMIC_TLS_KEY_PATH` | Yes | — | Path to TLS private key |
+| `LOOMIC_REDIS_HOST` | No | `127.0.0.1` | Redis hostname |
+| `LOOMIC_REDIS_PORT` | No | `6379` | Redis port |
+| `LOOMIC_CASSANDRA_CONTACT_POINTS` | No | — | Comma-separated Cassandra hosts |
+| `LOOMIC_LOG_LEVEL` | No | `info` | `trace` `debug` `info` `warn` `error` |
+| `LOOMIC_LOG_FILE` | No | `logs/server.log` | JSON log file path |
+
+---
 
 ## CLion
 
-If you use CLion, import the checked-in CMake presets and select the `debug` preset-backed profile. Do not create or use a separate `cmake-build-debug` configuration for this repo.
+Import the checked-in CMake presets and select the `debug` preset-backed profile. Do not create or use a separate `cmake-build-debug` configuration.

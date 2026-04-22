@@ -77,3 +77,16 @@ target_link_libraries(test_phase6
 )
 
 add_test(NAME test_phase6 COMMAND test_phase6)
+
+# ── test_hardening ─────────────────────────────────────────────────────────────
+add_executable(test_hardening
+    test_hardening.cpp
+)
+
+target_link_libraries(test_hardening
+    PRIVATE
+        LoomicServer_lib
+        GTest::gtest_main
+)
+
+add_test(NAME test_hardening COMMAND test_hardening)

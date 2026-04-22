@@ -5,6 +5,7 @@
 #include "LoomicServer/db/RedisClient.hpp"
 #include "LoomicServer/db/CassandraClient.hpp"
 #include "LoomicServer/db/PgPool.hpp"
+#include "LoomicServer/metrics/MetricsRegistry.hpp"
 #include "LoomicServer/util/Logger.hpp"
 
 #include <chrono>
@@ -119,6 +120,7 @@ net::awaitable<void> Session::run()
         }
         user_id_ = static_cast<uint64_t>(user->uid);
         registry_->insert(user_id_, self);
+        try { MetricsRegistry::get().active_sessions().Increment(); } catch (...) {}
         co_await redis_->set_presence(user_id_, server_id_);
 
         // ── Step 2: ACK auth so the client knows auth is complete ─────────
@@ -221,6 +223,8 @@ net::awaitable<void> Session::run()
     // ── Cleanup ───────────────────────────────────────────────────────────
     heartbeat_.cancel();
     if (user_id_ != 0) {
+        try { MetricsRegistry::get().active_sessions().Decrement(); } catch (...) {}
+        try { MetricsRegistry::get().active_connections().Decrement(); } catch (...) {}
         registry_->remove(user_id_, this);
         co_await redis_->del_presence(user_id_);
 
@@ -280,6 +284,7 @@ net::awaitable<void> Session::route_message(const FrameHeader& hdr,
                                              std::vector<uint8_t> payload)
 {
     auto self = shared_from_this();
+    auto t0   = std::chrono::steady_clock::now();
 
     if (hdr.flags & kFlagIsGroup) {
         // ── Group fan-out ────────────────────────────────────────────────────
@@ -360,6 +365,18 @@ net::awaitable<void> Session::route_message(const FrameHeader& hdr,
                       update_conv_activity(pg_, group_id, true, preview_str),
                       net::detached);
 
+        // Record routing metrics
+        {
+            double ms = std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - t0).count();
+            try {
+                auto& mr = MetricsRegistry::get();
+                mr.messages_total().Increment();
+                mr.message_latency_ms().Observe(ms);
+            } catch (...) {}
+        }
+        co_return;
+
     } else {
         // ── Direct message (existing logic) ──────────────────────────────────
         uint64_t conv_id = std::min(user_id_, hdr.recipient_id);
@@ -434,6 +451,17 @@ net::awaitable<void> Session::route_message(const FrameHeader& hdr,
         net::co_spawn(co_await net::this_coro::executor,
                       update_conv_activity(pg_, conv_id, false, preview_str_dm),
                       net::detached);
+
+        // Record routing metrics
+        {
+            double ms = std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - t0).count();
+            try {
+                auto& mr = MetricsRegistry::get();
+                mr.messages_total().Increment();
+                mr.message_latency_ms().Observe(ms);
+            } catch (...) {}
+        }
     }
 }
 

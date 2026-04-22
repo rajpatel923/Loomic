@@ -11,17 +11,17 @@ namespace Loomic {
 /// Thread-safe. Buckets are lazily created on first access.
 class RateLimiter {
 public:
+    /// Token bucket state for a single key.
+    struct Bucket {
+        double                                  tokens{0.0};
+        std::chrono::steady_clock::time_point   last_refill{};
+    };
+
     /// max_tokens: burst capacity; refill_rate: tokens added per second.
     RateLimiter(double max_tokens, double refill_rate);
 
     /// Returns true and consumes one token if the key has capacity, else false.
     bool allow(const std::string& key);
-
-private:
-    struct Bucket {
-        double                                  tokens{0.0};
-        std::chrono::steady_clock::time_point   last_refill{};
-    };
 
     double max_tokens_;
     double refill_rate_;
