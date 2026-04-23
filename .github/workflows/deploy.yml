@@ -61,11 +61,12 @@ jobs:
         env:
           GAR_IMAGE: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GAR_REPO }}/loomic-server:latest
           GCP_REGION: ${{ secrets.GCP_REGION }}
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         with:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
-          envs: GAR_IMAGE,GCP_REGION
+          envs: GAR_IMAGE,GCP_REGION,GCP_PROJECT_ID
           script: |
             set -e
             cd /home/g12g23raj_nes/Loomic/server
