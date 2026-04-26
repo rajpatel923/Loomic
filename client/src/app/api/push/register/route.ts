@@ -1,0 +1,66 @@
+import type { NextRequest } from "next/server";
+
+import {
+  buildNetworkErrorResponse,
+  buildProxyResponse,
+  getApiBaseUrl,
+  logProxyNetworkError,
+} from "@/lib/loomic";
+
+export async function POST(request: NextRequest) {
+  const upstreamUrl = `${getApiBaseUrl()}/push/register`;
+
+  try {
+    const payload = await request.text();
+    const response = await fetch(upstreamUrl, {
+      method: "POST",
+      headers: {
+        authorization: request.headers.get("authorization") ?? "",
+        "content-type":
+          request.headers.get("content-type") ?? "application/json",
+      },
+      body: payload,
+      cache: "no-store",
+    });
+
+    return buildProxyResponse(response, {
+      route: "/api/push/register",
+      upstreamUrl,
+    });
+  } catch (error) {
+    logProxyNetworkError("/api/push/register", upstreamUrl, error);
+
+    return buildNetworkErrorResponse(
+      "Unable to register the Loomic push token.",
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  const upstreamUrl = `${getApiBaseUrl()}/push/register`;
+
+  try {
+    const payload = await request.text();
+    const response = await fetch(upstreamUrl, {
+      method: "DELETE",
+      headers: {
+        authorization: request.headers.get("authorization") ?? "",
+        "content-type":
+          request.headers.get("content-type") ?? "application/json",
+      },
+      body: payload,
+      cache: "no-store",
+    });
+
+    return buildProxyResponse(response, {
+      route: "/api/push/register",
+      upstreamUrl,
+    });
+  } catch (error) {
+    logProxyNetworkError("/api/push/register", upstreamUrl, error);
+
+    return buildNetworkErrorResponse(
+      "Unable to unregister the Loomic push token.",
+    );
+  }
+}

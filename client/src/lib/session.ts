@@ -90,6 +90,40 @@ export function saveStoredSession(
   window.localStorage.removeItem(SESSION_STORAGE_KEY);
 }
 
+export function updateStoredSessionTokens(tokens: {
+  access_token: string;
+  refresh_token: string;
+  token_type?: string;
+}) {
+  const existing = readStoredSession();
+
+  if (!existing) {
+    return null;
+  }
+
+  const nextSession: StoredSession = normalizeSession({
+    ...existing,
+    access_token: tokens.access_token,
+    refresh_token: tokens.refresh_token,
+    token_type: tokens.token_type ?? existing.token_type,
+    persisted: existing.persisted,
+    client_session_id: existing.client_session_id,
+    user_id: decodeJwtSubject(tokens.access_token),
+  });
+
+  const serialized = JSON.stringify(nextSession);
+
+  if (nextSession.persisted) {
+    window.localStorage.setItem(SESSION_STORAGE_KEY, serialized);
+    window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
+  } else {
+    window.sessionStorage.setItem(SESSION_STORAGE_KEY, serialized);
+    window.localStorage.removeItem(SESSION_STORAGE_KEY);
+  }
+
+  return nextSession;
+}
+
 export function clearStoredSession() {
   if (typeof window === "undefined") {
     return;

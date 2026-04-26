@@ -1,5 +1,6 @@
 type JwtPayload = {
   sub?: string;
+  exp?: number;
 };
 
 function decodeBase64Url(segment: string) {
@@ -30,4 +31,8 @@ export function decodeJwtPayload(token: string): JwtPayload | null {
 
 export function decodeJwtSubject(token: string) {
   return decodeJwtPayload(token)?.sub ?? null;
+}
+
+export function decodeJwtExpiry(token: string) {
+  return decodeJwtPayload(token)?.exp ?? null;
 }

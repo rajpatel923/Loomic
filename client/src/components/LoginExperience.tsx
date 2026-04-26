@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { readStoredSession, saveStoredSession } from "@/lib/session";
+import { decodeJwtExpiry } from "@/lib/jwt";
+import {
+  clearStoredSession,
+  readStoredSession,
+  saveStoredSession,
+} from "@/lib/session";
 
 type LoginResponse = {
   access_token: string;
@@ -51,6 +56,14 @@ export default function LoginExperience() {
     const session = readStoredSession();
 
     if (session) {
+      const expiresAt = decodeJwtExpiry(session.access_token);
+
+      if (expiresAt && expiresAt * 1000 <= Date.now()) {
+        clearStoredSession();
+        setReady(true);
+        return;
+      }
+
       router.replace("/chat");
       return;
     }
