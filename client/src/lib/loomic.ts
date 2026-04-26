@@ -33,7 +33,9 @@ function normalizeWebSocketProtocol(protocol: string) {
 export function getWebSocketUrl(protocolHint?: string) {
   const explicitWebSocketUrl = process.env.LOOMIC_WS_URL;
   const url = new URL(explicitWebSocketUrl ?? getApiBaseUrl());
-  url.protocol = normalizeWebSocketProtocol(protocolHint ?? url.protocol);
+  if (!explicitWebSocketUrl) {
+    url.protocol = normalizeWebSocketProtocol(protocolHint ?? url.protocol);
+  }
   url.pathname = "/ws";
   url.search = "";
   url.hash = "";
@@ -83,6 +85,10 @@ export async function buildProxyResponse(
   const bodyText = await response.text();
   const contentType =
     response.headers.get("content-type") ?? "application/json; charset=utf-8";
+  const isHtmlError =
+    !response.ok &&
+    (contentType.toLowerCase().includes("text/html") ||
+      bodyText.trimStart().startsWith("<html"));
 
   if (!response.ok && context) {
     console.error(
@@ -90,11 +96,27 @@ export async function buildProxyResponse(
     );
 
     if (bodyText.length > 0) {
-      console.error(`[Loomic proxy] Upstream response body: ${bodyText}`);
+      console.error(
+        isHtmlError
+          ? `[Loomic proxy] Upstream returned an HTML error page (${bodyText.length} chars).`
+          : `[Loomic proxy] Upstream response body: ${bodyText}`,
+      );
     }
   }
 
   const noBodyStatus = response.status === 204 || response.status === 205 || response.status === 304;
+
+  if (isHtmlError) {
+    return Response.json(
+      { error: `Loomic backend returned ${response.status} ${response.statusText}.` },
+      {
+        status: response.status,
+        headers: {
+          "cache-control": "no-store",
+        },
+      },
+    );
+  }
 
   return new Response(noBodyStatus ? null : bodyText, {
     status: response.status,
