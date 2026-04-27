@@ -13,7 +13,8 @@ export async function GET(
   context: RouteContext<"/api/files/[uuid]">,
 ) {
   const { uuid } = await context.params;
-  const upstreamUrl = `${getApiBaseUrl()}/files/${encodeURIComponent(uuid)}`;
+  const download = request.nextUrl.searchParams.get("download");
+  const upstreamUrl = `${getApiBaseUrl()}/files/${encodeURIComponent(uuid)}${download ? "?download=1" : ""}`;
 
   try {
     const response = await fetch(upstreamUrl, {

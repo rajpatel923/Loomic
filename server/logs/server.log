@@ -1117,3 +1117,64 @@ DETAIL:  Key (user_id)=(1) is not present in table "users".
 {"ts":"2026-04-22T18:57:26.319","tid":1,"lvl":"info","rid":"","msg":"TLS TCP server: port 7777"}
 {"ts":"2026-04-22T18:58:38.083","tid":1,"lvl":"info","rid":"","msg":"Shutdown signal received, stopping..."}
 {"ts":"2026-04-22T18:58:38.083","tid":1,"lvl":"info","rid":"","msg":"Server stopped"}
+{"ts":"2026-04-26T20:23:05.589","tid":1,"lvl":"info","rid":"","msg":"PgPool: 12 connections established"}
+{"ts":"2026-04-26T20:23:06.366","tid":1,"lvl":"info","rid":"","msg":"RedisClient connected to redis-12274.c17.us-east-1-4.ec2.cloud.redislabs.com:12274"}
+{"ts":"2026-04-26T20:23:11.179","tid":1,"lvl":"info","rid":"","msg":"CassandraClient connected to loomic-cosmos.cassandra.cosmos.azure.com"}
+{"ts":"2026-04-26T20:23:11.184","tid":1,"lvl":"info","rid":"","msg":"OpenAPI spec loaded (42438 bytes)"}
+{"ts":"2026-04-26T20:23:11.184","tid":1,"lvl":"info","rid":"","msg":"Docs routes registered: GET /openapi.json  GET /docs"}
+{"ts":"2026-04-26T20:23:11.184","tid":1,"lvl":"info","rid":"","msg":"Loomic Server starting"}
+{"ts":"2026-04-26T20:23:11.184","tid":1,"lvl":"info","rid":"","msg":"Thread pool: 12 threads"}
+{"ts":"2026-04-26T20:23:11.184","tid":1,"lvl":"info","rid":"","msg":"HTTP server: http://0.0.0.0:8080"}
+{"ts":"2026-04-26T20:23:11.184","tid":1,"lvl":"info","rid":"","msg":"TLS TCP server: port 7777"}
+{"ts":"2026-04-26T21:45:51.790","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-26T22:16:48.679","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-26T22:16:58.331","tid":1,"lvl":"warning","rid":"","msg":"PgPool: PostgreSQL connection dropped: Lost connection to the database server."}
+{"ts":"2026-04-26T22:44:53.091","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-26T22:44:53.093","tid":1,"lvl":"warning","rid":"","msg":"PgPool: recreating PostgreSQL connection (checkout_not_open)"}
+{"ts":"2026-04-26T22:58:01.443","tid":1,"lvl":"warning","rid":"","msg":"PgPool: PostgreSQL connection dropped: Lost connection to the database server."}
+{"ts":"2026-04-26T22:58:12.966","tid":1,"lvl":"warning","rid":"","msg":"PgPool: recreating PostgreSQL connection (checkout_not_open)"}
+{"ts":"2026-04-26T23:04:04.635","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-26T23:04:16.157","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-26T23:21:45.109","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-26T23:21:45.111","tid":1,"lvl":"warning","rid":"","msg":"PgPool: PostgreSQL connection dropped: Lost connection to the database server."}
+{"ts":"2026-04-26T23:24:18.096","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-26T23:24:18.101","tid":1,"lvl":"warning","rid":"","msg":"PgPool: recreating PostgreSQL connection (checkout_not_open)"}
+{"ts":"2026-04-26T23:26:51.108","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-26T23:29:51.105","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-26T23:32:51.101","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-26T23:35:51.101","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-26T23:38:51.107","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-26T23:41:51.113","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-26T23:44:51.104","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-26T23:47:51.106","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-26T23:50:54.930","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-26T23:53:54.945","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-26T23:56:54.950","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-26T23:56:54.952","tid":1,"lvl":"warning","rid":"","msg":"PgPool: recreating PostgreSQL connection (max_lifetime_recycle)"}
+{"ts":"2026-04-26T23:59:54.943","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-27T00:02:54.954","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-27T00:05:54.952","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-27T00:08:54.948","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-27T00:11:54.955","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-27T00:14:54.953","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-27T00:17:54.960","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-27T00:20:54.953","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-27T00:23:54.957","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-27T00:26:54.944","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-27T00:29:54.935","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-27T00:29:54.938","tid":1,"lvl":"warning","rid":"","msg":"PgPool: recreating PostgreSQL connection (max_lifetime_recycle)"}
+{"ts":"2026-04-27T00:32:54.935","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-27T00:35:54.940","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-27T00:38:54.939","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-27T00:41:54.909","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-27T00:44:54.905","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-27T00:47:54.905","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-27T00:50:54.900","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-27T00:52:18.710","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-27T03:18:45.806","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-27T03:18:45.812","tid":1,"lvl":"warning","rid":"","msg":"PgPool: PostgreSQL connection dropped: Lost connection to the database server."}
+{"ts":"2026-04-27T03:29:53.248","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-27T03:29:53.252","tid":1,"lvl":"warning","rid":"","msg":"PgPool: recreating PostgreSQL connection (checkout_not_open)"}
+{"ts":"2026-04-27T03:32:54.249","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-27T03:35:54.249","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSession 305092694839922688: heartbeat timeout, closing"}
+{"ts":"2026-04-27T03:38:54.251","tid":1,"lvl":"warning","rid":"","msg":"WebSocketSessi

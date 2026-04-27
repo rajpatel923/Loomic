@@ -56,7 +56,7 @@ Server::Server(const Config& cfg)
 {
     MetricsRegistry::init(cfg.metrics_port);
     setup_tls(cfg);
-    register_routes();
+    register_routes(cfg);
 }
 
 void Server::setup_tls(const Config& cfg)
@@ -74,7 +74,7 @@ void Server::setup_tls(const Config& cfg)
     }
 }
 
-void Server::register_routes()
+void Server::register_routes(const Config& cfg)
 {
     http_.add_route(http::verb::get, "/health",
         [](const Request& /*req*/, const PathParams&) -> net::awaitable<Response> {
@@ -92,8 +92,13 @@ void Server::register_routes()
     groups_handler_->register_routes(http_);
 
     // ── Messages ───────────────────────────────────────────────────────────
+    MessagesHandler::AzureBlobConfig blobCfg;
+    blobCfg.account         = cfg.azure_storage_account;
+    blobCfg.key             = cfg.azure_storage_key;
+    blobCfg.container       = cfg.azure_container;
+    blobCfg.sas_ttl_minutes = cfg.azure_sas_ttl_min;
     messages_handler_ = std::make_shared<MessagesHandler>(
-        cass_, pg_, jwt_, redis_, registry_, snowflake_);
+        cass_, pg_, jwt_, redis_, registry_, snowflake_, std::move(blobCfg));
     messages_handler_->register_routes(http_);
 
     // ── Users ──────────────────────────────────────────────────────────────

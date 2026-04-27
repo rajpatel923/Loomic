@@ -19,11 +19,17 @@
 #include <nlohmann/json.hpp>
 #include <pqxx/pqxx>
 
+#include <azure/storage/blobs.hpp>
+#include <azure/storage/blobs/blob_sas_builder.hpp>
+
+#include <boost/asio/steady_timer.hpp>
+#include <boost/asio/thread_pool.hpp>
+#include <boost/asio/use_awaitable.hpp>
+
 #include <algorithm>
 #include <charconv>
 #include <chrono>
-#include <filesystem>
-#include <fstream>
+#include <future>
 #include <random>
 #include <span>
 #include <string>
@@ -32,7 +38,6 @@
 
 namespace net  = boost::asio;
 namespace http = boost::beast::http;
-namespace fs   = std::filesystem;
 
 namespace Loomic {
 
@@ -155,13 +160,15 @@ MessagesHandler::MessagesHandler(std::shared_ptr<CassandraClient> cass,
                                   std::shared_ptr<JwtService>       jwt,
                                   std::shared_ptr<RedisClient>      redis,
                                   std::shared_ptr<SessionRegistry>  registry,
-                                  std::shared_ptr<SnowflakeGen>     snowflake)
+                                  std::shared_ptr<SnowflakeGen>     snowflake,
+                                  AzureBlobConfig                   blob_cfg)
     : cass_(std::move(cass))
     , pg_(std::move(pg))
     , jwt_(std::move(jwt))
     , redis_(std::move(redis))
     , registry_(std::move(registry))
     , snowflake_(std::move(snowflake))
+    , blob_cfg_(std::move(blob_cfg))
 {}
 
 void MessagesHandler::register_routes(HttpServer& http)
@@ -171,6 +178,18 @@ void MessagesHandler::register_routes(HttpServer& http)
     auto jwt      = jwt_;
     auto redis    = redis_;
     auto registry = registry_;
+
+    // Thread pool for blocking Azure SDK I/O (never runs on the HTTP io_context thread).
+    auto blob_pool = std::make_shared<net::thread_pool>(2);
+
+    // Build Azure Blob Storage client shared across upload and download routes.
+    // Client construction is deferred inside the lambdas if credentials are absent.
+    auto cred = std::make_shared<Azure::Storage::StorageSharedKeyCredential>(
+        blob_cfg_.account, blob_cfg_.key);
+    auto container_client = std::make_shared<Azure::Storage::Blobs::BlobContainerClient>(
+        "https://" + blob_cfg_.account + ".blob.core.windows.net/" + blob_cfg_.container,
+        cred);
+    auto blob_cfg = blob_cfg_; // value copy for lambda captures
 
     // ── DELETE /messages/{msg_id}?conv_id={conv_id} ───────────────────────────
     http.add_route(http::verb::delete_, "/messages/{msg_id}",
@@ -269,10 +288,14 @@ void MessagesHandler::register_routes(HttpServer& http)
 
     // ── POST /upload ──────────────────────────────────────────────────────────
     http.add_route(http::verb::post, "/upload",
-        [jwt](const Request& req, const PathParams&)
+        [jwt, container_client, blob_pool, blob_cfg](const Request& req, const PathParams&)
         -> net::awaitable<Response> {
             auto user = require_auth(std::string(req[http::field::authorization]), *jwt);
             if (!user) co_return make_error(http::status::forbidden, "missing or invalid token");
+
+            if (blob_cfg.account.empty() || blob_cfg.key.empty())
+                co_return make_error(http::status::service_unavailable,
+                                     "Azure Blob Storage not configured");
 
             // Extract boundary from Content-Type header
             auto ct = std::string(req[http::field::content_type]);
@@ -291,20 +314,46 @@ void MessagesHandler::register_routes(HttpServer& http)
             if (!parsed) co_return make_error(http::status::bad_request, "failed to parse multipart");
 
             auto& [filename, file_data] = *parsed;
-            auto ext = extract_extension(filename);
-
-            auto uuid    = generate_uuid();
+            auto ext      = extract_extension(filename);
+            auto uuid     = generate_uuid();
             auto out_name = uuid + ext;
 
-            try {
-                fs::create_directories("uploads");
-                std::ofstream ofs("uploads/" + out_name, std::ios::binary);
-                if (!ofs) co_return make_error(http::status::internal_server_error, "failed to write file");
-                ofs.write(reinterpret_cast<const char*>(file_data.data()),
-                          static_cast<std::streamsize>(file_data.size()));
-            } catch (const std::exception& e) {
-                LOG_ERROR("POST /upload: {}", e.what());
-                co_return make_error(http::status::internal_server_error, "file write error");
+            // Move file bytes out of the optional so the thread pool lambda owns them.
+            auto upload_data = std::move(file_data);
+            auto http_ex     = co_await net::this_coro::executor;
+
+            // Run the blocking Azure upload on the thread pool so the HTTP
+            // io_context thread is never stalled.
+            std::packaged_task<std::string()> task(
+                [container_client, out_name, data = std::move(upload_data)]() mutable -> std::string {
+                    try {
+                        auto blockBlob = container_client->GetBlockBlobClient(out_name);
+                        Azure::Core::IO::MemoryBodyStream bodyStream(data.data(), data.size());
+                        Azure::Storage::Blobs::UploadBlockBlobOptions opts;
+                        opts.HttpHeaders.ContentType = content_type_for(out_name);
+                        blockBlob.Upload(bodyStream, opts);
+                        return {};
+                    } catch (const std::exception& e) {
+                        return e.what();
+                    } catch (...) {
+                        return "unknown exception during Azure upload";
+                    }
+                });
+            auto upload_future = task.get_future();
+            net::post(blob_pool->get_executor(), std::move(task));
+
+            // Yield to the io_context in short slices until the thread pool task finishes.
+            while (upload_future.wait_for(std::chrono::milliseconds(0))
+                   != std::future_status::ready) {
+                net::steady_timer t{http_ex};
+                t.expires_after(std::chrono::milliseconds(10));
+                co_await t.async_wait(net::use_awaitable);
+            }
+
+            auto upload_error = upload_future.get();
+            if (!upload_error.empty()) {
+                LOG_ERROR("POST /upload: {}", upload_error);
+                co_return make_error(http::status::internal_server_error, "file upload error");
             }
 
             nlohmann::json resp;
@@ -314,10 +363,14 @@ void MessagesHandler::register_routes(HttpServer& http)
 
     // ── GET /files/{uuid} ─────────────────────────────────────────────────────
     http.add_route(http::verb::get, "/files/{uuid}",
-        [jwt](const Request& req, const PathParams& params)
+        [jwt, cred, blob_cfg](const Request& req, const PathParams& params)
         -> net::awaitable<Response> {
             auto user = require_auth(std::string(req[http::field::authorization]), *jwt);
             if (!user) co_return make_error(http::status::forbidden, "missing or invalid token");
+
+            if (blob_cfg.account.empty() || blob_cfg.key.empty())
+                co_return make_error(http::status::service_unavailable,
+                                     "Azure Blob Storage not configured");
 
             auto& uuid = params.at("uuid");
 
@@ -328,20 +381,38 @@ void MessagesHandler::register_routes(HttpServer& http)
                 co_return make_error(http::status::bad_request, "invalid filename");
             }
 
-            auto path = "uploads/" + uuid;
-            std::ifstream ifs(path, std::ios::binary);
-            if (!ifs) co_return make_error(http::status::not_found, "file not found");
+            bool want_download = !query_param(std::string_view(req.target()), "download").empty();
 
-            std::string content((std::istreambuf_iterator<char>(ifs)),
-                                 std::istreambuf_iterator<char>());
+            try {
+                Azure::Storage::Sas::BlobSasBuilder sas;
+                sas.BlobContainerName = blob_cfg.container;
+                sas.BlobName          = uuid;
+                sas.Resource          = Azure::Storage::Sas::BlobSasResource::Blob;
+                sas.ExpiresOn         = Azure::DateTime(
+                    std::chrono::system_clock::now()
+                    + std::chrono::minutes(blob_cfg.sas_ttl_minutes));
+                sas.SetPermissions(Azure::Storage::Sas::BlobSasPermissions::Read);
+                if (want_download)
+                    sas.ContentDisposition = "attachment; filename=\"" + uuid + "\"";
 
-            auto ct = content_type_for(uuid);
+                auto sasToken    = sas.GenerateSasToken(*cred);
+                auto redirectUrl = "https://" + blob_cfg.account
+                                 + ".blob.core.windows.net/"
+                                 + blob_cfg.container + "/" + uuid
+                                 + "?" + sasToken;
 
-            Response res{http::status::ok, 11};
-            res.set(http::field::content_type, ct);
-            res.body() = std::move(content);
-            res.prepare_payload();
-            co_return res;
+                Response res{http::status::found, 11};
+                res.set(http::field::location, redirectUrl);
+                res.set(http::field::cache_control, "no-store");
+                res.prepare_payload();
+                co_return res;
+            } catch (const std::exception& e) {
+                LOG_ERROR("GET /files/{}: SAS generation failed: {}", uuid, e.what());
+                co_return make_error(http::status::internal_server_error, "failed to generate file URL");
+            } catch (...) {
+                LOG_ERROR("GET /files/{}: unknown exception during SAS generation", uuid);
+                co_return make_error(http::status::internal_server_error, "failed to generate file URL");
+            }
         });
 }
 

@@ -103,6 +103,10 @@ void Config::from_env(Config& cfg)
     if (auto v = get("LOOMIC_CASSANDRA_KEYSPACE");        !v.empty()) cfg.cassandra_keyspace        = v;
     if (auto v = get("LOOMIC_CASSANDRA_SSL");             !v.empty()) cfg.cassandra_ssl             = (v == "true" || v == "1");
     if (auto v = get("LOOMIC_CASSANDRA_CA_CERT");         !v.empty()) cfg.cassandra_ca_cert         = v;
+    if (auto v = get("LOOMIC_AZURE_STORAGE_ACCOUNT");     !v.empty()) cfg.azure_storage_account     = v;
+    if (auto v = get("LOOMIC_AZURE_STORAGE_KEY");         !v.empty()) cfg.azure_storage_key         = v;
+    if (auto v = get("LOOMIC_AZURE_CONTAINER");           !v.empty()) cfg.azure_container           = v;
+    if (auto v = get("LOOMIC_AZURE_SAS_TTL_MINUTES");     !v.empty()) cfg.azure_sas_ttl_min         = to_int(v, "LOOMIC_AZURE_SAS_TTL_MINUTES");
 }
 
 void Config::load_dotenv(const std::filesystem::path& path)

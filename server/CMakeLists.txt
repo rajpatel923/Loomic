@@ -42,8 +42,11 @@ find_package(jwt-cpp        REQUIRED)
 find_package(prometheus-cpp REQUIRED)
 find_package(libpqxx        REQUIRED)
 find_package(Protobuf       REQUIRED)
-find_package(absl           REQUIRED)
-find_package(cassandra      REQUIRED)
+find_package(absl                     REQUIRED)
+find_package(cassandra                REQUIRED)
+find_package(azure-core-cpp           CONFIG REQUIRED)
+find_package(azure-storage-common-cpp CONFIG REQUIRED)
+find_package(azure-storage-blobs-cpp  CONFIG REQUIRED)
 
 set(LOOMIC_HAS_CASSANDRA ON)
 
@@ -151,6 +154,9 @@ target_link_libraries(LoomicServer_lib
         absl::flat_hash_map
         prometheus-cpp::core
         prometheus-cpp::pull
+        Azure::azure-core
+        Azure::azure-storage-common
+        Azure::azure-storage-blobs
 )
 
 if(LOOMIC_HAS_CASSANDRA)

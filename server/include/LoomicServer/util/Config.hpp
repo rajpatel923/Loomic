@@ -33,6 +33,12 @@ struct Config {
     bool        cassandra_ssl      = true;
     std::string cassandra_ca_cert; // PEM-encoded CA certificate for TLS verification
 
+    // Azure Blob Storage
+    std::string azure_storage_account;
+    std::string azure_storage_key;
+    std::string azure_container        = "loomic-uploads";
+    int         azure_sas_ttl_min      = 60;
+
     // Auth
     std::string jwt_secret;       // required
 

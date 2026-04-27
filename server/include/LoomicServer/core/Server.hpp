@@ -43,7 +43,7 @@ public:
 
 private:
     void setup_tls(const Config& cfg);
-    void register_routes();
+    void register_routes(const Config& cfg);
 
     // Declaration order matters: ssl_ctx_ before tcp_, services before tcp_.
     // cfg_ is a reference to the Config passed to the constructor; store it

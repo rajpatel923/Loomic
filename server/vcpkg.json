@@ -18,6 +18,7 @@
     "libpqxx",
     "protobuf",
     "abseil",
-    "cassandra-cpp-driver"
+    "cassandra-cpp-driver",
+    "azure-storage-blobs-cpp"
   ]
 }
