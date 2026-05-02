@@ -1,56 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Loomic Client (Next.js)
+
+The web frontend for Loomic. A Next.js app that talks to the Loomic backend
+over HTTPS + WebSocket and (for live chat) over an SSE bridge backed by the
+TLS TCP messaging port.
+
+> **Heads up:** this codebase uses a fork of Next.js with breaking changes
+> from upstream. See [AGENTS.md](AGENTS.md) — read the relevant guide in
+> `node_modules/next/dist/docs/` before making non-trivial changes.
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Backend Configuration
 
-The client does not need the backend running locally if you point the local
-Next.js server at a remote Loomic backend.
+The client doesn't need the backend running locally if you point it at a
+remote Loomic backend.
 
 1. Create `client/.env.local`.
 2. Set `LOOMIC_API_BASE_URL` to the backend you want to use.
-
-Example:
 
 ```bash
 LOOMIC_API_BASE_URL=http://35.232.85.186:8080
 ```
 
-Then restart `npm run dev`. The Next.js route handlers under
-`src/app/api/auth/*` will proxy requests to that backend even during local
-development.
+Restart `npm run dev`. The Next.js route handlers under `src/app/api/*` will
+proxy requests to that backend even during local development.
 
-For deployed HTTPS environments, the browser WebSocket URL must also be secure.
-If your backend supports TLS for the `/ws` endpoint, set:
+For deployed HTTPS environments the browser WebSocket URL must also be
+secure. If your backend supports TLS for `/ws`, set:
 
 ```bash
 LOOMIC_WS_URL=wss://your-backend-host:8080/ws
 ```
 
 If `LOOMIC_WS_URL` is not set, the client derives the socket endpoint from
-`LOOMIC_API_BASE_URL` and will prefer `wss://` when the app itself is served
+`LOOMIC_API_BASE_URL` and prefers `wss://` when the app itself is served
 over HTTPS.
 
 ## Live Chat Bridge
 
-The `/chat` page now uses a browser-safe bridge:
+The `/chat` page uses a browser-safe bridge:
 
 1. The browser talks to Next.js route handlers under `src/app/api/chat/*`.
-2. The Next.js server opens the secure Loomic TCP session on port `9000`.
+2. The Next.js server opens the secure Loomic TCP session on port `7777`.
 3. Messages stream back to the browser over Server-Sent Events.
 
 Optional `.env.local` overrides:
@@ -59,29 +57,67 @@ Optional `.env.local` overrides:
 LOOMIC_API_BASE_URL=http://35.232.85.186:8080
 LOOMIC_WS_URL=wss://your-backend-host:8080/ws
 LOOMIC_TCP_HOST=35.232.85.186
-LOOMIC_TCP_PORT=9000
+LOOMIC_TCP_PORT=7777
 LOOMIC_TCP_SERVERNAME=35.232.85.186
 LOOMIC_TCP_VERIFY_TLS=false
 ```
 
-The current frontend keeps recent live messages in session memory because the
-backend does not yet expose an HTTP history endpoint.
+The frontend keeps recent live messages in session memory because the
+backend does not yet expose an HTTP history endpoint that backs this bridge.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## What's in the App
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Pages
 
-## Learn More
+| Path | What it does |
+|------|--------------|
+| `/` | Landing / login experience |
+| `/chat` | Direct-message chat UI |
 
-To learn more about Next.js, take a look at the following resources:
+### Backend proxy routes (`src/app/api/`)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The Next.js server exposes thin proxies to the Loomic backend so the browser
+never has to hold the JWT directly:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Proxy route | Backend endpoint |
+|-------------|------------------|
+| `auth/*` | `/auth/register`, `/auth/login`, `/auth/logout`, `/auth/refresh` |
+| `conversations/`, `conversations/[id]/messages`, `conversations/[id]/read` | DM list, history, mark-read |
+| `users/[id]`, `users/search` | User profile and search |
+| `groups/`, `groups/[id]`, `groups/[id]/members`, `groups/[id]/members/[uid]` | Group create / rename / membership |
+| `messages/[msg_id]` | Delete a message |
+| `upload`, `files/[uuid]` | File attachment upload + download |
+| `push/register` | Web push token registration |
+| `chat/socket-config`, `chat/*` | SSE bridge to the TLS TCP backend |
 
-## Deploy on Vercel
+### Feature status
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+> Authoritative source: [`backend-frontend-gap-report.md`](../backend-frontend-gap-report.md)
+> at the repo root.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+What the UI currently exposes:
+
+- Account registration and login
+- Direct-message conversation list
+- Sending and receiving DMs over WebSocket / SSE
+- User search to start a new DM
+- Sign-out
+
+Recent additions visible in the source tree (per commit `b343dae`):
+groups, send-status indicators, profile pictures, and a settings surface —
+some are wired through proxy routes and may not yet be reachable from a UI
+entry point. See the gap report for the canonical list of missing UI vs
+backend features.
+
+## Alternative client
+
+There is also a [Python CLI](../cli/README.md) under `cli/` — it logs in
+through the same HTTP API and connects to `/ws`. Useful for quick smoke
+tests from a terminal without a browser.
+
+## Stack
+
+- Next.js (forked — see `AGENTS.md`)
+- React + TypeScript
+- Tailwind / PostCSS
+- ESLint

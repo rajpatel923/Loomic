@@ -36,7 +36,9 @@ If your generated file is placed elsewhere, make sure `chat_pb2.py` is importabl
 The script is currently set up to use:
 
 - HTTP base URL: `http://35.232.85.186:8080`
-- TCP port: `7777`
+- TCP port: `7777` (matches `server/include/LoomicServer/util/Config.hpp` and
+  `server/config/server.json`; some older drafts of `server/api/openapi.json`
+  list 9000 — that value is stale)
 
 ## How To Run
 
@@ -164,3 +166,9 @@ This command was run successfully against your current server:
 ```bash
 python3 test_e2e_messaging.py --host http://35.232.85.186 --no-verify-tls
 ```
+
+## See also
+
+- [`cli/`](../cli/) — interactive Python chat client over the WebSocket
+  endpoint (port 8080). Useful for poking at a running server by hand
+  without the protobuf TCP framing.

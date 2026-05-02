@@ -4,6 +4,8 @@ Backend server for the Loomic platform. Built with C++20, CMake presets, Ninja, 
 
 ## Architecture Overview
 
+### Network layers
+
 | Layer | Technology | Port |
 |-------|-----------|------|
 | TLS TCP binary protocol | Boost.ASIO coroutines | 7777 |
@@ -14,9 +16,33 @@ Backend server for the Loomic platform. Built with C++20, CMake presets, Ninja, 
 | Redis | Presence, offline queue, unread counts | 6379 |
 | Cassandra | Message history | 10350 |
 
-Real-time messaging supports two protocols:
-- **WebSocket** (`ws://host:8080/ws`) — JSON text frames, browser-friendly
-- **TLS TCP** (port 7777) — binary wire protocol (LMS2), 30-byte fixed header + protobuf payload
+> **Port note:** earlier drafts of `server/api/openapi.json` describe the TLS TCP
+> protocol on port 9000 — this is stale. The default in `Config.hpp` and
+> `config/server.json` is **7777**.
+
+### HTTP handlers
+
+The HTTP server (port 8080) routes through these handlers (`server/src/http/`):
+
+| Handler | Endpoints | Purpose |
+|---------|-----------|---------|
+| `AuthHandler` | `/auth/register`, `/auth/login`, `/auth/logout`, `/auth/refresh` | JWT issuance + refresh |
+| `ConversationsHandler` | `/conversations`, `/conversations/{id}/messages`, `/conversations/{id}/read` | DM list, history, mark-read |
+| `GroupsHandler` | `/groups`, `/groups/{id}`, `/groups/{id}/members`, `/groups/{id}/members/{uid}` | Group create / rename / membership |
+| `MessagesHandler` | `/messages/{msg_id}`, `/upload`, `/files/{uuid}` | Delete, file upload (Azure Blob), download |
+| `ReceiptsHandler` | (DELIVERED / READ frame logic) | Delivery + read receipt processing |
+| `UsersHandler` | `/users/search`, `/users/{id}`, `/users/{id}/presence` | Search, profile, online status |
+| `PushHandler` | `/push/register` | Web / iOS / Android device tokens |
+| `HealthHandler` | `/health` | Liveness probe |
+| `DocsHandler` | `/docs`, `/openapi.json` | Auto-served OpenAPI |
+
+### Real-time messaging
+
+Two protocols, same backend:
+- **WebSocket** (`ws://host:8080/ws`) — JSON text frames, browser-friendly. Used by the Next.js client and the `cli/` Python client.
+- **TLS TCP** (port 7777) — binary wire protocol (LMS2), 30-byte fixed header + protobuf payload. Used by `python_test/test_e2e_messaging.py` and the load-test client.
+
+WebSocket events handled: `auth`, `chat`, `group_chat`, `typing`, `read`, `delivered`, `delete_notify`, `ping/pong`, `error`.
 
 ---
 
@@ -85,7 +111,7 @@ Restart the shell after installing tools so they are available on `PATH`.
 ### 1. Clone the repository
 
 ```bash
-git clone --recurse-submodules https://github.com/your-org/Loomic.git
+git clone --recurse-submodules https://github.com/rajpatel923/Loomic.git
 cd Loomic/server
 ```
 
@@ -245,7 +271,7 @@ This starts:
 | `server` | http://localhost:8080 | REST API + WebSocket |
 | `nginx` | https://localhost:443 | TLS termination + rate limiting |
 | `prometheus` | http://localhost:19090 | Metrics storage (scrapes server:9090) |
-| `grafana` | http://localhost:3000 | Live dashboard (admin / admin) |
+| `grafana` | http://localhost:3001 | Live dashboard (admin / admin) — host port 3001 → container 3000 |
 
 > **TCP binary protocol** (port 7777) connects directly to the server container — nginx does not proxy binary TLS TCP.
 
