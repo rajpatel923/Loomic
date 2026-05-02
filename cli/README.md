@@ -24,9 +24,18 @@ python loomic.py --port 8080
 python loomic.py --host loomic-server.patel-raj.com --http-scheme https --ws-scheme wss
 ```
 
-On first run you will be prompted for your username and password. The access
-token is cached at `~/.loomic/token.json` (mode 0600). To force re-login,
-delete that file.
+On first run you will be prompted to log in or register:
+
+```
+Loomic  [L] login  [R] register
+choice:
+```
+
+- **L** — log in with an existing account
+- **R** — create a new account (asks for username, email, and password min 6 chars), then logs in automatically
+
+The access token is cached at `~/.loomic/token.json` (mode 0600). To force
+re-login or switch accounts, delete that file.
 
 ## Commands
 
