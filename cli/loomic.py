@@ -62,6 +62,16 @@ def append_activity(line: str) -> None:
         f.write(f"[{datetime.now().isoformat(timespec='seconds')}] {line}\n")
 
 
+def http_register(base_url: str, username: str, email: str, password: str) -> None:
+    r = requests.post(
+        f"{base_url}/auth/register",
+        json={"username": username, "email": email, "password": password},
+        timeout=10,
+    )
+    if r.status_code not in (200, 201):
+        raise RuntimeError(f"registration failed ({r.status_code}): {r.text.strip()[:200]}")
+
+
 def http_login(base_url: str, username: str, password: str) -> dict:
     r = requests.post(
         f"{base_url}/auth/login",
@@ -372,9 +382,17 @@ def login_flow(base_url: str) -> dict:
     if cached:
         info(f"using saved token for {cached.get('username')}  (delete {TOKEN_FILE} to force re-login)")
         return cached
-    print("Loomic login")
-    username = input("username: ").strip()
-    password = getpass.getpass("password: ")
+    print("Loomic  [L] login  [R] register")
+    choice = input("choice: ").strip().lower()
+    if choice == "r":
+        username = input("username: ").strip()
+        email    = input("email: ").strip()
+        password = getpass.getpass("password (min 6 chars): ")
+        http_register(base_url, username, email, password)
+        info(f"account created for {username}, logging in...")
+    else:
+        username = input("username: ").strip()
+        password = getpass.getpass("password: ")
     auth = http_login(base_url, username, password)
     save_token(auth)
     return auth
