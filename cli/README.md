@@ -9,8 +9,6 @@ server.
 
 ```bash
 cd cli
-python -m venv .venv
-. .venv/bin/activate           # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
@@ -19,14 +17,11 @@ Python 3.10 or newer.
 ## Run
 
 ```bash
-# default: connects to http://127.0.0.1:8080
-python loomic.py
+# local dev server
+python loomic.py --port 8080
 
-# point at a different host/port
-python loomic.py --host 35.232.85.186 --port 8080
-
-# production over TLS
-python loomic.py --host loomic.example.com --port 443 --http-scheme https --ws-scheme wss
+# hosted server (no --port needed, defaults to 443)
+python loomic.py --host loomic-server.patel-raj.com --http-scheme https --ws-scheme wss
 ```
 
 On first run you will be prompted for your username and password. The access
@@ -35,31 +30,44 @@ delete that file.
 
 ## Commands
 
-| Command              | What it does                                     |
-| -------------------- | ------------------------------------------------ |
-| `/help`              | list commands                                    |
-| `/nick <name>`       | change your displayed name (local only)          |
-| `/msg <user> <text>` | private message a user by username               |
-| `/log [N]`           | show last N CLI activity entries (default 20)    |
-| `/quit`              | disconnect and exit                              |
+| Command                  | What it does                                        |
+| ------------------------ | --------------------------------------------------- |
+| `/help`                  | list commands                                       |
+| `/nick <name>`           | change your displayed name (local only)             |
+| `/msg <user> <text>`     | send a private message to a user by username        |
+| `/history <user> [N]`    | show last N messages with a user (default 20)       |
+| `/log [N]`               | show last N CLI activity entries (default 20)       |
+| `/quit`                  | disconnect and exit                                 |
 
-Anything not starting with `/` is sent to the active conversation (the most
-recent one, picked automatically at login).
+Anything not starting with `/` is sent to the active conversation (set
+automatically at login, or updated after `/msg` and `/history`).
 
 ## Behind the scenes
 
-The `/log` command shows recent CLI activity recorded at
-`~/.loomic/activity.log` — connect events, sends, receives, PMs. This is the
-"window into what's happening" that the professor asked for.
+**Messaging flow:**
+- `/msg` searches for the user via `GET /users/search`, looks up or creates the
+  DM conversation via `POST /conversations`, then sends a `chat` frame over the
+  WebSocket.
+- `/history` fetches past messages from `GET /conversations/{id}/messages` and
+  decodes the base64 content returned by the server.
+- A background ping is sent every 5 seconds to keep the WebSocket connection
+  alive.
 
-Server-side activity (connection events, broadcast traffic, errors) lives in
-the existing `server/logs/server.log` and is unaffected by this CLI.
+**Offline messages:** Messages sent while you are offline are queued on the
+server (up to 7 days) and delivered automatically when you reconnect.
+
+**Activity log:** The `/log` command shows recent CLI activity recorded at
+`~/.loomic/activity.log` — connect events, sends, receives, and PMs. This is
+the "window into what's happening" that the professor asked for.
+
+Server-side activity lives in `server/logs/server.log` and is unaffected by
+this CLI.
 
 ## Files
 
 ```
 cli/
-├── loomic.py          # the CLI (single file, ~250 lines)
+├── loomic.py          # the CLI (single file)
 ├── requirements.txt   # `requests`, `websocket-client`
 ├── .gitignore
 └── README.md
@@ -70,10 +78,7 @@ cli/
 - `/nick` is a **local display alias**. The server's user model has a fixed
   `username`; the CLI just relabels how your own name appears on outgoing
   messages.
-- `/msg <user>` looks up the user via `GET /users/search`, computes the DM
-  conversation ID per the OpenAPI spec (`min(sender_id, recipient_id)`),
-  and sends a `chat` frame to it.
 - Ctrl-C closes the WebSocket cleanly via a SIGINT handler.
 - The token file is created with mode `0600` so other local users can't read it.
-- Token is currently not auto-refreshed — when it expires (24h), delete
+- Token is not auto-refreshed — when it expires (24h), delete
   `~/.loomic/token.json` and log in again.
