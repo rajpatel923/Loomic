@@ -95,7 +95,37 @@ def http_list_conversations(base_url: str, token: str) -> list[dict]:
     )
     if r.status_code != 200:
         raise RuntimeError(f"list convos failed ({r.status_code}): {r.text.strip()[:200]}")
-    return r.json() if isinstance(r.json(), list) else []
+    body = r.json()
+    return body if isinstance(body, list) else body.get("value", [])
+
+
+def http_get_messages(base_url: str, token: str, conv_id: str, limit: int = 20) -> list[dict]:
+    r = requests.get(
+        f"{base_url}/conversations/{conv_id}/messages",
+        params={"limit": limit},
+        headers={"Authorization": f"Bearer {token}"},
+        timeout=10,
+    )
+    if r.status_code != 200:
+        raise RuntimeError(f"fetch messages failed ({r.status_code}): {r.text.strip()[:200]}")
+    body = r.json()
+    return body if isinstance(body, list) else body.get("messages", [])
+
+
+def http_get_or_create_dm(base_url: str, token: str, peer_id: str) -> str:
+    convos = http_list_conversations(base_url, token)
+    for c in convos:
+        if c.get("kind") == "dm" and str(c.get("peer_id")) == str(peer_id):
+            return str(c["id"])
+    r = requests.post(
+        f"{base_url}/conversations",
+        json={"kind": "dm", "member_ids": [peer_id]},
+        headers={"Authorization": f"Bearer {token}"},
+        timeout=10,
+    )
+    if r.status_code not in (200, 201):
+        raise RuntimeError(f"create DM failed ({r.status_code}): {r.text.strip()[:200]}")
+    return str(r.json()["conv_id"])
 
 
 class ChatSession:
@@ -120,6 +150,18 @@ class ChatSession:
         self.ws.send(json.dumps({"type": "auth", "token": self.token}))
         info(f"connected to {self.ws_url} as {self.nick}")
         append_activity(f"connect ws as {self.username}")
+        t = threading.Thread(target=self._ping_loop, daemon=True)
+        t.start()
+
+    def _ping_loop(self) -> None:
+        while not self.stop.is_set():
+            time.sleep(5)
+            if self.stop.is_set():
+                break
+            try:
+                self.ws.send(json.dumps({"type": "ping"}))
+            except Exception:
+                break
 
     def close(self) -> None:
         self.stop.set()
@@ -189,12 +231,13 @@ class ChatSession:
 
 HELP_TEXT = """\
 commands:
-  /help              show this list
-  /nick <name>       change your displayed name (local only)
-  /msg <user> <text> private message a user by username
-  /log [N]           show last N (default 20) lines of CLI activity
-  /quit              disconnect and exit
-anything else       send to the active conversation
+  /help                   show this list
+  /nick <name>            change your displayed name (local only)
+  /msg <user> <text>      private message a user by username
+  /history <user> [N]     show last N messages with a user (default 20)
+  /log [N]                show last N lines of CLI activity (default 20)
+  /quit                   disconnect and exit
+anything else             send to the active conversation
 """
 
 
@@ -228,13 +271,11 @@ def cmd_msg(s: ChatSession, args: str) -> None:
         return
     target_id = str(match.get("id"))
     s.peers_by_id[target_id] = match["username"]
-    # Per the OpenAPI: conv_id for a 1-1 DM is min(sender_id, recipient_id) as decimal string.
     try:
-        my_id = _decode_jwt_subject(s.token)
-    except Exception:
-        err("could not derive sender id from token")
+        conv_id = http_get_or_create_dm(s.base_url, s.token, target_id)
+    except Exception as e:
+        err(str(e))
         return
-    conv_id = str(min(int(my_id), int(target_id)))
     s.ws.send(json.dumps({"type": "chat", "conv_id": conv_id, "content": text}))
     info(f"sent PM to {match['username']}")
     append_activity(f"pm to={match['username']} text={text!r}")
@@ -258,17 +299,58 @@ def cmd_log(_: ChatSession, args: str) -> None:
     print("--- end ---")
 
 
+def cmd_history(s: ChatSession, args: str) -> None:
+    parts = args.split()
+    if not parts:
+        err("usage: /history <user> [N]")
+        return
+    target_username = parts[0]
+    limit = 20
+    if len(parts) > 1:
+        try: limit = max(1, int(parts[1]))
+        except ValueError: pass
+    try:
+        users = http_search_user(s.base_url, s.token, target_username)
+    except Exception as e:
+        err(str(e)); return
+    match = next((u for u in users if u.get("username", "").lower() == target_username.lower()), None)
+    if not match:
+        err(f"no such user: {target_username}"); return
+    target_id = str(match.get("id"))
+    try:
+        conv_id = http_get_or_create_dm(s.base_url, s.token, target_id)
+        messages = http_get_messages(s.base_url, s.token, conv_id, limit)
+    except Exception as e:
+        err(str(e)); return
+    my_id = _decode_jwt_subject(s.token)
+    print(f"--- conversation with {match['username']} ---")
+    for m in reversed(messages):
+        sender_id = str(m.get("sender_id", ""))
+        sender = "you" if sender_id == my_id else match["username"]
+        ts = ChatSession._fmt_ts(m.get("ts_ms") or m.get("ts"))
+        import base64
+        raw = m.get("content_b64") or m.get("content", "")
+        try:
+            content = base64.b64decode(raw).decode("utf-8", errors="replace") if raw else ""
+        except Exception:
+            content = str(raw)
+        print(f"[{ts}] <{sender}> {content}")
+    print("--- end ---")
+    s.active_conv = conv_id
+
+
 def cmd_quit(s: ChatSession, _args: str) -> None:
     info("goodbye")
     s.close()
 
 
 COMMANDS = {
-    "/help": cmd_help,
-    "/nick": cmd_nick,
-    "/msg":  cmd_msg,
-    "/log":  cmd_log,
-    "/quit": cmd_quit,
+    "/help":    cmd_help,
+    "/nick":    cmd_nick,
+    "/msg":     cmd_msg,
+    "/log":     cmd_log,
+    "/history": cmd_history,
+    "/quit":    cmd_quit,
 }
 
 
