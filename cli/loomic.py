@@ -301,13 +301,14 @@ def login_flow(base_url: str) -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser(description="Loomic CLI chat client")
     ap.add_argument("--host", default=os.getenv("LOOMIC_HOST", "127.0.0.1"))
-    ap.add_argument("--port", type=int, default=int(os.getenv("LOOMIC_HTTP_HEALTH_PORT", "8080")))
+    ap.add_argument("--port", type=int, default=None)
     ap.add_argument("--ws-scheme",  default="ws",   help="ws or wss")
     ap.add_argument("--http-scheme", default="http", help="http or https")
     args = ap.parse_args()
 
-    base_url = f"{args.http_scheme}://{args.host}:{args.port}"
-    ws_url   = f"{args.ws_scheme}://{args.host}:{args.port}/ws"
+    port_str = f":{args.port}" if args.port is not None else ""
+    base_url = f"{args.http_scheme}://{args.host}{port_str}"
+    ws_url   = f"{args.ws_scheme}://{args.host}{port_str}/ws"
 
     try:
         auth = login_flow(base_url)
