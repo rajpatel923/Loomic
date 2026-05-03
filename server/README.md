@@ -1,4 +1,4 @@
-# LoomicServer
+# Loomic Server
 
 Backend server for the Loomic platform. Built with C++20, CMake presets, Ninja, and vcpkg manifest mode.
 
