@@ -15,7 +15,7 @@ vcpkg/downloads/
 *.out
 /LoomicServer
 .env
-
+.claude
 # IDE
 .idea/
 
